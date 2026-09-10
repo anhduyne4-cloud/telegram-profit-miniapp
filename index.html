@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Quản lý tài khoản</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; padding: 16px;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--tg-theme-bg-color, #fff);
+  color: var(--tg-theme-text-color, #000);
+}
+h1 { font-size: 20px; margin: 8px 0 4px; }
+h3 { font-size: 16px; margin: 20px 0 10px; }
+.tabs { display: flex; gap: 6px; margin: 12px 0 16px; overflow-x: auto; }
+.tabs button {
+  flex: 1 1 auto; min-width: 80px; padding: 9px 12px;
+  border: none; border-radius: 8px;
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  color: var(--tg-theme-text-color, #000);
+  font-weight: 500; font-size: 13px; white-space: nowrap;
+}
+.tabs button.active {
+  background: var(--tg-theme-button-color, #2481cc);
+  color: var(--tg-theme-button-text-color, #fff);
+}
+.view { display: none; }
+.view.active { display: block; }
+form label { display: block; margin-bottom: 12px; font-size: 14px; font-weight: 500; }
+form input, form select {
+  width: 100%; padding: 11px; margin-top: 5px;
+  border-radius: 8px; border: 1px solid #ccc8;
+  font-size: 16px;
+  background: var(--tg-theme-bg-color, #fff);
+  color: var(--tg-theme-text-color, #000);
+}
+form label.row { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+form label.row input[type="checkbox"] { width: auto; margin: 0; transform: scale(1.2); }
+button.primary, button.danger, button.ghost {
+  width: 100%; padding: 13px; border: none; border-radius: 8px;
+  font-size: 15px; font-weight: 600; margin-top: 8px;
+}
+button.primary { background: var(--tg-theme-button-color, #2481cc); color: #fff; }
+button.danger  { background: #e74c3c; color: #fff; }
+button.ghost   { background: transparent; color: var(--tg-theme-text-color, #000); border: 1px solid #8884; }
+button:active { opacity: .75; }
+.card {
+  background: var(--tg-theme-secondary-bg-color, #f8f8f8);
+  padding: 12px 14px; border-radius: 10px; margin-bottom: 10px;
+}
+.card .name { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
+.card .meta { font-size: 13px; opacity: .85; line-height: 1.5; }
+.card .actions { margin-top: 10px; display: flex; gap: 8px; }
+.card .actions button {
+  padding: 6px 12px; border-radius: 6px; border: none;
+  font-size: 13px; background: #e74c3c; color: #fff;
+}
+.loading { opacity: .6; font-style: italic; text-align: center; padding: 20px; }
+.empty { opacity: .6; text-align: center; padding: 30px 10px; }
+#toast {
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 10px 20px;
+  border-radius: 20px; opacity: 0; transition: opacity .3s;
+  pointer-events: none; z-index: 1000; font-size: 14px; max-width: 90%;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>💼 Quản lý tài khoản</h1>
+
+<nav class="tabs">
+  <button data-view="list" class="active">📋 Danh sách</button>
+  <button data-view="add">➕ Thêm</button>
+  <button data-view="session">▶️ Phiên</button>
+  <button data-view="history">📜 Lịch sử</button>
+</nav>
+
+<!-- View: Danh sách -->
+<section id="view-list" class="view active">
+  <div id="accounts"><p class="loading">Đang tải...</p></div>
+</section>
+
+<!-- View: Thêm -->
+<section id="view-add" class="view">
+  <form id="form-add">
+    <label>Tên account
+      <input name="account_name" required placeholder="VD: ACC-001" />
+    </label>
+    <label>Mật khẩu rút tiền
+      <input type="password" name="withdraw_password" required placeholder="••••••" />
+    </label>
+    <label>Số tài khoản
+      <input name="account_number" required placeholder="123456789" />
+    </label>
+    <label class="row">
+      <input type="checkbox" name="promotion" id="chk-promo" /> Có khuyến mãi
+    </label>
+    <label id="promo-amount-wrap" style="display:none;">Số tiền khuyến mãi
+      <input type="number" name="promotion_amount" value="0" min="0" step="1000" />
+    </label>
+    <button type="submit" class="primary">💾 Lưu</button>
+    <button type="button" class="ghost" onclick="tg.close()">Hủy</button>
+  </form>
+</section>
+
+<!-- View: Phiên -->
+<section id="view-session" class="view">
+  <div id="session-info" class="card">Chưa có phiên nào đang mở.</div>
+  <button id="btn-start" class="primary">▶️ Bắt đầu phiên</button>
+  <button id="btn-end" class="danger">⏹ Kết thúc phiên</button>
+  <h3>Ghi giao dịch</h3>
+  <form id="form-tx">
+    <label>Tài khoản
+      <select name="account_id" id="tx-account" required></select>
+    </label>
+    <label>Loại
+      <select name="type" id="tx-type">
+        <option value="deposit">💵 Nạp</option>
+        <option value="withdraw">💸 Rút</option>
+      </select>
+    </label>
+    <label>Số tiền
+      <input type="number" name="amount" required min="0" step="1000" placeholder="1000000" />
+    </label>
+    <label id="tx-promo-wrap">Khuyến mãi (chỉ khi nạp)
+      <input type="number" name="promotion_amount" value="0" min="0" step="1000" />
+    </label>
+    <button type="submit" class="primary">➕ Ghi nhận</button>
+  </form>
+</section>
+
+<!-- View: Lịch sử -->
+<section id="view-history" class="view">
+  <div id="history"><p class="loading">Đang tải...</p></div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   ⚙️ SỬA DUY NHẤT DÒNG NÀY: URL của backend (tunnel HTTPS)
+   ============================================================ */
+const API_BASE = "https://your-tunnel-url.ngrok-free.app";
+/* ============================================================ */
+
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const initData = tg.initData;
+
+async function api(path, opts = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "tma " + initData,
+      "ngrok-skip-browser-warning": "true",
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(t || ("HTTP " + res.status));
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
+function fmt(n) { return Number(n || 0).toLocaleString("vi-VN"); }
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tabs button").forEach(btn => {
+  btn.onclick = () => switchView(btn.dataset.view);
+});
+function switchView(view) {
+  document.querySelectorAll(".tabs button").forEach(b =>
+    b.classList.toggle("active", b.dataset.view === view));
+  document.querySelectorAll(".view").forEach(v =>
+    v.classList.toggle("active", v.id === "view-" + view));
+  if (view === "list") loadAccounts();
+  if (view === "history") loadHistory();
+  if (view === "session") loadSessionView();
+}
+
+/* ---------- Danh sách ---------- */
+async function loadAccounts() {
+  const box = document.getElementById("accounts");
+  box.innerHTML = `<p class="loading">Đang tải...</p>`;
+  try {
+    const accs = await api("/api/accounts");
+    if (!accs.length) {
+      box.innerHTML = `<p class="empty">Chưa có tài khoản nào.</p>`;
+      return;
+    }
+    box.innerHTML = accs.map(a => `
+      <div class="card">
+        <div class="name">${esc(a.account_name)}</div>
+        <div class="meta">🔢 STK: ${esc(a.account_number)}</div>
+        <div class="meta">🎁 Khuyến mãi: ${a.promotion ? "✅ " + fmt(a.promotion_amount) : "❌"}</div>
+        <div class="actions">
+          <button onclick="delAccount(${a.id})">🗑 Xóa</button>
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    box.innerHTML = `<p class="empty">Lỗi: ${esc(e.message)}</p>`;
+  }
+}
+window.delAccount = async (id) => {
+  if (!confirm("Xóa tài khoản này?")) return;
+  try {
+    await api("/api/accounts/" + id, { method: "DELETE" });
+    toast("Đã xóa");
+    loadAccounts();
+  } catch (e) { toast("Lỗi: " + e.message); }
+};
+
+/* ---------- Form thêm ---------- */
+const chkPromo = document.getElementById("chk-promo");
+const promoWrap = document.getElementById("promo-amount-wrap");
+chkPromo.onchange = () => {
+  promoWrap.style.display = chkPromo.checked ? "block" : "none";
+};
+document.getElementById("form-add").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = {
+    account_name: fd.get("account_name"),
+    withdraw_password: fd.get("withdraw_password"),
+    account_number: fd.get("account_number"),
+    promotion: fd.get("promotion") === "on",
+    promotion_amount: parseFloat(fd.get("promotion_amount") || 0),
+  };
+  try {
+    await api("/api/accounts", { method: "POST", body: JSON.stringify(body) });
+    toast("Đã lưu ✅");
+    e.target.reset();
+    promoWrap.style.display = "none";
+    setTimeout(() => tg.close(), 700);
+  } catch (err) { toast("Lỗi: " + err.message); }
+};
+
+/* ---------- Phiên ---------- */
+async function loadSessionView() {
+  try {
+    const accs = await api("/api/accounts");
+    const sel = document.getElementById("tx-account");
+    sel.innerHTML = accs.length
+      ? accs.map(a => `<option value="${a.id}">${esc(a.account_name)} — ${esc(a.account_number)}</option>`).join("")
+      : `<option value="">— Chưa có tài khoản —</option>`;
+  } catch (e) { /* ignore */ }
+
+  try {
+    const st = await api("/api/sessions/current");
+    const info = document.getElementById("session-info");
+    if (st.active) {
+      info.innerHTML = `
+        <div class="name">🟢 Phiên #${st.id} đang mở</div>
+        <div class="meta">🕐 ${new Date(st.start_time).toLocaleString("vi-VN")}</div>
+        <div class="meta">💵 Nạp: ${fmt(st.total_deposit)} | 💸 Rút: ${fmt(st.total_withdraw)} | 🎁 KM: ${fmt(st.total_promotion)}</div>
+        <div class="meta"><b>Tạm tính: ${fmt(st.total_withdraw - st.total_deposit + st.total_promotion)}</b></div>`;
+    } else {
+      info.innerHTML = `<div class="meta">Chưa có phiên nào đang mở.</div>`;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+document.getElementById("tx-type").onchange = (e) => {
+  document.getElementById("tx-promo-wrap").style.display =
+    e.target.value === "deposit" ? "block" : "none";
+};
+document.getElementById("btn-start").onclick = async () => {
+  try {
+    const r = await api("/api/sessions/start", { method: "POST" });
+    toast(r.resumed ? "Tiếp tục phiên cũ" : "Đã bắt đầu phiên mới");
+    loadSessionView();
+  } catch (e) { toast("Lỗi: " + e.message); }
+};
+document.getElementById("btn-end").onclick = async () => {
+  if (!confirm("Kết thúc phiên và tính lợi nhuận?")) return;
+  try {
+    const r = await api("/api/sessions/end", { method: "POST" });
+    toast(`✅ Lợi nhuận: ${fmt(r.profit)}`);
+    loadSessionView();
+  } catch (e) { toast(e.message); }
+};
+document.getElementById("form-tx").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = {
+    account_id: parseInt(fd.get("account_id")),
+    type: fd.get("type"),
+    amount: parseFloat(fd.get("amount")),
+    promotion_amount: parseFloat(fd.get("promotion_amount") || 0),
+  };
+  if (!body.account_id) { toast("Chưa có tài khoản"); return; }
+  try {
+    await api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
+    toast("Đã ghi nhận ✅");
+    e.target.reset();
+    document.getElementById("tx-promo-wrap").style.display = "block";
+    loadSessionView();
+  } catch (err) { toast(err.message); }
+};
+
+/* ---------- Lịch sử ---------- */
+async function loadHistory() {
+  const box = document.getElementById("history");
+  box.innerHTML = `<p class="loading">Đang tải...</p>`;
+  try {
+    const rows = await api("/api/sessions/history");
+    if (!rows.length) {
+      box.innerHTML = `<p class="empty">Chưa có phiên nào hoàn thành.</p>`;
+      return;
+    }
+    box.innerHTML = rows.map(r => {
+      const color = r.profit >= 0 ? "#2ecc71" : "#e74c3c";
+      return `
+        <div class="card">
+          <div class="name">Phiên #${r.id}</div>
+          <div class="meta">🕐 ${new Date(r.start).toLocaleString("vi-VN")}</div>
+          <div class="meta">💵 Nạp: ${fmt(r.deposit)} | 💸 Rút: ${fmt(r.withdraw)} | 🎁 KM: ${fmt(r.promotion)}</div>
+          <div class="meta" style="color:${color};font-weight:600;">📈 Lợi nhuận: ${fmt(r.profit)}</div>
+        </div>`;
+    }).join("");
+  } catch (e) {
+    box.innerHTML = `<p class="empty">Lỗi: ${esc(e.message)}</p>`;
+  }
+}
+
+/* ---------- Init ---------- */
+(function () {
+  const view = new URLSearchParams(location.search).get("view") || "list";
+  switchView(view);
+})();
+</script>
+</body>
+</html>
