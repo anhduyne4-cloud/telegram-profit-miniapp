@@ -88,6 +88,9 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .user-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .admin-tools{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
 .admin-tools-title{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.proxy-item{background:#000;color:var(--success);padding:10px 12px;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.proxy-item span{word-break:break-all}
+.proxy-item button{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -142,7 +145,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 
   <div class="admin-tools">
     <div class="admin-tools-title">📢 Công cụ Admin</div>
-    <button class="btn btn-purple btn-block" style="margin-bottom:8px" onclick="openBroadcast()">📢 Gửi thông báo đến TẤT CẢ khách</button>
+    <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Gửi thông báo đến TẤT CẢ khách</button>
   </div>
 
   <div class="stats-grid" id="adminStats"></div>
@@ -352,6 +355,7 @@ function changeQty(d) {
   document.getElementById("buyQty").textContent = window._qty;
   document.getElementById("buyTotal").textContent = fmt(currentProduct.price * window._qty);
 }
+
 async function doBuy() {
   const qty = window._qty || 1;
   const btn = event.target;
@@ -363,22 +367,60 @@ async function doBuy() {
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     toast("Mua thành công!", "success");
     closeModal();
-    setTimeout(() => showPurchased(r.proxy_data, r.order_code), 300);
+    setTimeout(() => showPurchased(r), 300);
     loadOrders();
   } catch(e) {
     toast("Lỗi kết nối", "error");
     btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
   }
 }
-function showPurchased(data, code) {
+
+function showPurchased(r) {
+  const proxies = r.proxies || [];
+  const expire = r.expire || "";
+  const raw = r.raw || "";
+  const hasStructured = proxies.length > 0;
+
+  const proxiesHtml = hasStructured
+    ? proxies.map(p => `
+        <div class="proxy-item">
+          <span>${escapeHtml(p)}</span>
+          <button onclick='copyOne(${JSON.stringify(p)})'>📋</button>
+        </div>
+      `).join("")
+    : `<div class="code-box">${escapeHtml(raw || "(không có dữ liệu)")}</div>`;
+
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
-    ${code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(code)}</span></div>` : ""}
-    <div style="margin:10px 0;font-size:13px;color:var(--muted)">Dữ liệu proxy của bạn:</div>
-    <div class="code-box">${escapeHtml(data || "(không có dữ liệu)")}</div>
-    <button class="btn btn-block" onclick="copyData()">📋 Copy</button>
+
+    <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(r.product_name||"")}</span></div>
+    <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
+    <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
+    ${r.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(r.order_code)}</span></div>` : ""}
+    ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
+    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(r.created_at||"")}</span></div>
+
+    <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
+      <span>🔑 Danh sách Proxy (${proxies.length || "?"})</span>
+      <button class="btn btn-xs" onclick="copyAll()">📋 Copy tất cả</button>
+    </div>
+
+    ${proxiesHtml}
+
+    ${!hasStructured && raw ? `<div style="margin-top:10px;font-size:11px;color:var(--muted)">⚠️ Không parse được cấu trúc proxy — hiển thị dữ liệu gốc</div>` : ""}
+
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">
+      💡 Định dạng: <code>IP:PORT:USER:PASS</code>
+    </div>
   `);
-  window._copyData = data || "";
+  window._copyData = proxies.length ? proxies.join("\n") : raw;
+}
+
+function copyOne(txt) {
+  navigator.clipboard.writeText(txt).then(() => toast("Đã copy!", "success"));
+}
+function copyAll() {
+  navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy toàn bộ!", "success"));
 }
 function copyData() {
   navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy!", "success"));
@@ -391,27 +433,69 @@ async function loadOrders() {
   try {
     const r = await api("/api/my-orders");
     if (!r.ok || !r.orders.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn hàng nào</div>'; return; }
-    list.innerHTML = r.orders.map(o => `
-      <div class="card">
-        <div class="product-head">
-          <div class="product-name">${escapeHtml(o.name)}</div>
-          <div class="stock-tag">SL: ${o.amount}</div>
+    list.innerHTML = r.orders.map(o => {
+      const proxyList = (o.proxies || []).slice(0, 3);
+      const more = (o.proxies || []).length - proxyList.length;
+      const previewHtml = proxyList.length
+        ? proxyList.map(p => `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${escapeHtml(p)}</div>`).join("") +
+          (more > 0 ? `<div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">+${more} proxy khác...</div>` : "")
+        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Không có dữ liệu proxy</div>`;
+      return `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${escapeHtml(o.name)}</div>
+            <div class="stock-tag">SL: ${o.amount}</div>
+          </div>
+          <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.created_at)}</span></div>
+          <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+          ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(o.expire)}</span></div>` : ""}
+          ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
+          <div style="margin-top:10px;margin-bottom:8px;font-size:12px;color:var(--muted);font-weight:600">🔑 Proxy:</div>
+          ${previewHtml}
+          <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o))})'>👁 Xem đầy đủ</button>
         </div>
-        <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
-        <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
-        ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
-        <button class="btn btn-sm" style="margin-top:10px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o.proxy_data))})'>👁 Xem proxy</button>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi tải đơn hàng</div>'; }
 }
-function viewOrder(dataJson) {
-  const data = JSON.parse(dataJson || '""');
+
+function viewOrder(orderJson) {
+  const o = JSON.parse(orderJson);
+  const proxies = o.proxies || [];
+  const expire = o.expire || "";
+  const raw = o.raw || "";
+
+  const proxiesHtml = proxies.length
+    ? proxies.map(p => `
+        <div class="proxy-item">
+          <span>${escapeHtml(p)}</span>
+          <button onclick='copyOne(${JSON.stringify(p)})'>📋</button>
+        </div>
+      `).join("")
+    : `<div class="code-box">${escapeHtml(raw || "(không có dữ liệu)")}</div>`;
+
   openModal(`
-    <div class="modal-title">👁 Proxy của bạn<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="code-box">${escapeHtml(data || "(không có dữ liệu)")}</div>
-    <button class="btn btn-block" onclick='navigator.clipboard.writeText(${JSON.stringify(data||"")}).then(()=>toast("Đã copy!"))'>📋 Copy</button>
+    <div class="modal-title">👁 Chi tiết đơn hàng<button class="close-x" onclick="closeModal()">✕</button></div>
+
+    <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
+    <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
+    <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+    ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
+    ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
+    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.created_at||"")}</span></div>
+
+    <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
+      <span>🔑 Proxy (${proxies.length})</span>
+      <button class="btn btn-xs" onclick="copyAll()">📋 Copy tất cả</button>
+    </div>
+
+    ${proxiesHtml}
+
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">
+      💡 Định dạng: <code>IP:PORT:USER:PASS</code>
+    </div>
   `);
+  window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
 // ========== DEPOSIT ==========
@@ -522,7 +606,7 @@ async function adminTab(tab, el) {
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
         </div>
       `).join("") || '<div class="empty">Chưa có đơn</div>';
-    } else { // logs
+    } else {
       const r = await api("/api/admin/logs");
       if (!r.ok) { box.innerHTML = ""; return; }
       const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin nhắn"};
