@@ -6,443 +6,247 @@
 <title>Quản lý tài khoản</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-/* ============ RESET & BASE ============ */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-
 :root {
-  --accent-1: #2481cc;
-  --accent-2: #1e6fa8;
-  --success-1: #2ecc71;
-  --success-2: #27ae60;
-  --danger-1: #ff5c5c;
-  --danger-2: #e74c3c;
-  --warn-1: #f39c12;
-  --warn-2: #e67e22;
-  --radius: 14px;
-  --radius-sm: 10px;
+  --accent-1: #2481cc; --accent-2: #1e6fa8;
+  --success-1: #2ecc71; --success-2: #27ae60;
+  --danger-1: #ff5c5c; --danger-2: #e74c3c;
+  --warn-1: #f39c12; --warn-2: #e67e22;
+  --radius: 14px; --radius-sm: 10px;
   --shadow-sm: 0 2px 6px rgba(0,0,0,.06);
   --shadow: 0 4px 14px rgba(0,0,0,.08);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
 }
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--tg-theme-bg-color, #f5f6f8);
   color: var(--tg-theme-text-color, #1a1a1a);
   padding: 0 0 calc(30px + env(safe-area-inset-bottom)) 0;
-  min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100vh; overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-
-/* ============ HEADER ============ */
 .header {
   background: linear-gradient(135deg, #2481cc 0%, #1e6fa8 50%, #155d8f 100%);
   color: #fff;
   padding: calc(20px + env(safe-area-inset-top)) 18px 22px;
   border-radius: 0 0 24px 24px;
   box-shadow: 0 4px 20px rgba(36,129,204,.25);
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 16px;
+  position: relative; overflow: hidden; margin-bottom: 16px;
 }
 .header::before {
-  content: "";
-  position: absolute;
-  top: -50%; right: -20%;
+  content: ""; position: absolute; top: -50%; right: -20%;
   width: 200px; height: 200px;
   background: radial-gradient(circle, rgba(255,255,255,.15), transparent 70%);
   border-radius: 50%;
 }
-.header::after {
-  content: "";
-  position: absolute;
-  bottom: -40%; left: -10%;
-  width: 180px; height: 180px;
-  background: radial-gradient(circle, rgba(255,255,255,.1), transparent 70%);
-  border-radius: 50%;
-}
-.header .title {
-  font-size: 22px; font-weight: 700;
-  letter-spacing: -0.3px;
-  position: relative; z-index: 1;
-  display: flex; align-items: center; gap: 8px;
-}
-.header .subtitle {
-  font-size: 13px; opacity: .85;
-  margin-top: 4px;
-  position: relative; z-index: 1;
-}
+.header .title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; position: relative; z-index: 1; }
+.header .subtitle { font-size: 13px; opacity: .85; margin-top: 4px; position: relative; z-index: 1; }
 
-/* ============ TABS ============ */
-.tabs {
-  display: flex; gap: 6px; margin: 0 14px 18px;
-  overflow-x: auto; padding-bottom: 4px;
-  scrollbar-width: none;
-}
+.tabs { display: flex; gap: 6px; margin: 0 14px 18px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tabs button {
-  flex: 1 0 auto;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 999px;
+  flex: 1 0 auto; padding: 10px 14px; border: none; border-radius: 999px;
   background: var(--tg-theme-secondary-bg-color, #fff);
   color: var(--tg-theme-text-color, #555);
-  font-weight: 600;
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all .2s ease;
-  box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; gap: 5px;
-  justify-content: center;
+  font-weight: 600; font-size: 13px; white-space: nowrap; cursor: pointer;
+  transition: all .2s ease; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 5px; justify-content: center;
 }
 .tabs button.active {
   background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(36,129,204,.35);
+  color: #fff; box-shadow: 0 4px 12px rgba(36,129,204,.35);
   transform: translateY(-1px);
 }
 .tabs button:active { transform: scale(.97); }
 
-/* ============ VIEW ============ */
 .view { display: none; padding: 0 14px; animation: fadeIn .25s ease; }
 .view.active { display: block; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* ============ CARDS ============ */
 .card {
   background: var(--tg-theme-bg-color, #fff);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(0,0,0,.03);
-  transition: transform .15s ease, box-shadow .15s ease;
-  position: relative;
-  overflow: hidden;
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px;
+  box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,.03);
+  transition: transform .15s ease; position: relative; overflow: hidden;
 }
-.card:active { transform: scale(.985); }
 .card::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
   background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
 }
-.card.profit::before   { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
-.card.loss::before     { background: linear-gradient(180deg, var(--danger-1), var(--danger-2)); }
-.card.promo::before    { background: linear-gradient(180deg, var(--warn-1), var(--warn-2)); }
+.card.profit::before { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
+.card.loss::before   { background: linear-gradient(180deg, var(--danger-1), var(--danger-2)); }
+.card.promo::before  { background: linear-gradient(180deg, var(--warn-1), var(--warn-2)); }
 
-.card .name {
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 6px;
-  display: flex; align-items: center; gap: 6px;
-  color: var(--tg-theme-text-color, #1a1a1a);
-}
-.card .meta {
-  font-size: 13px;
-  opacity: .85;
-  line-height: 1.7;
-  display: flex; align-items: center; gap: 6px;
-}
-.card .actions {
-  margin-top: 12px;
-  display: flex; gap: 8px; justify-content: flex-end;
-}
+.card .name { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.card .meta { font-size: 13px; opacity: .85; line-height: 1.7; display: flex; align-items: center; gap: 6px; }
+.card .actions { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; }
 .card .actions button {
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .15s ease;
+  padding: 7px 14px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
   background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(231,76,60,.25);
+  color: #fff; box-shadow: 0 2px 8px rgba(231,76,60,.25);
 }
 .card .actions button:active { transform: scale(.95); }
 
-/* ============ FORM ============ */
-form label {
-  display: block;
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #333);
-  opacity: .9;
-}
+form label { display: block; margin-bottom: 14px; font-size: 13px; font-weight: 600; opacity: .9; }
 form input, form select {
-  width: 100%;
-  padding: 13px 14px;
-  margin-top: 6px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid rgba(0,0,0,.08);
-  font-size: 15px;
-  font-weight: 500;
+  width: 100%; padding: 13px 14px; margin-top: 6px;
+  border-radius: var(--radius-sm); border: 1.5px solid rgba(0,0,0,.08);
+  font-size: 15px; font-weight: 500;
   background: var(--tg-theme-bg-color, #fff);
   color: var(--tg-theme-text-color, #000);
-  transition: all .2s ease;
-  outline: none;
-  font-family: inherit;
+  transition: all .2s ease; outline: none; font-family: inherit;
 }
 form input:focus, form select:focus {
-  border-color: var(--accent-1);
-  box-shadow: 0 0 0 4px rgba(36,129,204,.12);
+  border-color: var(--accent-1); box-shadow: 0 0 0 4px rgba(36,129,204,.12);
 }
 form label.row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--tg-theme-secondary-bg-color, #f8f9fb);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--tg-theme-secondary-bg-color, #f8f9fb);
+  border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 14px;
 }
 form label.row input[type="checkbox"] {
-  width: 20px; height: 20px;
-  margin: 0;
-  accent-color: var(--accent-1);
-  cursor: pointer;
+  width: 20px; height: 20px; margin: 0; accent-color: var(--accent-1); cursor: pointer;
 }
 
-/* ============ BUTTONS ============ */
-button.primary, button.danger, button.ghost {
-  width: 100%;
-  padding: 14px;
-  border: none;
+.promo-field {
+  background: linear-gradient(135deg, rgba(243,156,18,.08), rgba(230,126,34,.06));
+  border: 1.5px dashed rgba(243,156,18,.4);
   border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-weight: 700;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: all .2s ease;
-  font-family: inherit;
-  letter-spacing: .2px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  animation: slideDown .25s ease;
 }
-button.primary {
-  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(36,129,204,.3);
+.promo-field label { margin-bottom: 0; color: var(--warn-2); font-weight: 700; }
+.promo-field input { margin-top: 8px; background: #fff; border-color: rgba(243,156,18,.3); }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-button.danger {
-  background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(231,76,60,.3);
+
+button.primary, button.danger, button.ghost {
+  width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 700; margin-top: 10px; cursor: pointer;
+  transition: all .2s ease; font-family: inherit; letter-spacing: .2px;
 }
-button.ghost {
-  background: var(--tg-theme-secondary-bg-color, #f0f2f5);
-  color: var(--tg-theme-text-color, #333);
-}
-button.primary:active, button.danger:active, button.ghost:active {
-  transform: scale(.97);
-  box-shadow: 0 2px 6px rgba(0,0,0,.15);
-}
+button.primary { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: #fff; box-shadow: 0 4px 14px rgba(36,129,204,.3); }
+button.danger  { background: linear-gradient(135deg, var(--danger-1), var(--danger-2)); color: #fff; box-shadow: 0 4px 14px rgba(231,76,60,.3); }
+button.ghost   { background: var(--tg-theme-secondary-bg-color, #f0f2f5); color: var(--tg-theme-text-color, #333); }
+button.primary:active, button.danger:active, button.ghost:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 
-/* ============ PROFIT BOX ============ */
 .profit-box {
   background: linear-gradient(135deg, var(--success-1), var(--success-2));
-  color: #fff;
-  padding: 18px;
-  border-radius: var(--radius);
-  margin: 14px 0;
-  text-align: center;
+  color: #fff; padding: 18px; border-radius: var(--radius);
+  margin: 14px 0; text-align: center;
   box-shadow: 0 6px 20px rgba(46,204,113,.3);
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
   animation: pulseIn .4s ease;
 }
 @keyframes pulseIn {
-  0%   { transform: scale(.95); opacity: 0; }
-  100% { transform: scale(1);   opacity: 1; }
+  0% { transform: scale(.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
-.profit-box.loss {
-  background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
-  box-shadow: 0 6px 20px rgba(231,76,60,.3);
-}
+.profit-box.loss { background: linear-gradient(135deg, var(--danger-1), var(--danger-2)); box-shadow: 0 6px 20px rgba(231,76,60,.3); }
 .profit-box::before {
-  content: "";
-  position: absolute;
-  top: -60%; right: -20%;
+  content: ""; position: absolute; top: -60%; right: -20%;
   width: 180px; height: 180px;
   background: radial-gradient(circle, rgba(255,255,255,.15), transparent 70%);
   border-radius: 50%;
 }
-.profit-box .label {
-  font-size: 12px;
-  opacity: .9;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 600;
-  position: relative; z-index: 1;
-}
-.profit-box .value {
-  font-size: 28px;
-  font-weight: 800;
-  margin: 6px 0;
-  letter-spacing: -0.5px;
-  position: relative; z-index: 1;
-}
+.profit-box .label { font-size: 12px; opacity: .9; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; position: relative; z-index: 1; }
+.profit-box .value { font-size: 28px; font-weight: 800; margin: 6px 0; letter-spacing: -0.5px; position: relative; z-index: 1; }
 .profit-box .percent {
-  font-size: 16px;
-  font-weight: 700;
-  opacity: .95;
-  position: relative; z-index: 1;
-  display: inline-block;
-  background: rgba(255,255,255,.2);
-  padding: 3px 12px;
-  border-radius: 999px;
+  font-size: 16px; font-weight: 700; opacity: .95;
+  position: relative; z-index: 1; display: inline-block;
+  background: rgba(255,255,255,.2); padding: 3px 12px; border-radius: 999px;
 }
 .profit-box .stat-row {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,.25);
+  display: flex; justify-content: space-around; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid rgba(255,255,255,.25);
   position: relative; z-index: 1;
 }
-.profit-box .stat-row > div { font-size: 13px; }
+.profit-box .stat-row > div { font-size: 12px; text-align: center; }
 .profit-box .stat-row b { display: block; font-size: 14px; margin-top: 2px; }
 
-/* ============ ACCOUNT ROW ============ */
 .acc-row {
-  padding: 12px 0;
-  border-bottom: 1px dashed rgba(0,0,0,.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  padding: 12px 0; border-bottom: 1px dashed rgba(0,0,0,.1);
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
 }
 .acc-row:last-child { border-bottom: none; }
-.acc-row .lbl {
-  font-weight: 600;
-  font-size: 14px;
-  display: flex; align-items: center; gap: 6px;
-}
-.acc-row .val {
-  text-align: right;
-  font-size: 13px;
-  line-height: 1.5;
-}
+.acc-row .lbl { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.acc-row .val { text-align: right; font-size: 13px; line-height: 1.5; }
 .acc-row .val .pos { color: var(--success-2); font-weight: 700; }
 .acc-row .val .neg { color: var(--danger-2); font-weight: 700; }
-.acc-row .val .sub { font-size: 12px; opacity: .7; display: block; }
+.acc-row .val .km  { color: var(--warn-2); font-weight: 700; }
+.acc-row .val .sub { font-size: 12px; opacity: .7; display: block; margin-top: 2px; }
 
-/* ============ LOADING & EMPTY ============ */
-.loading {
-  text-align: center;
-  padding: 40px 20px;
-  opacity: .7;
-  font-size: 14px;
-}
+.loading { text-align: center; padding: 40px 20px; opacity: .7; font-size: 14px; }
 .spinner {
   width: 36px; height: 36px;
-  border: 3px solid rgba(36,129,204,.15);
-  border-top-color: var(--accent-1);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-  margin: 0 auto 12px;
+  border: 3px solid rgba(36,129,204,.15); border-top-color: var(--accent-1);
+  border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.empty {
-  text-align: center;
-  padding: 50px 20px;
-  opacity: .65;
-}
+.empty { text-align: center; padding: 50px 20px; opacity: .65; }
 .empty .icon { font-size: 52px; display: block; margin-bottom: 12px; opacity: .6; }
 .empty .title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
 .empty .hint { font-size: 13px; opacity: .7; }
 
-/* ============ SECTION TITLE ============ */
 .section-title {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .8px;
-  opacity: .55;
-  margin: 20px 0 10px;
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; opacity: .55; margin: 20px 0 10px;
   display: flex; align-items: center; gap: 6px;
 }
 
-/* ============ TOAST ============ */
 #toast {
-  position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: #2c3e50;
-  color: #fff;
-  padding: 12px 22px;
-  border-radius: 999px;
-  opacity: 0;
+  position: fixed; bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: #2c3e50; color: #fff; padding: 12px 22px;
+  border-radius: 999px; opacity: 0;
   transition: all .3s cubic-bezier(.4,0,.2,1);
-  pointer-events: none;
-  z-index: 1000;
-  font-size: 14px;
-  font-weight: 600;
-  max-width: 90%;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  pointer-events: none; z-index: 1000; font-size: 14px; font-weight: 600;
+  max-width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,.25);
   display: flex; align-items: center; gap: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #toast.success { background: linear-gradient(135deg, var(--success-1), var(--success-2)); }
 #toast.error   { background: linear-gradient(135deg, var(--danger-1), var(--danger-2)); }
 #toast.info    { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
 
-/* ============ SESSION INFO CARD ============ */
 .session-active-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
   background: linear-gradient(135deg, var(--success-1), var(--success-2));
-  color: #fff;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  color: #fff; padding: 4px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 700;
   box-shadow: 0 2px 8px rgba(46,204,113,.35);
   animation: pulse 2s ease infinite;
 }
 @keyframes pulse {
   0%, 100% { box-shadow: 0 2px 8px rgba(46,204,113,.35); }
-  50%      { box-shadow: 0 2px 16px rgba(46,204,113,.55); }
+  50% { box-shadow: 0 2px 16px rgba(46,204,113,.55); }
 }
 .session-active-badge::before {
-  content: "";
-  width: 8px; height: 8px;
-  background: #fff;
-  border-radius: 50%;
-  animation: blink 1.5s ease infinite;
+  content: ""; width: 8px; height: 8px;
+  background: #fff; border-radius: 50%; animation: blink 1.5s ease infinite;
 }
 @keyframes blink {
   0%, 100% { opacity: 1; }
-  50%      { opacity: .3; }
+  50% { opacity: .3; }
 }
 </style>
 </head>
 <body>
 
-<!-- ==================== HEADER ==================== -->
 <div class="header">
   <div class="title">💼 Quản lý tài khoản</div>
   <div class="subtitle">Theo dõi nạp/rút & tính lợi nhuận</div>
 </div>
 
-<!-- ==================== TABS ==================== -->
 <nav class="tabs">
   <button data-view="list" class="active">📋 Danh sách</button>
   <button data-view="add">➕ Thêm</button>
@@ -450,14 +254,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <button data-view="history">📜 Lịch sử</button>
 </nav>
 
-<!-- ==================== VIEW: DANH SÁCH ==================== -->
+<!-- ============ DANH SÁCH ============ -->
 <section id="view-list" class="view active">
-  <div id="accounts">
-    <div class="loading"><div class="spinner"></div>Đang tải...</div>
-  </div>
+  <div id="accounts"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </section>
 
-<!-- ==================== VIEW: THÊM ==================== -->
+<!-- ============ THÊM ============ -->
 <section id="view-add" class="view">
   <div class="section-title">➕ Thêm tài khoản mới</div>
   <form id="form-add">
@@ -472,9 +274,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     </label>
     <label class="row">
       <input type="checkbox" name="promotion" id="chk-promo" />
-      <span>🎁 Có khuyến mãi</span>
+      <span>🎁 Tài khoản có khuyến mãi</span>
     </label>
-    <label id="promo-amount-wrap" style="display:none;">Số tiền khuyến mãi
+    <label id="promo-amount-wrap" style="display:none;">Số tiền khuyến mãi mặc định
       <input type="number" name="promotion_amount" value="0" min="0" step="1000" />
     </label>
     <button type="submit" class="primary">💾 Lưu tài khoản</button>
@@ -482,7 +284,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   </form>
 </section>
 
-<!-- ==================== VIEW: PHIÊN ==================== -->
+<!-- ============ PHIÊN ============ -->
 <section id="view-session" class="view">
   <div id="session-info" class="card">
     <div class="meta">Chưa có phiên nào đang mở.</div>
@@ -491,7 +293,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <div id="session-actions">
     <button id="btn-start" class="primary">▶️ Bắt đầu phiên mới</button>
   </div>
-
   <div id="btn-end-wrap" style="display:none;">
     <button id="btn-end" class="danger">⏹ Kết thúc phiên</button>
   </div>
@@ -511,6 +312,14 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       <label>Số tiền
         <input type="number" name="amount" required min="0" step="1000" placeholder="1000000" inputmode="numeric" />
       </label>
+
+      <div class="promo-field" id="promo-tx-wrap">
+        <label>🎁 Số tiền khuyến mãi được tặng
+          <input type="number" name="promotion_amount" value="0" min="0" step="1000"
+                 placeholder="Để trống hoặc 0 nếu không có" inputmode="numeric" />
+        </label>
+      </div>
+
       <button type="submit" class="primary">➕ Ghi nhận giao dịch</button>
     </form>
   </div>
@@ -519,11 +328,9 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <div id="session-detail"></div>
 </section>
 
-<!-- ==================== VIEW: LỊCH SỬ ==================== -->
+<!-- ============ LỊCH SỬ ============ -->
 <section id="view-history" class="view">
-  <div id="history">
-    <div class="loading"><div class="spinner"></div>Đang tải...</div>
-  </div>
+  <div id="history"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </section>
 
 <div id="toast"></div>
@@ -543,7 +350,6 @@ try { tg.setHeaderColor('secondary_bg_color'); } catch (e) {}
 
 const initData = tg.initData;
 
-/* ============ API WRAPPER ============ */
 async function api(path, opts = {}) {
   const res = await fetch(API_BASE + path, {
     ...opts,
@@ -561,7 +367,6 @@ async function api(path, opts = {}) {
   return res.status === 204 ? null : res.json();
 }
 
-/* ============ TOAST ============ */
 let toastTimer;
 function toast(msg, type = "info") {
   const el = document.getElementById("toast");
@@ -572,16 +377,13 @@ function toast(msg, type = "info") {
   toastTimer = setTimeout(() => { el.className = ""; }, 2500);
 }
 
-/* ============ HELPERS ============ */
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
-  );
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function fmt(n) { return Number(n || 0).toLocaleString("vi-VN"); }
 function fmtPct(n) { return (Number(n || 0)).toFixed(2) + "%"; }
 
-/* ============ TAB NAV ============ */
 document.querySelectorAll(".tabs button").forEach(btn => {
   btn.onclick = () => switchView(btn.dataset.view);
 });
@@ -602,12 +404,10 @@ async function loadAccounts() {
   try {
     const accs = await api("/api/accounts");
     if (!accs.length) {
-      box.innerHTML = `
-        <div class="empty">
-          <span class="icon">📭</span>
-          <div class="title">Chưa có tài khoản nào</div>
-          <div class="hint">Vào tab ➕ Thêm để tạo tài khoản đầu tiên</div>
-        </div>`;
+      box.innerHTML = `<div class="empty">
+        <span class="icon">📭</span>
+        <div class="title">Chưa có tài khoản nào</div>
+        <div class="hint">Vào tab ➕ Thêm để tạo tài khoản đầu tiên</div></div>`;
       return;
     }
     box.innerHTML = accs.map(a => `
@@ -622,15 +422,12 @@ async function loadAccounts() {
         </div>
       </div>`).join("");
   } catch (e) {
-    box.innerHTML = `
-      <div class="empty">
-        <span class="icon">⚠️</span>
-        <div class="title">Lỗi tải dữ liệu</div>
-        <div class="hint">${esc(e.message)}</div>
-      </div>`;
+    box.innerHTML = `<div class="empty">
+      <span class="icon">⚠️</span>
+      <div class="title">Lỗi tải dữ liệu</div>
+      <div class="hint">${esc(e.message)}</div></div>`;
   }
 }
-
 window.delAccount = async (id) => {
   if (!confirm("Xóa tài khoản này?")) return;
   try {
@@ -671,8 +468,6 @@ document.getElementById("form-add").onsubmit = async (e) => {
     toast("Đã lưu tài khoản ✅", "success");
     e.target.reset();
     promoWrap.style.display = "none";
-
-    // ⚡ KHÔNG đóng Mini App — chuyển sang tab Danh sách để xem kết quả
     setTimeout(() => switchView("list"), 600);
   } catch (err) {
     toast("Lỗi: " + err.message, "error");
@@ -684,7 +479,6 @@ document.getElementById("form-add").onsubmit = async (e) => {
 
 /* ============ PHIÊN ============ */
 async function loadSessionView() {
-  // Load accounts vào select
   try {
     const accs = await api("/api/accounts");
     const sel = document.getElementById("tx-account");
@@ -703,9 +497,7 @@ async function loadSessionView() {
 
     if (st.active) {
       info.innerHTML = `
-        <div class="name">
-          <span class="session-active-badge">ĐANG MỞ • Phiên #${st.id}</span>
-        </div>
+        <div class="name"><span class="session-active-badge">ĐANG MỞ • Phiên #${st.id}</span></div>
         <div class="meta" style="margin-top:8px;">🕐 Bắt đầu: <b>${new Date(st.start_time).toLocaleString("vi-VN")}</b></div>
       `;
       entry.style.display = "block";
@@ -713,21 +505,23 @@ async function loadSessionView() {
       btnEndWrap.style.display = "block";
 
       if (!st.accounts || !st.accounts.length) {
-        detail.innerHTML = `
-          <div class="empty">
-            <span class="icon">📝</span>
-            <div class="title">Chưa có giao dịch nào</div>
-            <div class="hint">Ghi nạp/rút ở form phía trên</div>
-          </div>`;
+        detail.innerHTML = `<div class="empty">
+          <span class="icon">📝</span>
+          <div class="title">Chưa có giao dịch nào</div>
+          <div class="hint">Ghi nạp/rút ở form phía trên</div></div>`;
       } else {
         const rows = st.accounts.map(a => {
           const p = a.withdraw - a.deposit;
           const cls = p >= 0 ? "pos" : "neg";
+          const promoLine = a.promotion > 0
+            ? `<span class="sub">🎁 Khuyến mãi được tặng: <b class="km">+${fmt(a.promotion)}</b></span>`
+            : "";
           return `
             <div class="acc-row">
               <div class="lbl">👤 ${esc(a.account_name)}</div>
               <div class="val">
                 💵 ${fmt(a.deposit)} <span style="opacity:.5;">→</span> 💸 ${fmt(a.withdraw)}
+                ${promoLine}
                 <span class="sub">Lợi nhuận: <b class="${cls}">${fmt(p)}</b></span>
               </div>
             </div>`;
@@ -736,11 +530,11 @@ async function loadSessionView() {
         const totalProfit = st.total_withdraw - st.total_deposit;
         const totalPct = st.total_deposit > 0
           ? (totalProfit / st.total_deposit) * 100 : 0;
+        const promoStat = st.total_promotion > 0
+          ? `<div>🎁 Khuyến mãi<b>${fmt(st.total_promotion)}</b></div>` : "";
 
         detail.innerHTML = `
-          <div class="card profit">
-            ${rows}
-          </div>
+          <div class="card profit">${rows}</div>
           <div class="profit-box ${totalProfit < 0 ? "loss" : ""}">
             <div class="label">TỔNG LỢI NHUẬN TẠM TÍNH</div>
             <div class="value">${totalProfit >= 0 ? "+" : ""}${fmt(totalProfit)}</div>
@@ -748,6 +542,7 @@ async function loadSessionView() {
             <div class="stat-row">
               <div>💵 Tổng nạp<b>${fmt(st.total_deposit)}</b></div>
               <div>💸 Tổng rút<b>${fmt(st.total_withdraw)}</b></div>
+              ${promoStat}
             </div>
           </div>
         `;
@@ -757,18 +552,24 @@ async function loadSessionView() {
       entry.style.display = "none";
       btnStart.style.display = "block";
       btnEndWrap.style.display = "none";
-      detail.innerHTML = `
-        <div class="empty">
-          <span class="icon">▶️</span>
-          <div class="title">Bắt đầu phiên để ghi giao dịch</div>
-          <div class="hint">Mỗi phiên có thể ghi nhiều tài khoản</div>
-        </div>`;
+      detail.innerHTML = `<div class="empty">
+        <span class="icon">▶️</span>
+        <div class="title">Bắt đầu phiên để ghi giao dịch</div>
+        <div class="hint">Mỗi phiên có thể ghi nhiều tài khoản</div></div>`;
     }
   } catch (e) {
     document.getElementById("session-info").innerHTML =
       `<div class="meta">⚠️ Lỗi: ${esc(e.message)}</div>`;
   }
 }
+
+document.getElementById("tx-type").onchange = (e) => {
+  const wrap = document.getElementById("promo-tx-wrap");
+  wrap.style.display = e.target.value === "deposit" ? "block" : "none";
+  if (e.target.value === "withdraw") {
+    e.target.form.elements["promotion_amount"].value = 0;
+  }
+};
 
 document.getElementById("btn-start").onclick = async () => {
   try {
@@ -791,19 +592,22 @@ document.getElementById("form-tx").onsubmit = async (e) => {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const fd = new FormData(e.target);
+  const type = fd.get("type");
   const body = {
     account_id: parseInt(fd.get("account_id")),
-    type: fd.get("type"),
+    type: type,
     amount: parseFloat(fd.get("amount")),
-    promotion_amount: 0,
+    promotion_amount: type === "deposit" ? parseFloat(fd.get("promotion_amount") || 0) : 0,
   };
   if (!body.account_id) { toast("Chưa có tài khoản", "error"); return; }
   submitBtn.disabled = true;
   submitBtn.textContent = "⏳ Đang ghi...";
   try {
     await api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
-    toast("Đã ghi nhận giao dịch ✅", "success");
+    const km = body.promotion_amount > 0 ? ` (+${fmt(body.promotion_amount)} KM)` : "";
+    toast(`Đã ghi nhận ${type === "deposit" ? "nạp" : "rút"}${km} ✅`, "success");
     e.target.reset();
+    document.getElementById("promo-tx-wrap").style.display = "block";
     loadSessionView();
   } catch (err) {
     toast(err.message, "error");
@@ -820,21 +624,22 @@ async function loadHistory() {
   try {
     const rows = await api("/api/sessions/history");
     if (!rows.length) {
-      box.innerHTML = `
-        <div class="empty">
-          <span class="icon">📜</span>
-          <div class="title">Chưa có phiên nào hoàn thành</div>
-          <div class="hint">Kết thúc phiên đầu tiên để xem lịch sử</div>
-        </div>`;
+      box.innerHTML = `<div class="empty">
+        <span class="icon">📜</span>
+        <div class="title">Chưa có phiên nào hoàn thành</div>
+        <div class="hint">Kết thúc phiên đầu tiên để xem lịch sử</div></div>`;
       return;
     }
     box.innerHTML = rows.map(r => {
       const isProfit = r.profit >= 0;
+      const promoLine = (r.promotion || 0) > 0
+        ? `<div class="meta">🎁 Khuyến mãi: <b>${fmt(r.promotion)}</b></div>` : "";
       return `
         <div class="card ${isProfit ? "profit" : "loss"}">
           <div class="name">📅 Phiên #${r.id}</div>
           <div class="meta">🕐 ${new Date(r.start).toLocaleString("vi-VN")}</div>
           <div class="meta">💵 Nạp: <b>${fmt(r.deposit)}</b> • 💸 Rút: <b>${fmt(r.withdraw)}</b></div>
+          ${promoLine}
         </div>
         <div class="profit-box ${isProfit ? "" : "loss"}" style="margin-top:-6px;">
           <div class="label">LỢI NHUẬN</div>
@@ -845,16 +650,13 @@ async function loadHistory() {
       `;
     }).join("");
   } catch (e) {
-    box.innerHTML = `
-      <div class="empty">
-        <span class="icon">⚠️</span>
-        <div class="title">Lỗi tải lịch sử</div>
-        <div class="hint">${esc(e.message)}</div>
-      </div>`;
+    box.innerHTML = `<div class="empty">
+      <span class="icon">⚠️</span>
+      <div class="title">Lỗi tải lịch sử</div>
+      <div class="hint">${esc(e.message)}</div></div>`;
   }
 }
 
-/* ============ INIT ============ */
 (function () {
   const view = new URLSearchParams(location.search).get("view") || "list";
   switchView(view);
