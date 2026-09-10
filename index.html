@@ -319,6 +319,7 @@ function renderProducts() {
         <div class="stock-tag">${p.stock} có sẵn</div>
       </div>
       ${p.category_name ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">📂 ${escapeHtml(shortCat(p.category_name))}</div>` : ""}
+      ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
       ${p.desc ? `<div class="product-desc">${escapeHtml(p.desc.split("\\n")[0].substring(0,120))}${p.desc.length>120?"…":""}</div>` : ""}
       <div class="product-foot">
         <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
@@ -332,32 +333,35 @@ function openBuy(id) {
   const p = ALL_PRODUCTS.find(x => x.id === id);
   if (!p) return;
   currentProduct = p;
+  const minBuy = p.min_buy || 1;
   openModal(`
     <div class="modal-title">${escapeHtml(p.name)}<button class="close-x" onclick="closeModal()">✕</button></div>
     ${p.category_name ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">📂 ${escapeHtml(p.category_name)}</div>` : ""}
     <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
     <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
+    ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
     ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
     <div class="qty-row">
       <button class="qty-btn" onclick="changeQty(-1)">−</button>
-      <div class="qty-val" id="buyQty">1</div>
+      <div class="qty-val" id="buyQty">${minBuy}</div>
       <button class="qty-btn" onclick="changeQty(1)">+</button>
     </div>
-    <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price)}</span></div>
+    <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
   `);
-  window._qty = 1;
+  window._qty = minBuy;
 }
 function changeQty(d) {
-  window._qty = Math.max(1, (window._qty || 1) + d);
+  const minBuy = currentProduct.min_buy || 1;
+  window._qty = Math.max(minBuy, (window._qty || minBuy) + d);
   document.getElementById("buyQty").textContent = window._qty;
   document.getElementById("buyTotal").textContent = fmt(currentProduct.price * window._qty);
 }
 
 async function doBuy() {
-  const qty = window._qty || 1;
+  const qty = window._qty || (currentProduct.min_buy || 1);
   const btn = event.target;
   btn.disabled = true; btn.textContent = "Đang xử lý...";
   try {
@@ -398,7 +402,7 @@ function showPurchased(r) {
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
     ${r.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(r.order_code)}</span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
-    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(r.created_at||"")}</span></div>
+    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(r.buy_time || r.created_at || "")}</span></div>
 
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
       <span>🔑 Danh sách Proxy (${proxies.length || "?"})</span>
@@ -422,9 +426,6 @@ function copyOne(txt) {
 function copyAll() {
   navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy toàn bộ!", "success"));
 }
-function copyData() {
-  navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy!", "success"));
-}
 
 // ========== ORDERS ==========
 async function loadOrders() {
@@ -446,7 +447,7 @@ async function loadOrders() {
             <div class="product-name">${escapeHtml(o.name)}</div>
             <div class="stock-tag">SL: ${o.amount}</div>
           </div>
-          <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.created_at)}</span></div>
+          <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
           <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
           ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(o.expire)}</span></div>` : ""}
           ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
@@ -482,7 +483,7 @@ function viewOrder(orderJson) {
     <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
     ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
-    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.created_at||"")}</span></div>
+    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.buy_time || o.created_at||"")}</span></div>
 
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
       <span>🔑 Proxy (${proxies.length})</span>
