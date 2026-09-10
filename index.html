@@ -1,23 +1,288 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>OLA PROXY SHOP</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Proxy Shop Mini App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{
-  --bg: var(--tg-theme-bg-color, #0f1419);
-  --bg2: var(--tg-theme-secondary-bg-color, #17212b);
-  --text: var(--tg-theme-text-color, #f5f5f5);
-  --hint: var(--tg-theme-hint-color, #708499);
-  --btn: var(--tg-theme-button-color, #3390ec);
-  --btn-text: var(--tg-theme-button-text-color, #ffffff);
-  --link: var(--tg-theme-link-color, #6ab3f3);
-  --danger: #ff5252;
-  --success: #4caf50;
-  --warn: #ffb020;
-  --border: rgba(255,255,255,0.08);
+  --bg:#080b12;--card:#111827;--card2:#172033;--text:#f8fafc;
+  --muted:#94a3b8;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;
+  --border:rgba(255,255,255,.08);
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at top,#15233d 0,#080b12 42%);
+color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
+.wrap{max-width:900px;margin:auto;padding:14px 14px 90px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.brand{font-size:21px;font-weight:900}
+.sub{font-size:12px;color:var(--muted)}
+.balance{background:linear-gradient(135deg,#0ea5e9,#2563eb);padding:10px 14px;border-radius:16px;font-weight:800}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.tab{border:1px solid var(--border);background:var(--card);color:var(--muted);padding:11px 5px;border-radius:13px;text-align:center;font-size:12px;font-weight:800;cursor:pointer}
+.tab.active{background:#172554;color:#fff;border-color:#2563eb}
+.section{display:none}.section.active{display:block}
+.card{background:rgba(17,24,39,.9);border:1px solid var(--border);border-radius:20px;padding:15px;margin-bottom:12px;box-shadow:0 12px 35px rgba(0,0,0,.18)}
+.hero{padding:20px;background:linear-gradient(135deg,#111827,#172554)}
+h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 6px;font-size:15px}
+.muted{color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card2);border:1px solid var(--border);padding:13px;border-radius:15px}
+.stat b{display:block;font-size:18px;margin-top:4px}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.product{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:18px}
+.price{font-size:18px;font-weight:900;color:#7dd3fc;margin:9px 0}
+button{border:0;border-radius:13px;padding:11px 14px;font-weight:900;cursor:pointer}
+.primary{background:#2563eb;color:#fff;width:100%}
+.green{background:#16a34a;color:#fff}.gray{background:#334155;color:#fff}.danger{background:#dc2626;color:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.input{width:100%;background:#0b1220;border:1px solid var(--border);color:#fff;border-radius:12px;padding:12px;outline:none;margin:8px 0}
+.purchase{padding:12px 0;border-bottom:1px solid var(--border)}
+.purchase:last-child{border-bottom:0}
+.qr{display:block;max-width:280px;width:100%;margin:12px auto;border-radius:12px;background:#fff;padding:8px}
+.badge{display:inline-block;background:#0f766e;color:#ccfbf1;padding:4px 8px;border-radius:99px;font-size:11px}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.toast{position:fixed;left:14px;right:14px;bottom:18px;background:#020617;border:1px solid var(--border);padding:13px;border-radius:14px;display:none;z-index:99}
+.loading{opacity:.65}
+@media(max-width:600px){.products,.grid{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="brand">⚡ PROXY SHOP</div>
+      <div class="sub" id="hello">Telegram Mini App</div>
+    </div>
+    <div class="balance" id="balance">0đ</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="shop">🛍 Shop</div>
+    <div class="tab" data-tab="wallet">💰 Nạp tiền</div>
+    <div class="tab" data-tab="orders">📦 Đã mua</div>
+    <div class="tab admin-only" data-tab="admin" style="display:none">⚙️ Admin</div>
+  </div>
+
+  <section id="shop" class="section active">
+    <div class="card hero">
+      <h2>Mua proxy nhanh</h2>
+      <div class="muted">Sản phẩm lấy trực tiếp từ OLAProxy. Người dùng chỉ nhìn thấy đơn của chính mình.</div>
+    </div>
+    <div id="products" class="products"></div>
+  </section>
+
+  <section id="wallet" class="section">
+    <div class="card">
+      <h2>💳 Nạp tiền</h2>
+      <div class="muted">Sau khi chuyển khoản đúng số tiền và đúng nội dung, hệ thống tự động duyệt.</div>
+      <input class="input" id="depositAmount" type="number" min="10000" step="1000" placeholder="Số tiền, ví dụ 50000">
+      <button class="primary" onclick="createDeposit()">Tạo QR thanh toán</button>
+    </div>
+    <div id="qrBox"></div>
+  </section>
+
+  <section id="orders" class="section">
+    <div class="card">
+      <h2>📦 Sản phẩm đã mua</h2>
+      <div class="muted">Chỉ hiển thị các sản phẩm được mua bằng tài khoản Telegram này.</div>
+    </div>
+    <div id="ordersList"></div>
+  </section>
+
+  <section id="admin" class="section">
+    <div class="card">
+      <h2>⚙️ Dashboard Admin</h2>
+      <div class="grid">
+        <div class="stat"><span class="muted">Doanh thu hôm nay</span><b id="dRevenue">0đ</b></div>
+        <div class="stat"><span class="muted">Lợi nhuận hôm nay</span><b id="dProfit">0đ</b></div>
+        <div class="stat"><span class="muted">Doanh thu tuần</span><b id="wRevenue">0đ</b></div>
+        <div class="stat"><span class="muted">Lợi nhuận tuần</span><b id="wProfit">0đ</b></div>
+        <div class="stat"><span class="muted">Doanh thu tháng</span><b id="mRevenue">0đ</b></div>
+        <div class="stat"><span class="muted">Lợi nhuận tháng</span><b id="mProfit">0đ</b></div>
+        <div class="stat"><span class="muted">Tổng proxy bán</span><b id="allProxies">0</b></div>
+        <div class="stat"><span class="muted">Khách đã ghé shop</span><b id="customers">0</b></div>
+        <div class="stat"><span class="muted">Tổng lượt ghé</span><b id="visits">0</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><h2>👥 Khách hàng</h2><button class="gray" onclick="loadAdmin()">↻</button></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Telegram</th><th>User</th><th>Balance</th><th>Đã nạp</th><th>Đã mua</th><th>Proxy</th></tr></thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🛒 Đơn gần đây</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>ID</th><th>Telegram</th><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th><th>Lợi nhuận</th></tr></thead>
+          <tbody id="recentTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if(tg){ tg.ready(); tg.expand(); }
+
+const INIT_DATA = tg?.initData || "";
+const API_BASE = window.location.protocol.startsWith("http")
+  ? window.location.origin
+  : "https://priorities-newsletters-regardless-resistance.trycloudflare.com";
+
+let ME = null;
+
+function money(n){ return new Intl.NumberFormat("vi-VN").format(Number(n||0))+"đ"; }
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function toast(s){
+  const x=document.getElementById("toast");x.textContent=s;x.style.display="block";
+  setTimeout(()=>x.style.display="none",3000);
+}
+function headers(){
+  return {"Content-Type":"application/json","X-Telegram-Init-Data":INIT_DATA};
+}
+async function api(path, options={}){
+  const r=await fetch(API_BASE+path,{...options,headers:{...headers(),...(options.headers||{})}});
+  let d={};try{d=await r.json()}catch{}
+  if(!r.ok) throw new Error(d.detail||d.message||"API error");
+  return d;
+}
+
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById(t.dataset.tab).classList.add("active");
+    if(t.dataset.tab==="admin") loadAdmin();
+  };
+});
+
+async function loadMe(){
+  ME=await api("/api/me");
+  document.getElementById("balance").textContent=money(ME.user.balance);
+  document.getElementById("hello").textContent=
+    "Xin chào "+(ME.user.first_name||ME.user.username||"bạn");
+  document.querySelectorAll(".admin-only").forEach(x=>x.style.display=ME.is_admin?"block":"none");
+  renderOrders(ME.purchases);
+}
+
+function renderOrders(items){
+  const box=document.getElementById("ordersList");
+  if(!items.length){box.innerHTML='<div class="card muted">Bạn chưa mua sản phẩm nào.</div>';return;}
+  box.innerHTML=items.map(p=>`
+    <div class="card purchase">
+      <div class="row"><b>${esc(p.product_name)}</b><span class="badge">#${p.id}</span></div>
+      <div class="muted">Mã SP: ${esc(p.product_id)} · SL: ${p.quantity}</div>
+      <div style="margin-top:7px">Thanh toán: <b>${money(p.total_price)}</b></div>
+      <div class="muted">${esc(p.created_at)}</div>
+      <details style="margin-top:8px"><summary>Thông tin nhà cung cấp</summary>
+        <pre style="white-space:pre-wrap;font-size:11px">${esc(p.supplier_data)}</pre>
+      </details>
+    </div>`).join("");
+}
+
+async function loadProducts(){
+  const box=document.getElementById("products");
+  box.innerHTML='<div class="card loading">Đang tải sản phẩm...</div>';
+  try{
+    const d=await api("/api/products");
+    if(!d.products.length){box.innerHTML='<div class="card">Không có sản phẩm.</div>';return;}
+    box.innerHTML=d.products.map(p=>`
+      <div class="product">
+        <h3>${esc(p.name)}</h3>
+        <div class="muted">ID: ${esc(p.id)}</div>
+        <div class="price">${money(p.sell_price)}</div>
+        <div class="muted">Giá nhập: ${money(p.price)}${p.stock!=null?" · Kho: "+esc(p.stock):""}</div>
+        <input class="input" id="qty-${esc(p.id)}" type="number" min="1" value="1">
+        <button class="primary" onclick="buyProduct('${encodeURIComponent(p.id)}')">Mua ngay</button>
+      </div>`).join("");
+  }catch(e){box.innerHTML=`<div class="card">❌ ${esc(e.message)}</div>`;}
+}
+
+async function buyProduct(encoded){
+  const id=decodeURIComponent(encoded);
+  const q=document.getElementById("qty-"+CSS.escape(id));
+  const amount=Math.max(1,Number(q?.value||1));
+  if(!confirm("Xác nhận mua "+amount+" sản phẩm?")) return;
+  try{
+    const d=await api("/api/buy",{method:"POST",body:JSON.stringify({product_id:id,amount})});
+    toast("Mua thành công!");
+    await loadMe();
+    renderOrders(ME.purchases);
+    if(tg) tg.HapticFeedback?.notificationOccurred("success");
+  }catch(e){toast("❌ "+e.message);}
+}
+
+async function createDeposit(){
+  const amount=Number(document.getElementById("depositAmount").value);
+  if(!amount) return toast("Nhập số tiền cần nạp");
+  try{
+    const d=await api("/api/deposit",{method:"POST",body:JSON.stringify({amount})});
+    const qr=d.qr_data_url
+      ? `<img class="qr" src="${d.qr_data_url}" alt="VietQR">`
+      : "";
+    document.getElementById("qrBox").innerHTML=`
+      <div class="card">
+        <h2>🏦 Chuyển khoản ACB</h2>${qr}
+        <div class="stat"><span class="muted">Ngân hàng</span><b>${esc(d.bank)}</b></div>
+        <div class="stat"><span class="muted">Số tài khoản</span><b>${esc(d.account_no)}</b></div>
+        <div class="stat"><span class="muted">Chủ tài khoản</span><b>${esc(d.account_name)}</b></div>
+        <div class="stat"><span class="muted">Số tiền</span><b>${money(d.amount)}</b></div>
+        <div class="stat"><span class="muted">Nội dung bắt buộc</span><b>${esc(d.code)}</b></div>
+        <p class="muted">Không sửa nội dung chuyển khoản. Hệ thống sẽ tự kiểm tra giao dịch ACB.</p>
+      </div>`;
+    toast("Đã tạo QR. Hãy chuyển khoản đúng nội dung.");
+  }catch(e){toast("❌ "+e.message);}
+}
+
+async function loadAdmin(){
+  if(!ME?.is_admin)return;
+  try{
+    const d=await api("/api/admin/stats");
+    document.getElementById("dRevenue").textContent=money(d.day.revenue);
+    document.getElementById("dProfit").textContent=money(d.day.profit);
+    document.getElementById("wRevenue").textContent=money(d.week.revenue);
+    document.getElementById("wProfit").textContent=money(d.week.profit);
+    document.getElementById("mRevenue").textContent=money(d.month.revenue);
+    document.getElementById("mProfit").textContent=money(d.month.profit);
+    document.getElementById("allProxies").textContent=d.all.proxies;
+    document.getElementById("customers").textContent=d.customers;
+    document.getElementById("visits").textContent=d.visits;
+
+    document.getElementById("usersTable").innerHTML=d.users.map(u=>`
+      <tr><td>${u.telegram_id}</td><td>${esc(u.username||u.first_name||"")}</td>
+      <td>${money(u.balance)}</td><td>${money(u.total_deposited)}</td>
+      <td>${money(u.spent)}</td><td>${u.proxies}</td></tr>`).join("");
+
+    document.getElementById("recentTable").innerHTML=d.recent_purchases.map(p=>`
+      <tr><td>#${p.id}</td><td>${p.telegram_id}</td><td>${esc(p.product_name)}</td>
+      <td>${p.quantity}</td><td>${money(p.total_price)}</td>
+      <td>${money(p.total_price-p.total_cost)}</td></tr>`).join("");
+  }catch(e){toast("❌ "+e.message);}
+}
+
+(async function boot(){
+  if(!INIT_DATA){
+    document.body.innerHTML='<div class="wrap"><div class="card"><h2>⚠️ Hãy mở Mini App từ Telegram</h2><div class="muted">Không thể xác thực tài khoản nếu mở trực tiếp bằng trình duyệt.</div></div></div>';
+    return;
+  }
+  try{
+    await loadMe();
+    await loadProducts();
+  }catch(e){
+    document.body.innerHTML='<div class="wrap"><div class="card"><h2>❌ Không thể kết nối</h2><div class="muted">'+esc(e.message)+'</div></div></div>';
+  }
+})();
+</script>
+</body>
+</html>
