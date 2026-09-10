@@ -158,7 +158,6 @@
   </div>
 </div>
 
-<!-- Admin sub pages -->
 <div class="page" id="page-admin-customers">
   <button class="btn btn-ghost" style="margin-bottom:10px" onclick="backToAdmin()">← Quay lại</button>
   <div class="filter-row">
@@ -253,7 +252,7 @@
 
 <script>
 // ============ CẤU HÌNH ============
-const API_BASE = 'https://baby-circus-constructed-tri.trycloudflare.com';
+const API_BASE = 'https://programmers-latitude-instructions-examination.trycloudflare.com';  // ⚠️ Đổi khi tunnel restart
 // ==================================
 
 const tg = window.Telegram?.WebApp;
@@ -262,13 +261,17 @@ if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.('#4f8cff'); }
 const INIT_DATA = tg?.initData || "";
 let STATE = { user:null, balance:0, is_admin:false, products:[], currentProduct:null, currentTab:'products' };
 
+// ===== Gửi initData qua query param → KHÔNG còn preflight OPTIONS → KHÔNG dính CORS =====
 async function api(path, opts={}) {
-  const headers = { 'X-Init-Data': INIT_DATA, ...(opts.headers||{}) };
+  const sep = path.includes('?') ? '&' : '?';
+  const url = API_BASE + path + sep + 'initData=' + encodeURIComponent(INIT_DATA);
+
+  const headers = { ...(opts.headers||{}) };
   if (opts.body && typeof opts.body === 'object') {
     headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
-  const r = await fetch(API_BASE + path, { ...opts, headers });
+  const r = await fetch(url, { ...opts, headers });
   const data = await r.json().catch(()=>({}));
   if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
   return data;
@@ -327,7 +330,7 @@ async function init(){
     refreshProducts();
   } catch (e) {
     document.getElementById('products-list').innerHTML =
-      `<div class="empty">⚠️ ${esc(e.message)}<br><br>Hãy mở Mini App từ bot Telegram.</div>`;
+      `<div class="empty">⚠️ ${esc(e.message)}<br><br>Kiểm tra API_BASE và backend đang chạy.</div>`;
   }
 }
 
@@ -378,7 +381,7 @@ function openBuy(p){
   if (p.price <= 0) return toast('Sản phẩm chưa có giá','error');
   STATE.currentProduct = p;
   document.getElementById('buy-title').innerHTML = esc(p.name) + ' <button class="close-x" onclick="closeModal(\'buy-modal\')">×</button>';
-  document.getElementById('buy-price').innerHTML = `Giá: <span class="price-badge" style="color:var(--success);font-weight:700">${fmt(p.price)}</span> / cái`;
+  document.getElementById('buy-price').innerHTML = `Giá: <span style="color:var(--success);font-weight:700">${fmt(p.price)}</span> / cái`;
   document.getElementById('buy-qty').value = 1;
   document.getElementById('buy-balance').textContent = fmt(STATE.balance);
   updateBuyTotal();
@@ -461,7 +464,7 @@ async function openOrderDetail(oid) {
 async function refreshOrderInfo(oid) {
   try {
     toast('Đang lấy...');
-    const d = await api('/api/refresh-order/'+oid, {method:'POST'});
+    await api('/api/refresh-order/'+oid, {method:'POST'});
     toast('✅ Đã cập nhật','success');
     openOrderDetail(oid);
   } catch(e){ toast(e.message,'error'); }
