@@ -96,6 +96,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <body>
 
 <script>
+  // ====== ĐỔI THÀNH URL TUNNEL CỦA BẠN ======
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
 </script>
 
@@ -126,7 +127,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <div class="page" id="page-deposit">
   <div class="section-title"><span>💳 Nạp tiền tự động</span></div>
   <div class="card">
-    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu 1,000đ). Hệ thống tạo QR tự động, duyệt ngay khi nhận tiền.</div>
+    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu <b style="color:var(--gold)">10,000đ</b>). Hệ thống tạo QR tự động, mã có hiệu lực <b style="color:var(--gold)">5 phút</b>.</div>
     <input class="input" id="depAmount" type="number" placeholder="Số tiền (VD: 50000)" inputmode="numeric">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="btn btn-outline btn-sm" onclick="setAmt(10000)">10K</button>
@@ -501,42 +502,85 @@ function viewOrder(orderJson) {
 
 // ========== DEPOSIT ==========
 function setAmt(n) { document.getElementById("depAmount").value = n; }
+
 async function createDeposit() {
   const amt = parseInt(document.getElementById("depAmount").value || "0");
-  if (amt < 1000) { toast("Tối thiểu 1,000đ", "error"); return; }
+  if (amt < 10000) { toast("Nạp tối thiểu 10,000đ", "error"); return; }
   try {
     const r = await api("/api/deposit", {amount: amt});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    const totalSec = r.expire_seconds || 300;
     openModal(`
       <div class="modal-title">💳 Quét QR để nạp<button class="close-x" onclick="closeDeposit()">✕</button></div>
+      <div style="text-align:center;margin-bottom:12px;font-size:13px;font-weight:600">
+        <span style="color:var(--muted)">⏰ Mã có hiệu lực: </span>
+        <span id="depCountdown" style="color:var(--gold);font-variant-numeric:tabular-nums">05:00</span>
+      </div>
       <div class="qr-box"><img src="${r.qr}" alt="QR"></div>
       <div class="info-row"><span>Ngân hàng</span><span>${r.bank}</span></div>
       <div class="info-row"><span>Số TK</span><span>${r.account_no}</span></div>
       <div class="info-row"><span>Chủ TK</span><span>${r.account_name}</span></div>
       <div class="info-row"><span>Số tiền</span><span>${fmt(r.amount)}</span></div>
-      <div class="info-row"><span>Nội dung</span><span style="color:var(--gold)">${r.content}</span></div>
-      <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">⏳ Đang chờ thanh toán... Hệ thống sẽ tự động duyệt</div>
+      <div class="info-row"><span>Nội dung</span><span style="color:var(--gold);font-weight:700">${r.content}</span></div>
+      <div id="depStatusMsg" style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">
+        ⏳ Đang chờ thanh toán... Hệ thống sẽ tự động duyệt
+      </div>
     `);
-    startDepositPoll(r.code);
+    startDepositPoll(r.code, totalSec);
   } catch(e) { toast("Lỗi kết nối", "error"); }
 }
-function startDepositPoll(code) {
+
+function startDepositPoll(code, totalSec) {
+  totalSec = totalSec || 300;
   if (depositPolling) clearInterval(depositPolling);
+  if (window._depCountdownTimer) clearInterval(window._depCountdownTimer);
+
+  const startTime = Date.now();
+
+  window._depCountdownTimer = setInterval(() => {
+    const el = document.getElementById("depCountdown");
+    if (!el) { clearInterval(window._depCountdownTimer); return; }
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const remaining = Math.max(0, totalSec - elapsed);
+    const m = String(Math.floor(remaining / 60)).padStart(2, "0");
+    const s = String(remaining % 60).padStart(2, "0");
+    el.textContent = `${m}:${s}`;
+    if (remaining <= 30) el.style.color = "var(--danger)";
+    if (remaining === 0) {
+      clearInterval(window._depCountdownTimer);
+      const st = document.getElementById("depStatusMsg");
+      if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực!</span><br><span style="font-size:11px">Vui lòng tạo mã nạp mới</span>';
+    }
+  }, 1000);
+
   depositPolling = setInterval(async () => {
     try {
       const r = await api("/api/deposit/check", {code});
-      if (r.ok && r.status === "paid") {
+      if (!r.ok) return;
+
+      if (r.status === "paid") {
         clearInterval(depositPolling); depositPolling = null;
+        clearInterval(window._depCountdownTimer);
         USER.balance = r.balance;
         document.getElementById("hdrBal").textContent = fmt(r.balance);
         closeModal();
         toast("✅ Nạp tiền thành công!", "success");
+      } else if (r.status === "expired") {
+        clearInterval(depositPolling); depositPolling = null;
+        clearInterval(window._depCountdownTimer);
+        const cd = document.getElementById("depCountdown");
+        if (cd) { cd.textContent = "00:00"; cd.style.color = "var(--danger)"; }
+        const st = document.getElementById("depStatusMsg");
+        if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực!</span><br><span style="font-size:11px">Giao dịch sau 5 phút sẽ KHÔNG được tự động duyệt. Vui lòng tạo mã mới.</span>';
+        toast("⏰ Mã đã hết hiệu lực", "error");
       }
     } catch(e) {}
-  }, 4000);
+  }, 3000);
 }
+
 function closeDeposit() {
   if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
+  if (window._depCountdownTimer) { clearInterval(window._depCountdownTimer); window._depCountdownTimer = null; }
   closeModal();
 }
 
