@@ -1,288 +1,446 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Proxy Shop Mini App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Proxy Shop</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{
-  --bg:#080b12;--card:#111827;--card2:#172033;--text:#f8fafc;
-  --muted:#94a3b8;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;
-  --border:rgba(255,255,255,.08);
-}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at top,#15233d 0,#080b12 42%);
-color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
-.wrap{max-width:900px;margin:auto;padding:14px 14px 90px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.brand{font-size:21px;font-weight:900}
-.sub{font-size:12px;color:var(--muted)}
-.balance{background:linear-gradient(135deg,#0ea5e9,#2563eb);padding:10px 14px;border-radius:16px;font-weight:800}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.tab{border:1px solid var(--border);background:var(--card);color:var(--muted);padding:11px 5px;border-radius:13px;text-align:center;font-size:12px;font-weight:800;cursor:pointer}
-.tab.active{background:#172554;color:#fff;border-color:#2563eb}
-.section{display:none}.section.active{display:block}
-.card{background:rgba(17,24,39,.9);border:1px solid var(--border);border-radius:20px;padding:15px;margin-bottom:12px;box-shadow:0 12px 35px rgba(0,0,0,.18)}
-.hero{padding:20px;background:linear-gradient(135deg,#111827,#172554)}
-h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 6px;font-size:15px}
-.muted{color:var(--muted);font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.stat{background:var(--card2);border:1px solid var(--border);padding:13px;border-radius:15px}
-.stat b{display:block;font-size:18px;margin-top:4px}
-.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.product{background:var(--card);border:1px solid var(--border);padding:14px;border-radius:18px}
-.price{font-size:18px;font-weight:900;color:#7dd3fc;margin:9px 0}
-button{border:0;border-radius:13px;padding:11px 14px;font-weight:900;cursor:pointer}
-.primary{background:#2563eb;color:#fff;width:100%}
-.green{background:#16a34a;color:#fff}.gray{background:#334155;color:#fff}.danger{background:#dc2626;color:#fff}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.input{width:100%;background:#0b1220;border:1px solid var(--border);color:#fff;border-radius:12px;padding:12px;outline:none;margin:8px 0}
-.purchase{padding:12px 0;border-bottom:1px solid var(--border)}
-.purchase:last-child{border-bottom:0}
-.qr{display:block;max-width:280px;width:100%;margin:12px auto;border-radius:12px;background:#fff;padding:8px}
-.badge{display:inline-block;background:#0f766e;color:#ccfbf1;padding:4px 8px;border-radius:99px;font-size:11px}
-.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{padding:8px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-.toast{position:fixed;left:14px;right:14px;bottom:18px;background:#020617;border:1px solid var(--border);padding:13px;border-radius:14px;display:none;z-index:99}
-.loading{opacity:.65}
-@media(max-width:600px){.products,.grid{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+:root{--bg:#0f1117;--card:#1a1d28;--card2:#232735;--border:#2a2f3e;--text:#e8ecf4;--muted:#8b93a8;--primary:#4a9eff;--success:#25d366;--danger:#ff4757;--gold:#ffd700}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;font-size:14px}
+.header{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
+.logo{font-weight:700;font-size:18px;background:linear-gradient(135deg,#4a9eff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.balance-badge{background:var(--card2);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border)}
+.balance-badge span{color:var(--success)}
+.page{padding:16px;display:none}
+.page.active{display:block}
+.section-title{font-size:16px;font-weight:700;margin:8px 0 12px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;transition:.2s}
+.card:active{transform:scale(.98)}
+.product-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.product-name{font-weight:600;font-size:15px;line-height:1.3;flex:1}
+.stock-tag{background:rgba(37,211,102,.15);color:var(--success);font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
+.product-desc{color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.4}
+.product-foot{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.price{color:var(--gold);font-weight:700;font-size:16px}
+.price small{color:var(--muted);font-weight:400;font-size:11px}
+.btn{background:linear-gradient(135deg,#4a9eff,#357ae8);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+.btn:active{transform:scale(.95)}
+.btn:disabled{opacity:.5}
+.btn-success{background:linear-gradient(135deg,#25d366,#1ea953)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,#ffd700,#f0a500);color:#000}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;padding:13px;font-size:15px;border-radius:12px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto}
+.tab{padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:13px;white-space:nowrap;cursor:pointer;font-weight:500}
+.tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.modal-bg.active{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.close-x{background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}
+.input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px}
+.input:focus{border-color:var(--primary)}
+.qty-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.qty-btn{width:44px;height:44px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:20px;font-weight:700;cursor:pointer}
+.qty-val{flex:1;text-align:center;font-size:18px;font-weight:700;background:var(--card2);padding:11px;border-radius:10px}
+.qr-box{background:#fff;padding:14px;border-radius:14px;text-align:center;margin-bottom:14px}
+.qr-box img{width:100%;max-width:280px;display:block;margin:0 auto}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row span:first-child{color:var(--muted)}
+.info-row span:last-child{font-weight:600;text-align:right;max-width:60%;word-break:break-word}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.stat-val{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:4px;word-break:break-all}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat-card.gold .stat-val{color:var(--gold)}
+.stat-card.green .stat-val{color:var(--success)}
+.stat-card.pink .stat-val{color:#ff6b9d}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50}
+.nav-item{flex:1;text-align:center;padding:6px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:500}
+.nav-item.active{color:var(--primary)}
+.nav-icon{font-size:20px;display:block;margin-bottom:2px}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--card);border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:13px;z-index:200;transition:.3s;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--success)}
+.toast.error{border-color:var(--danger)}
+.code-box{background:#000;color:var(--success);padding:12px;border-radius:10px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin-bottom:10px;line-height:1.5}
+.badge-admin{background:linear-gradient(135deg,#ffd700,#f0a500);color:#000;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;margin-left:6px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div>
-      <div class="brand">⚡ PROXY SHOP</div>
-      <div class="sub" id="hello">Telegram Mini App</div>
-    </div>
-    <div class="balance" id="balance">0đ</div>
-  </div>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="shop">🛍 Shop</div>
-    <div class="tab" data-tab="wallet">💰 Nạp tiền</div>
-    <div class="tab" data-tab="orders">📦 Đã mua</div>
-    <div class="tab admin-only" data-tab="admin" style="display:none">⚙️ Admin</div>
-  </div>
+<!-- CẤU HÌNH API BASE - ĐỔI THÀNH URL TUNNEL CỦA BẠN -->
+<script>
+  const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
+</script>
 
-  <section id="shop" class="section active">
-    <div class="card hero">
-      <h2>Mua proxy nhanh</h2>
-      <div class="muted">Sản phẩm lấy trực tiếp từ OLAProxy. Người dùng chỉ nhìn thấy đơn của chính mình.</div>
-    </div>
-    <div id="products" class="products"></div>
-  </section>
-
-  <section id="wallet" class="section">
-    <div class="card">
-      <h2>💳 Nạp tiền</h2>
-      <div class="muted">Sau khi chuyển khoản đúng số tiền và đúng nội dung, hệ thống tự động duyệt.</div>
-      <input class="input" id="depositAmount" type="number" min="10000" step="1000" placeholder="Số tiền, ví dụ 50000">
-      <button class="primary" onclick="createDeposit()">Tạo QR thanh toán</button>
-    </div>
-    <div id="qrBox"></div>
-  </section>
-
-  <section id="orders" class="section">
-    <div class="card">
-      <h2>📦 Sản phẩm đã mua</h2>
-      <div class="muted">Chỉ hiển thị các sản phẩm được mua bằng tài khoản Telegram này.</div>
-    </div>
-    <div id="ordersList"></div>
-  </section>
-
-  <section id="admin" class="section">
-    <div class="card">
-      <h2>⚙️ Dashboard Admin</h2>
-      <div class="grid">
-        <div class="stat"><span class="muted">Doanh thu hôm nay</span><b id="dRevenue">0đ</b></div>
-        <div class="stat"><span class="muted">Lợi nhuận hôm nay</span><b id="dProfit">0đ</b></div>
-        <div class="stat"><span class="muted">Doanh thu tuần</span><b id="wRevenue">0đ</b></div>
-        <div class="stat"><span class="muted">Lợi nhuận tuần</span><b id="wProfit">0đ</b></div>
-        <div class="stat"><span class="muted">Doanh thu tháng</span><b id="mRevenue">0đ</b></div>
-        <div class="stat"><span class="muted">Lợi nhuận tháng</span><b id="mProfit">0đ</b></div>
-        <div class="stat"><span class="muted">Tổng proxy bán</span><b id="allProxies">0</b></div>
-        <div class="stat"><span class="muted">Khách đã ghé shop</span><b id="customers">0</b></div>
-        <div class="stat"><span class="muted">Tổng lượt ghé</span><b id="visits">0</b></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row"><h2>👥 Khách hàng</h2><button class="gray" onclick="loadAdmin()">↻</button></div>
-      <div class="table-wrap">
-        <table class="table">
-          <thead><tr><th>Telegram</th><th>User</th><th>Balance</th><th>Đã nạp</th><th>Đã mua</th><th>Proxy</th></tr></thead>
-          <tbody id="usersTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>🛒 Đơn gần đây</h2>
-      <div class="table-wrap">
-        <table class="table">
-          <thead><tr><th>ID</th><th>Telegram</th><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th><th>Lợi nhuận</th></tr></thead>
-          <tbody id="recentTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+<div class="header">
+  <div class="logo">⚡ Proxy Shop</div>
+  <div class="balance-badge">💰 <span id="hdrBal">0đ</span></div>
 </div>
+
+<!-- TRANG SHOP -->
+<div class="page active" id="page-shop">
+  <div class="section-title">🛍 Danh sách Proxy</div>
+  <div class="tabs">
+    <div class="tab active" onclick="loadProducts(this)">Tất cả</div>
+    <div class="tab" onclick="loadProducts(this,true)">Làm mới</div>
+  </div>
+  <div id="productsList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+</div>
+
+<!-- TRANG ĐƠN HÀNG -->
+<div class="page" id="page-orders">
+  <div class="section-title">📦 Proxy đã mua</div>
+  <div id="ordersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+</div>
+
+<!-- TRANG NẠP TIỀN -->
+<div class="page" id="page-deposit">
+  <div class="section-title">💳 Nạp tiền tự động</div>
+  <div class="card">
+    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu 1,000đ). Hệ thống sẽ tạo mã QR tự động và duyệt ngay khi nhận được tiền.</div>
+    <input class="input" id="depAmount" type="number" placeholder="Số tiền (VD: 50000)" inputmode="numeric">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="setAmt(10000)">10K</button>
+      <button class="btn btn-outline btn-sm" onclick="setAmt(20000)">20K</button>
+      <button class="btn btn-outline btn-sm" onclick="setAmt(50000)">50K</button>
+      <button class="btn btn-outline btn-sm" onclick="setAmt(100000)">100K</button>
+      <button class="btn btn-outline btn-sm" onclick="setAmt(200000)">200K</button>
+    </div>
+    <button class="btn btn-success btn-block" onclick="createDeposit()">🎯 Tạo QR thanh toán</button>
+  </div>
+</div>
+
+<!-- TRANG ADMIN -->
+<div class="page" id="page-admin">
+  <div class="section-title">👑 Admin Panel</div>
+  <div class="stats-grid" id="adminStats"></div>
+  <div class="tabs" style="margin-top:14px">
+    <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
+    <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn hàng</div>
+  </div>
+  <div id="adminList"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Shop</div>
+  <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn hàng</div>
+  <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp tiền</div>
+  <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const tg = window.Telegram?.WebApp;
-if(tg){ tg.ready(); tg.expand(); }
+let INIT_DATA = "";
+let USER = null;
+let PRODUCTS = [];
+let currentProduct = null;
+let depositPolling = null;
 
-const INIT_DATA = tg?.initData || "";
-const API_BASE = window.location.protocol.startsWith("http")
-  ? window.location.origin
-  : "https://priorities-newsletters-regardless-resistance.trycloudflare.com";
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
+INIT_DATA = tg?.initData || "";
 
-let ME = null;
-
-function money(n){ return new Intl.NumberFormat("vi-VN").format(Number(n||0))+"đ"; }
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
-function toast(s){
-  const x=document.getElementById("toast");x.textContent=s;x.style.display="block";
-  setTimeout(()=>x.style.display="none",3000);
-}
-function headers(){
-  return {"Content-Type":"application/json","X-Telegram-Init-Data":INIT_DATA};
-}
-async function api(path, options={}){
-  const r=await fetch(API_BASE+path,{...options,headers:{...headers(),...(options.headers||{})}});
-  let d={};try{d=await r.json()}catch{}
-  if(!r.ok) throw new Error(d.detail||d.message||"API error");
-  return d;
+function toast(msg, type="success") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast show " + type;
+  setTimeout(() => el.className = "toast " + type, 2600);
 }
 
-document.querySelectorAll(".tab").forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
-    t.classList.add("active");
-    document.getElementById(t.dataset.tab).classList.add("active");
-    if(t.dataset.tab==="admin") loadAdmin();
-  };
-});
-
-async function loadMe(){
-  ME=await api("/api/me");
-  document.getElementById("balance").textContent=money(ME.user.balance);
-  document.getElementById("hello").textContent=
-    "Xin chào "+(ME.user.first_name||ME.user.username||"bạn");
-  document.querySelectorAll(".admin-only").forEach(x=>x.style.display=ME.is_admin?"block":"none");
-  renderOrders(ME.purchases);
+async function api(path, data={}) {
+  const res = await fetch(API_BASE + path, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "X-Init-Data": INIT_DATA},
+    body: JSON.stringify({...data, initData: INIT_DATA})
+  });
+  return res.json();
 }
 
-function renderOrders(items){
-  const box=document.getElementById("ordersList");
-  if(!items.length){box.innerHTML='<div class="card muted">Bạn chưa mua sản phẩm nào.</div>';return;}
-  box.innerHTML=items.map(p=>`
-    <div class="card purchase">
-      <div class="row"><b>${esc(p.product_name)}</b><span class="badge">#${p.id}</span></div>
-      <div class="muted">Mã SP: ${esc(p.product_id)} · SL: ${p.quantity}</div>
-      <div style="margin-top:7px">Thanh toán: <b>${money(p.total_price)}</b></div>
-      <div class="muted">${esc(p.created_at)}</div>
-      <details style="margin-top:8px"><summary>Thông tin nhà cung cấp</summary>
-        <pre style="white-space:pre-wrap;font-size:11px">${esc(p.supplier_data)}</pre>
-      </details>
-    </div>`).join("");
+function fmt(n) { return (n||0).toLocaleString("vi-VN") + "đ"; }
+
+async function init() {
+  try {
+    const r = await api("/api/auth");
+    if (!r.ok) { toast("Xác thực thất bại", "error"); return; }
+    USER = r.user;
+    document.getElementById("hdrBal").textContent = fmt(USER.balance);
+    if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
+    loadProducts();
+    loadOrders();
+  } catch(e) {
+    toast("Lỗi kết nối server", "error");
+    console.error(e);
+  }
 }
 
-async function loadProducts(){
-  const box=document.getElementById("products");
-  box.innerHTML='<div class="card loading">Đang tải sản phẩm...</div>';
-  try{
-    const d=await api("/api/products");
-    if(!d.products.length){box.innerHTML='<div class="card">Không có sản phẩm.</div>';return;}
-    box.innerHTML=d.products.map(p=>`
-      <div class="product">
-        <h3>${esc(p.name)}</h3>
-        <div class="muted">ID: ${esc(p.id)}</div>
-        <div class="price">${money(p.sell_price)}</div>
-        <div class="muted">Giá nhập: ${money(p.price)}${p.stock!=null?" · Kho: "+esc(p.stock):""}</div>
-        <input class="input" id="qty-${esc(p.id)}" type="number" min="1" value="1">
-        <button class="primary" onclick="buyProduct('${encodeURIComponent(p.id)}')">Mua ngay</button>
-      </div>`).join("");
-  }catch(e){box.innerHTML=`<div class="card">❌ ${esc(e.message)}</div>`;}
+function nav(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("page-" + page).classList.add("active");
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+  if (page === "orders") loadOrders();
+  if (page === "admin") loadAdmin();
 }
 
-async function buyProduct(encoded){
-  const id=decodeURIComponent(encoded);
-  const q=document.getElementById("qty-"+CSS.escape(id));
-  const amount=Math.max(1,Number(q?.value||1));
-  if(!confirm("Xác nhận mua "+amount+" sản phẩm?")) return;
-  try{
-    const d=await api("/api/buy",{method:"POST",body:JSON.stringify({product_id:id,amount})});
-    toast("Mua thành công!");
-    await loadMe();
-    renderOrders(ME.purchases);
-    if(tg) tg.HapticFeedback?.notificationOccurred("success");
-  }catch(e){toast("❌ "+e.message);}
+function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
+function openModal(html) {
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modalBg").classList.add("active");
 }
 
-async function createDeposit(){
-  const amount=Number(document.getElementById("depositAmount").value);
-  if(!amount) return toast("Nhập số tiền cần nạp");
-  try{
-    const d=await api("/api/deposit",{method:"POST",body:JSON.stringify({amount})});
-    const qr=d.qr_data_url
-      ? `<img class="qr" src="${d.qr_data_url}" alt="VietQR">`
-      : "";
-    document.getElementById("qrBox").innerHTML=`
+async function loadProducts(el, force) {
+  const list = document.getElementById("productsList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/products");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải sản phẩm</div>'; return; }
+    PRODUCTS = r.products || [];
+    if (!PRODUCTS.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm</div>'; return; }
+    list.innerHTML = PRODUCTS.map(p => `
+      <div class="card" onclick="openBuy('${p.id}')">
+        <div class="product-head">
+          <div class="product-name">${p.name}</div>
+          <div class="stock-tag">${p.stock} có sẵn</div>
+        </div>
+        ${p.desc ? `<div class="product-desc">${p.desc}</div>` : ""}
+        <div class="product-foot">
+          <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
+          <button class="btn btn-sm">Mua ngay</button>
+        </div>
+      </div>
+    `).join("");
+  } catch(e) {
+    list.innerHTML = '<div class="empty">Lỗi kết nối</div>';
+  }
+}
+
+function openBuy(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  currentProduct = p;
+  openModal(`
+    <div class="modal-title">${p.name}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
+    <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
+    <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <div class="qty-val" id="buyQty">1</div>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+    </div>
+    <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price)}</span></div>
+    <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
+  `);
+  window._qty = 1;
+}
+
+function changeQty(d) {
+  window._qty = Math.max(1, (window._qty || 1) + d);
+  document.getElementById("buyQty").textContent = window._qty;
+  document.getElementById("buyTotal").textContent = fmt(currentProduct.price * window._qty);
+}
+
+async function doBuy() {
+  const qty = window._qty || 1;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Đang xử lý...";
+  try {
+    const r = await api("/api/buy", {id: currentProduct.id, amount: qty});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "✅ Xác nhận mua"; return; }
+    USER.balance -= r.paid;
+    document.getElementById("hdrBal").textContent = fmt(USER.balance);
+    toast("Mua thành công!", "success");
+    closeModal();
+    setTimeout(() => showPurchased(r.proxy_data, r.order_code), 300);
+    loadOrders();
+  } catch(e) {
+    toast("Lỗi kết nối", "error");
+    btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
+  }
+}
+
+function showPurchased(data, code) {
+  openModal(`
+    <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
+    ${code ? `<div class="info-row"><span>Mã đơn</span><span>${code}</span></div>` : ""}
+    <div style="margin:10px 0;font-size:13px;color:var(--muted)">Dữ liệu proxy của bạn:</div>
+    <div class="code-box">${escapeHtml(data || "(không có dữ liệu)")}</div>
+    <button class="btn btn-block" onclick="copyData()">📋 Copy</button>
+  `);
+  window._copyData = data || "";
+}
+
+function copyData() {
+  const t = window._copyData || "";
+  navigator.clipboard.writeText(t).then(() => toast("Đã copy!", "success"));
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+async function loadOrders() {
+  const list = document.getElementById("ordersList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/my-orders");
+    if (!r.ok || !r.orders.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn hàng nào</div>'; return;
+    }
+    list.innerHTML = r.orders.map(o => `
       <div class="card">
-        <h2>🏦 Chuyển khoản ACB</h2>${qr}
-        <div class="stat"><span class="muted">Ngân hàng</span><b>${esc(d.bank)}</b></div>
-        <div class="stat"><span class="muted">Số tài khoản</span><b>${esc(d.account_no)}</b></div>
-        <div class="stat"><span class="muted">Chủ tài khoản</span><b>${esc(d.account_name)}</b></div>
-        <div class="stat"><span class="muted">Số tiền</span><b>${money(d.amount)}</b></div>
-        <div class="stat"><span class="muted">Nội dung bắt buộc</span><b>${esc(d.code)}</b></div>
-        <p class="muted">Không sửa nội dung chuyển khoản. Hệ thống sẽ tự kiểm tra giao dịch ACB.</p>
-      </div>`;
-    toast("Đã tạo QR. Hãy chuyển khoản đúng nội dung.");
-  }catch(e){toast("❌ "+e.message);}
+        <div class="product-head">
+          <div class="product-name">${escapeHtml(o.name)}</div>
+          <div class="stock-tag">SL: ${o.amount}</div>
+        </div>
+        <div class="info-row"><span>Thời gian</span><span>${o.created_at}</span></div>
+        <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+        ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${o.order_code}</span></div>` : ""}
+        <button class="btn btn-sm" style="margin-top:10px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o.proxy_data))})'>👁 Xem proxy</button>
+      </div>
+    `).join("");
+  } catch(e) {
+    list.innerHTML = '<div class="empty">Lỗi tải đơn hàng</div>';
+  }
 }
 
-async function loadAdmin(){
-  if(!ME?.is_admin)return;
-  try{
-    const d=await api("/api/admin/stats");
-    document.getElementById("dRevenue").textContent=money(d.day.revenue);
-    document.getElementById("dProfit").textContent=money(d.day.profit);
-    document.getElementById("wRevenue").textContent=money(d.week.revenue);
-    document.getElementById("wProfit").textContent=money(d.week.profit);
-    document.getElementById("mRevenue").textContent=money(d.month.revenue);
-    document.getElementById("mProfit").textContent=money(d.month.profit);
-    document.getElementById("allProxies").textContent=d.all.proxies;
-    document.getElementById("customers").textContent=d.customers;
-    document.getElementById("visits").textContent=d.visits;
-
-    document.getElementById("usersTable").innerHTML=d.users.map(u=>`
-      <tr><td>${u.telegram_id}</td><td>${esc(u.username||u.first_name||"")}</td>
-      <td>${money(u.balance)}</td><td>${money(u.total_deposited)}</td>
-      <td>${money(u.spent)}</td><td>${u.proxies}</td></tr>`).join("");
-
-    document.getElementById("recentTable").innerHTML=d.recent_purchases.map(p=>`
-      <tr><td>#${p.id}</td><td>${p.telegram_id}</td><td>${esc(p.product_name)}</td>
-      <td>${p.quantity}</td><td>${money(p.total_price)}</td>
-      <td>${money(p.total_price-p.total_cost)}</td></tr>`).join("");
-  }catch(e){toast("❌ "+e.message);}
+function viewOrder(dataJson) {
+  const data = JSON.parse(dataJson || '""');
+  openModal(`
+    <div class="modal-title">👁 Proxy của bạn<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="code-box">${escapeHtml(data || "(không có dữ liệu)")}</div>
+    <button class="btn btn-block" onclick='navigator.clipboard.writeText(${JSON.stringify(data||"")}).then(()=>toast("Đã copy!"))'>📋 Copy</button>
+  `);
 }
 
-(async function boot(){
-  if(!INIT_DATA){
-    document.body.innerHTML='<div class="wrap"><div class="card"><h2>⚠️ Hãy mở Mini App từ Telegram</h2><div class="muted">Không thể xác thực tài khoản nếu mở trực tiếp bằng trình duyệt.</div></div></div>';
-    return;
+function setAmt(n) { document.getElementById("depAmount").value = n; }
+
+async function createDeposit() {
+  const amt = parseInt(document.getElementById("depAmount").value || "0");
+  if (amt < 1000) { toast("Tối thiểu 1,000đ", "error"); return; }
+  try {
+    const r = await api("/api/deposit", {amount: amt});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    openModal(`
+      <div class="modal-title">💳 Quét QR để nạp<button class="close-x" onclick="closeDeposit()">✕</button></div>
+      <div class="qr-box"><img src="${r.qr}" alt="QR"></div>
+      <div class="info-row"><span>Ngân hàng</span><span>${r.bank}</span></div>
+      <div class="info-row"><span>Số TK</span><span>${r.account_no}</span></div>
+      <div class="info-row"><span>Chủ TK</span><span>${r.account_name}</span></div>
+      <div class="info-row"><span>Số tiền</span><span>${fmt(r.amount)}</span></div>
+      <div class="info-row"><span>Nội dung</span><span style="color:var(--gold)">${r.content}</span></div>
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">⏳ Đang chờ thanh toán... Hệ thống sẽ tự động duyệt</div>
+    `);
+    startDepositPoll(r.code);
+  } catch(e) {
+    toast("Lỗi kết nối", "error");
   }
-  try{
-    await loadMe();
-    await loadProducts();
-  }catch(e){
-    document.body.innerHTML='<div class="wrap"><div class="card"><h2>❌ Không thể kết nối</h2><div class="muted">'+esc(e.message)+'</div></div></div>';
-  }
-})();
+}
+
+function startDepositPoll(code) {
+  if (depositPolling) clearInterval(depositPolling);
+  depositPolling = setInterval(async () => {
+    try {
+      const r = await api("/api/deposit/check", {code});
+      if (r.ok && r.status === "paid") {
+        clearInterval(depositPolling);
+        depositPolling = null;
+        USER.balance = r.balance;
+        document.getElementById("hdrBal").textContent = fmt(r.balance);
+        closeModal();
+        toast("✅ Nạp tiền thành công!", "success");
+      }
+    } catch(e) {}
+  }, 4000);
+}
+
+function closeDeposit() {
+  if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
+  closeModal();
+}
+
+// ========== ADMIN ==========
+async function loadAdmin() {
+  try {
+    const r = await api("/api/admin/stats");
+    if (!r.ok) return;
+    const s = r.stats;
+    document.getElementById("adminStats").innerHTML = `
+      <div class="stat-card gold"><div class="stat-val">${fmt(s.today_revenue)}</div><div class="stat-label">Doanh thu hôm nay</div></div>
+      <div class="stat-card green"><div class="stat-val">${fmt(s.today_profit)}</div><div class="stat-label">Lợi nhuận hôm nay</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(s.week_revenue)}</div><div class="stat-label">Tuần này</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(s.month_revenue)}</div><div class="stat-label">30 ngày</div></div>
+      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_profit)}</div><div class="stat-label">Tổng lợi nhuận</div></div>
+      <div class="stat-card gold"><div class="stat-val">${fmt(s.total_revenue)}</div><div class="stat-label">Tổng doanh thu</div></div>
+      <div class="stat-card"><div class="stat-val">${s.total_orders}</div><div class="stat-label">Tổng đơn</div></div>
+      <div class="stat-card green"><div class="stat-val">${s.total_proxy_sold}</div><div class="stat-label">Proxy đã bán</div></div>
+      <div class="stat-card"><div class="stat-val">${s.total_users}</div><div class="stat-label">Khách đã ghé</div></div>
+      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
+    `;
+    adminTab("users");
+  } catch(e) { toast("Lỗi tải admin", "error"); }
+}
+
+async function adminTab(tab, el) {
+  if (el) { document.querySelectorAll("#page-admin .tab").forEach(t => t.classList.remove("active")); el.classList.add("active"); }
+  const box = document.getElementById("adminList");
+  box.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    if (tab === "users") {
+      const r = await api("/api/admin/users");
+      if (!r.ok) { box.innerHTML = ""; return; }
+      box.innerHTML = r.users.map(u => `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${escapeHtml(u.first_name || u.username || "User")}</div>
+            <div class="stock-tag">💰 ${fmt(u.balance)}</div>
+          </div>
+          <div class="info-row"><span>ID</span><span>${u.id}</span></div>
+          ${u.username ? `<div class="info-row"><span>@</span><span>${u.username}</span></div>` : ""}
+          <div class="info-row"><span>Đã chi</span><span>${fmt(u.total_spent)}</span></div>
+          <div class="info-row"><span>Proxy đã mua</span><span>${u.total_proxy}</span></div>
+          <div class="info-row"><span>Lần cuối</span><span>${u.last_seen || ""}</span></div>
+        </div>
+      `).join("") || '<div class="empty">Chưa có user</div>';
+    } else {
+      const r = await api("/api/admin/orders");
+      if (!r.ok) { box.innerHTML = ""; return; }
+      box.innerHTML = r.orders.map(o => `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${escapeHtml(o.name)}</div>
+            <div class="stock-tag">SL: ${o.amount}</div>
+          </div>
+          <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || o.user_id)}</span></div>
+          <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+          <div class="info-row"><span>Vốn</span><span>${fmt(o.cost)}</span></div>
+          <div class="info-row"><span>Lãi</span><span style="color:var(--success)">${fmt(o.price - o.cost)}</span></div>
+          <div class="info-row"><span>Thời gian</span><span>${o.created_at}</span></div>
+        </div>
+      `).join("") || '<div class="empty">Chưa có đơn</div>';
+    }
+  } catch(e) { box.innerHTML = '<div class="empty">Lỗi tải</div>'; }
+}
+
+init();
 </script>
 </body>
 </html>
