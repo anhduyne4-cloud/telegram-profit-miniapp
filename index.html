@@ -9,55 +9,65 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 :root{--bg:#0f1117;--card:#1a1d28;--card2:#232735;--border:#2a2f3e;--text:#e8ecf4;--muted:#8b93a8;--primary:#4a9eff;--success:#25d366;--danger:#ff4757;--gold:#ffd700}
 body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;font-size:14px}
-.header{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
-.logo{font-weight:700;font-size:18px;background:linear-gradient(135deg,#4a9eff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.balance-badge{background:var(--card2);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border)}
+.header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10;gap:8px}
+.header-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+.logo{font-weight:700;font-size:17px;background:linear-gradient(135deg,#4a9eff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.clock{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.clock .dot{width:6px;height:6px;background:var(--success);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+.balance-badge{background:var(--card2);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border);white-space:nowrap;cursor:pointer}
 .balance-badge span{color:var(--success)}
 .page{padding:16px;display:none}
 .page.active{display:block}
-.section-title{font-size:16px;font-weight:700;margin:8px 0 12px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:16px;font-weight:700;margin:8px 0 12px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.section-title > span:first-child{display:flex;align-items:center;gap:8px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;transition:.2s}
 .card:active{transform:scale(.98)}
 .product-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
-.product-name{font-weight:600;font-size:15px;line-height:1.3;flex:1}
+.product-name{font-weight:600;font-size:15px;line-height:1.3;flex:1;word-break:break-word}
 .stock-tag{background:rgba(37,211,102,.15);color:var(--success);font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
 .product-desc{color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.4}
 .product-foot{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .price{color:var(--gold);font-weight:700;font-size:16px}
 .price small{color:var(--muted);font-weight:400;font-size:11px}
-.btn{background:linear-gradient(135deg,#4a9eff,#357ae8);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+.btn{background:linear-gradient(135deg,#4a9eff,#357ae8);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap}
 .btn:active{transform:scale(.95)}
 .btn:disabled{opacity:.5}
 .btn-success{background:linear-gradient(135deg,#25d366,#1ea953)}
+.btn-danger{background:linear-gradient(135deg,#ff4757,#e63946)}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-gold{background:linear-gradient(135deg,#ffd700,#f0a500);color:#000}
+.btn-purple{background:linear-gradient(135deg,#a855f7,#7c3aed)}
 .btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:8px}
 .btn-block{width:100%;padding:13px;font-size:15px;border-radius:12px}
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
-.tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto}
-.tab{padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:13px;white-space:nowrap;cursor:pointer;font-weight:500}
+.tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:12px;white-space:nowrap;cursor:pointer;font-weight:500;flex-shrink:0}
 .tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100}
 .modal-bg.active{display:flex}
-.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
+.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px;max-height:88vh;overflow-y:auto;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-title{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-.close-x{background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}
-.input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;line-height:1.3}
+.close-x{background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0}
+.input,textarea.input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px;font-family:inherit;resize:vertical}
 .input:focus{border-color:var(--primary)}
+textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .qty-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
 .qty-btn{width:44px;height:44px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:20px;font-weight:700;cursor:pointer}
 .qty-val{flex:1;text-align:center;font-size:18px;font-weight:700;background:var(--card2);padding:11px;border-radius:10px}
 .qr-box{background:#fff;padding:14px;border-radius:14px;text-align:center;margin-bottom:14px}
 .qr-box img{width:100%;max-width:280px;display:block;margin:0 auto}
-.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;gap:10px}
 .info-row:last-child{border-bottom:none}
-.info-row span:first-child{color:var(--muted)}
-.info-row span:last-child{font-weight:600;text-align:right;max-width:60%;word-break:break-word}
+.info-row span:first-child{color:var(--muted);flex-shrink:0}
+.info-row span:last-child{font-weight:600;text-align:right;max-width:65%;word-break:break-word}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
-.stat-val{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:4px;word-break:break-all}
+.stat-val{font-size:16px;font-weight:700;color:var(--primary);margin-bottom:4px;word-break:break-all}
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .stat-card.gold .stat-val{color:var(--gold)}
 .stat-card.green .stat-val{color:var(--success)}
@@ -74,42 +84,46 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
 .toast.success{border-color:var(--success)}
 .toast.error{border-color:var(--danger)}
 .code-box{background:#000;color:var(--success);padding:12px;border-radius:10px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin-bottom:10px;line-height:1.5}
-.badge-admin{background:linear-gradient(135deg,#ffd700,#f0a500);color:#000;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700;margin-left:6px}
+.user-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.user-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.admin-tools{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+.admin-tools-title{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
 
-<!-- CẤU HÌNH API BASE - ĐỔI THÀNH URL TUNNEL CỦA BẠN -->
 <script>
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
 </script>
 
 <div class="header">
-  <div class="logo">⚡ Proxy Shop</div>
-  <div class="balance-badge">💰 <span id="hdrBal">0đ</span></div>
+  <div class="header-left">
+    <div class="logo">⚡ Proxy Shop</div>
+    <div class="clock"><span class="dot"></span><span id="clock">--:--:--</span><span id="clockDate"></span></div>
+  </div>
+  <div class="balance-badge" onclick="refreshBalance()">💰 <span id="hdrBal">0đ</span></div>
 </div>
 
-<!-- TRANG SHOP -->
+<!-- SHOP -->
 <div class="page active" id="page-shop">
-  <div class="section-title">🛍 Danh sách Proxy</div>
-  <div class="tabs">
-    <div class="tab active" onclick="loadProducts(this)">Tất cả</div>
-    <div class="tab" onclick="loadProducts(this,true)">Làm mới</div>
+  <div class="section-title"><span>🛍 Danh sách Proxy</span></div>
+  <div class="tabs" id="catTabs">
+    <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
   </div>
   <div id="productsList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </div>
 
-<!-- TRANG ĐƠN HÀNG -->
+<!-- ORDERS -->
 <div class="page" id="page-orders">
-  <div class="section-title">📦 Proxy đã mua</div>
+  <div class="section-title"><span>📦 Proxy đã mua</span></div>
   <div id="ordersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </div>
 
-<!-- TRANG NẠP TIỀN -->
+<!-- DEPOSIT -->
 <div class="page" id="page-deposit">
-  <div class="section-title">💳 Nạp tiền tự động</div>
+  <div class="section-title"><span>💳 Nạp tiền tự động</span></div>
   <div class="card">
-    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu 1,000đ). Hệ thống sẽ tạo mã QR tự động và duyệt ngay khi nhận được tiền.</div>
+    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu 1,000đ). Hệ thống tạo QR tự động, duyệt ngay khi nhận tiền.</div>
     <input class="input" id="depAmount" type="number" placeholder="Số tiền (VD: 50000)" inputmode="numeric">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="btn btn-outline btn-sm" onclick="setAmt(10000)">10K</button>
@@ -122,13 +136,21 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
   </div>
 </div>
 
-<!-- TRANG ADMIN -->
+<!-- ADMIN -->
 <div class="page" id="page-admin">
-  <div class="section-title">👑 Admin Panel</div>
+  <div class="section-title"><span>👑 Admin Panel</span></div>
+
+  <div class="admin-tools">
+    <div class="admin-tools-title">📢 Công cụ Admin</div>
+    <button class="btn btn-purple btn-block" style="margin-bottom:8px" onclick="openBroadcast()">📢 Gửi thông báo đến TẤT CẢ khách</button>
+  </div>
+
   <div class="stats-grid" id="adminStats"></div>
+
   <div class="tabs" style="margin-top:14px">
     <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
     <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn hàng</div>
+    <div class="tab" onclick="adminTab('logs',this)">📜 Lịch sử</div>
   </div>
   <div id="adminList"></div>
 </div>
@@ -141,7 +163,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
 </div>
@@ -152,20 +173,36 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
 const tg = window.Telegram?.WebApp;
 let INIT_DATA = "";
 let USER = null;
-let PRODUCTS = [];
+let ALL_PRODUCTS = [];
 let currentProduct = null;
+let currentCat = "";
 let depositPolling = null;
+let balancePolling = null;
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
 
+// ========== CLOCK ==========
+function startClock() {
+  const tick = () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    document.getElementById("clock").textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    const days = ["CN","T2","T3","T4","T5","T6","T7"];
+    document.getElementById("clockDate").textContent = `• ${days[d.getDay()]}, ${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+startClock();
+
+// ========== HELPERS ==========
 function toast(msg, type="success") {
   const el = document.getElementById("toast");
   el.textContent = msg;
   el.className = "toast show " + type;
   setTimeout(() => el.className = "toast " + type, 2600);
 }
-
 async function api(path, data={}) {
   const res = await fetch(API_BASE + path, {
     method: "POST",
@@ -174,9 +211,10 @@ async function api(path, data={}) {
   });
   return res.json();
 }
-
 function fmt(n) { return (n||0).toLocaleString("vi-VN") + "đ"; }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
+// ========== INIT ==========
 async function init() {
   try {
     const r = await api("/api/auth");
@@ -186,12 +224,37 @@ async function init() {
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     loadProducts();
     loadOrders();
+    startBalancePolling();
   } catch(e) {
     toast("Lỗi kết nối server", "error");
     console.error(e);
   }
 }
 
+function startBalancePolling() {
+  if (balancePolling) clearInterval(balancePolling);
+  balancePolling = setInterval(async () => {
+    try {
+      const r = await api("/api/me/refresh");
+      if (r.ok && r.balance !== USER.balance) {
+        const diff = r.balance - USER.balance;
+        USER.balance = r.balance;
+        document.getElementById("hdrBal").textContent = fmt(r.balance);
+        if (diff > 0) toast(`💰 +${fmt(diff)}`, "success");
+        else if (diff < 0) toast(`⚠️ ${fmt(diff)}`, "error");
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+async function refreshBalance() {
+  try {
+    const r = await api("/api/me/refresh");
+    if (r.ok) { USER.balance = r.balance; document.getElementById("hdrBal").textContent = fmt(r.balance); toast("Đã cập nhật!", "success"); }
+  } catch(e) {}
+}
+
+// ========== NAV ==========
 function nav(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
@@ -200,48 +263,79 @@ function nav(page) {
   if (page === "orders") loadOrders();
   if (page === "admin") loadAdmin();
 }
-
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
 function openModal(html) {
   document.getElementById("modalContent").innerHTML = html;
   document.getElementById("modalBg").classList.add("active");
 }
 
-async function loadProducts(el, force) {
+// ========== PRODUCTS ==========
+async function loadProducts() {
   const list = document.getElementById("productsList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/products");
     if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải sản phẩm</div>'; return; }
-    PRODUCTS = r.products || [];
-    if (!PRODUCTS.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm</div>'; return; }
-    list.innerHTML = PRODUCTS.map(p => `
-      <div class="card" onclick="openBuy('${p.id}')">
-        <div class="product-head">
-          <div class="product-name">${p.name}</div>
-          <div class="stock-tag">${p.stock} có sẵn</div>
-        </div>
-        ${p.desc ? `<div class="product-desc">${p.desc}</div>` : ""}
-        <div class="product-foot">
-          <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
-          <button class="btn btn-sm">Mua ngay</button>
-        </div>
-      </div>
-    `).join("");
+    ALL_PRODUCTS = r.products || [];
+    if (!ALL_PRODUCTS.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm</div>';
+      return;
+    }
+    buildCatTabs(); renderProducts();
   } catch(e) {
     list.innerHTML = '<div class="empty">Lỗi kết nối</div>';
   }
 }
+function shortCat(name) { return !name ? "Khác" : (name.length > 35 ? name.substring(0,33) + "…" : name); }
+function buildCatTabs() {
+  const cats = []; const seen = new Set();
+  ALL_PRODUCTS.forEach(p => {
+    if (p.category_id && !seen.has(p.category_id)) { seen.add(p.category_id); cats.push({id: p.category_id, name: p.category_name}); }
+  });
+  const html = `<div class="tab ${currentCat===""?"active":""}" data-cat="" onclick="filterCat('',this)">🛒 Tất cả (${ALL_PRODUCTS.length})</div>` +
+    cats.map(c => {
+      const count = ALL_PRODUCTS.filter(p => p.category_id === c.id).length;
+      return `<div class="tab ${currentCat===c.id?"active":""}" data-cat="${c.id}" onclick="filterCat('${c.id}',this)">${escapeHtml(shortCat(c.name))} (${count})</div>`;
+    }).join("");
+  document.getElementById("catTabs").innerHTML = html;
+}
+function filterCat(catId, el) {
+  currentCat = catId;
+  document.querySelectorAll("#catTabs .tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  renderProducts();
+}
+function renderProducts() {
+  const list = document.getElementById("productsList");
+  const items = currentCat === "" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => p.category_id === currentCat);
+  if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có sản phẩm</div>'; return; }
+  list.innerHTML = items.map(p => `
+    <div class="card" onclick="openBuy('${p.id}')">
+      <div class="product-head">
+        <div class="product-name">${escapeHtml(p.name)}</div>
+        <div class="stock-tag">${p.stock} có sẵn</div>
+      </div>
+      ${p.category_name ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">📂 ${escapeHtml(shortCat(p.category_name))}</div>` : ""}
+      ${p.desc ? `<div class="product-desc">${escapeHtml(p.desc.split("\\n")[0].substring(0,120))}${p.desc.length>120?"…":""}</div>` : ""}
+      <div class="product-foot">
+        <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
+        <button class="btn btn-sm">Mua ngay</button>
+      </div>
+    </div>
+  `).join("");
+}
 
 function openBuy(id) {
-  const p = PRODUCTS.find(x => x.id === id);
+  const p = ALL_PRODUCTS.find(x => x.id === id);
   if (!p) return;
   currentProduct = p;
   openModal(`
-    <div class="modal-title">${p.name}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">${escapeHtml(p.name)}<button class="close-x" onclick="closeModal()">✕</button></div>
+    ${p.category_name ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">📂 ${escapeHtml(p.category_name)}</div>` : ""}
     <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
     <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
+    ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
     <div class="qty-row">
       <button class="qty-btn" onclick="changeQty(-1)">−</button>
@@ -253,13 +347,11 @@ function openBuy(id) {
   `);
   window._qty = 1;
 }
-
 function changeQty(d) {
   window._qty = Math.max(1, (window._qty || 1) + d);
   document.getElementById("buyQty").textContent = window._qty;
   document.getElementById("buyTotal").textContent = fmt(currentProduct.price * window._qty);
 }
-
 async function doBuy() {
   const qty = window._qty || 1;
   const btn = event.target;
@@ -278,50 +370,41 @@ async function doBuy() {
     btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
   }
 }
-
 function showPurchased(data, code) {
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
-    ${code ? `<div class="info-row"><span>Mã đơn</span><span>${code}</span></div>` : ""}
+    ${code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(code)}</span></div>` : ""}
     <div style="margin:10px 0;font-size:13px;color:var(--muted)">Dữ liệu proxy của bạn:</div>
     <div class="code-box">${escapeHtml(data || "(không có dữ liệu)")}</div>
     <button class="btn btn-block" onclick="copyData()">📋 Copy</button>
   `);
   window._copyData = data || "";
 }
-
 function copyData() {
-  const t = window._copyData || "";
-  navigator.clipboard.writeText(t).then(() => toast("Đã copy!", "success"));
+  navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy!", "success"));
 }
 
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
+// ========== ORDERS ==========
 async function loadOrders() {
   const list = document.getElementById("ordersList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/my-orders");
-    if (!r.ok || !r.orders.length) {
-      list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn hàng nào</div>'; return;
-    }
+    if (!r.ok || !r.orders.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn hàng nào</div>'; return; }
     list.innerHTML = r.orders.map(o => `
       <div class="card">
         <div class="product-head">
           <div class="product-name">${escapeHtml(o.name)}</div>
           <div class="stock-tag">SL: ${o.amount}</div>
         </div>
-        <div class="info-row"><span>Thời gian</span><span>${o.created_at}</span></div>
+        <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
         <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
-        ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${o.order_code}</span></div>` : ""}
+        ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
         <button class="btn btn-sm" style="margin-top:10px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o.proxy_data))})'>👁 Xem proxy</button>
       </div>
     `).join("");
-  } catch(e) {
-    list.innerHTML = '<div class="empty">Lỗi tải đơn hàng</div>';
-  }
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi tải đơn hàng</div>'; }
 }
-
 function viewOrder(dataJson) {
   const data = JSON.parse(dataJson || '""');
   openModal(`
@@ -331,8 +414,8 @@ function viewOrder(dataJson) {
   `);
 }
 
+// ========== DEPOSIT ==========
 function setAmt(n) { document.getElementById("depAmount").value = n; }
-
 async function createDeposit() {
   const amt = parseInt(document.getElementById("depAmount").value || "0");
   if (amt < 1000) { toast("Tối thiểu 1,000đ", "error"); return; }
@@ -350,19 +433,15 @@ async function createDeposit() {
       <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">⏳ Đang chờ thanh toán... Hệ thống sẽ tự động duyệt</div>
     `);
     startDepositPoll(r.code);
-  } catch(e) {
-    toast("Lỗi kết nối", "error");
-  }
+  } catch(e) { toast("Lỗi kết nối", "error"); }
 }
-
 function startDepositPoll(code) {
   if (depositPolling) clearInterval(depositPolling);
   depositPolling = setInterval(async () => {
     try {
       const r = await api("/api/deposit/check", {code});
       if (r.ok && r.status === "paid") {
-        clearInterval(depositPolling);
-        depositPolling = null;
+        clearInterval(depositPolling); depositPolling = null;
         USER.balance = r.balance;
         document.getElementById("hdrBal").textContent = fmt(r.balance);
         closeModal();
@@ -371,7 +450,6 @@ function startDepositPoll(code) {
     } catch(e) {}
   }, 4000);
 }
-
 function closeDeposit() {
   if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
   closeModal();
@@ -409,18 +487,26 @@ async function adminTab(tab, el) {
       if (!r.ok) { box.innerHTML = ""; return; }
       box.innerHTML = r.users.map(u => `
         <div class="card">
-          <div class="product-head">
-            <div class="product-name">${escapeHtml(u.first_name || u.username || "User")}</div>
+          <div class="user-card-head">
+            <div style="min-width:0;flex:1">
+              <div class="product-name">${escapeHtml(u.first_name || u.username || "User")}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">ID: ${u.id}${u.username ? " • @"+escapeHtml(u.username) : ""}</div>
+            </div>
             <div class="stock-tag">💰 ${fmt(u.balance)}</div>
           </div>
-          <div class="info-row"><span>ID</span><span>${u.id}</span></div>
-          ${u.username ? `<div class="info-row"><span>@</span><span>${u.username}</span></div>` : ""}
           <div class="info-row"><span>Đã chi</span><span>${fmt(u.total_spent)}</span></div>
           <div class="info-row"><span>Proxy đã mua</span><span>${u.total_proxy}</span></div>
-          <div class="info-row"><span>Lần cuối</span><span>${u.last_seen || ""}</span></div>
+          <div class="info-row"><span>Lần cuối</span><span>${escapeHtml(u.last_seen || "")}</span></div>
+          <div class="user-actions">
+            <button class="btn btn-success btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "add")'>➕ Cộng</button>
+            <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "sub")'>➖ Trừ</button>
+            <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance})'>✏️ Đặt</button>
+            <button class="btn btn-purple btn-xs" onclick='openMessageModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>💬 Nhắn</button>
+            <button class="btn btn-outline btn-xs" onclick='viewUserOrders(${u.id})'>📦 Đơn hàng</button>
+          </div>
         </div>
       `).join("") || '<div class="empty">Chưa có user</div>';
-    } else {
+    } else if (tab === "orders") {
       const r = await api("/api/admin/orders");
       if (!r.ok) { box.innerHTML = ""; return; }
       box.innerHTML = r.orders.map(o => `
@@ -433,11 +519,159 @@ async function adminTab(tab, el) {
           <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
           <div class="info-row"><span>Vốn</span><span>${fmt(o.cost)}</span></div>
           <div class="info-row"><span>Lãi</span><span style="color:var(--success)">${fmt(o.price - o.cost)}</span></div>
-          <div class="info-row"><span>Thời gian</span><span>${o.created_at}</span></div>
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
         </div>
       `).join("") || '<div class="empty">Chưa có đơn</div>';
+    } else { // logs
+      const r = await api("/api/admin/logs");
+      if (!r.ok) { box.innerHTML = ""; return; }
+      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin nhắn"};
+      box.innerHTML = r.logs.map(l => `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${actionText[l.action] || l.action}</div>
+            ${l.amount ? `<div class="stock-tag">${l.action==="sub"?"-":"+"}${fmt(l.amount)}</div>` : ""}
+          </div>
+          <div class="info-row"><span>Target ID</span><span>${l.target_id || "ALL"}</span></div>
+          ${l.reason ? `<div class="info-row"><span>Lý do</span><span>${escapeHtml(l.reason)}</span></div>` : ""}
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(l.created_at)}</span></div>
+        </div>
+      `).join("") || '<div class="empty">Chưa có log</div>';
     }
   } catch(e) { box.innerHTML = '<div class="empty">Lỗi tải</div>'; }
+}
+
+// ========== ADMIN MODALS ==========
+function openBalanceModal(userId, name, balance, action) {
+  const isAdd = action === "add";
+  openModal(`
+    <div class="modal-title">${isAdd?"➕ Cộng tiền":"➖ Trừ tiền"}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
+    <div class="info-row"><span>Số dư hiện tại</span><span>${fmt(balance)}</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số tiền</div>
+    <input class="input" id="admAmount" type="number" placeholder="VD: 50000" inputmode="numeric" value="10000">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=10000">10K</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=50000">50K</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=100000">100K</button>
+    </div>
+    <div style="margin:8px 0;font-weight:600;font-size:13px">Lý do (tùy chọn)</div>
+    <input class="input" id="admReason" placeholder="VD: Đền bù sự cố">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
+      <span>Gửi thông báo cho user</span>
+    </label>
+    <button class="btn ${isAdd?"btn-success":"btn-danger"} btn-block" onclick='submitBalance(${userId}, "${action}")'>Xác nhận ${isAdd?"cộng":"trừ"}</button>
+  `);
+}
+
+function openSetBalanceModal(userId, name, balance) {
+  openModal(`
+    <div class="modal-title">✏️ Đặt số dư mới<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
+    <div class="info-row"><span>Số dư hiện tại</span><span>${fmt(balance)}</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số dư mới</div>
+    <input class="input" id="admAmount" type="number" placeholder="VD: 100000" inputmode="numeric" value="${balance}">
+    <div style="margin:8px 0;font-weight:600;font-size:13px">Lý do (tùy chọn)</div>
+    <input class="input" id="admReason" placeholder="VD: Reset số dư">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
+      <span>Gửi thông báo cho user</span>
+    </label>
+    <button class="btn btn-block" onclick='submitBalance(${userId}, "set")'>Xác nhận đặt</button>
+  `);
+}
+
+async function submitBalance(userId, action) {
+  const amount = parseInt(document.getElementById("admAmount").value || "0");
+  const reason = document.getElementById("admReason").value.trim();
+  const notify = document.getElementById("admNotify").checked;
+  if (amount < 0 || (action !== "set" && amount === 0)) { toast("Số tiền không hợp lệ", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang xử lý...";
+  try {
+    const r = await api("/api/admin/balance", {user_id: userId, amount, action, reason, notify});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
+    toast(`✅ Thành công! Số dư mới: ${fmt(r.new_balance)}`, "success");
+    closeModal();
+    setTimeout(() => loadAdmin(), 400);
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
+}
+
+function openMessageModal(userId, name) {
+  openModal(`
+    <div class="modal-title">💬 Nhắn tin cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row" style="margin-bottom:12px"><span>User ID</span><span>${userId}</span></div>
+    <textarea class="input" id="admMsg" placeholder="Nhập nội dung tin nhắn..."></textarea>
+    <button class="btn btn-purple btn-block" onclick='submitMessage(${userId})'>📤 Gửi tin nhắn</button>
+  `);
+}
+
+async function submitMessage(userId) {
+  const message = document.getElementById("admMsg").value.trim();
+  if (!message) { toast("Nhập nội dung", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang gửi...";
+  try {
+    const r = await api("/api/admin/message", {user_id: userId, message});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
+    toast("✅ Đã gửi!", "success");
+    closeModal();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
+}
+
+function openBroadcast() {
+  openModal(`
+    <div class="modal-title">📢 Gửi thông báo đến TẤT CẢ<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);padding:10px;border-radius:10px;font-size:12px;color:var(--danger);margin-bottom:12px">
+      ⚠️ Tin nhắn sẽ gửi đến <b>TẤT CẢ khách hàng</b>. Không thể hoàn tác!
+    </div>
+    <textarea class="input" id="bcMsg" placeholder="Nhập nội dung thông báo...&#10;&#10;VD: 🎉 Shop khuyến mãi giảm giá 20% tất cả proxy hôm nay!"></textarea>
+    <button class="btn btn-purple btn-block" onclick="submitBroadcast()">📢 Gửi đến tất cả</button>
+  `);
+}
+
+async function submitBroadcast() {
+  const message = document.getElementById("bcMsg").value.trim();
+  if (!message) { toast("Nhập nội dung", "error"); return; }
+  if (!confirm("Bạn chắc chắn muốn gửi thông báo này đến TẤT CẢ khách hàng?")) return;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang gửi...";
+  try {
+    const r = await api("/api/admin/broadcast", {message});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
+    toast(`✅ Đang gửi đến ${r.total} khách hàng...`, "success");
+    closeModal();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
+}
+
+async function viewUserOrders(userId) {
+  openModal(`
+    <div class="modal-title">📦 Đơn hàng của user<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="loading"><div class="spinner"></div>Đang tải...</div>
+  `);
+  try {
+    const r = await api("/api/admin/user-orders", {user_id: userId});
+    if (!r.ok) { openModal(`<div class="modal-title">Lỗi<button class="close-x" onclick="closeModal()">✕</button></div><div class="empty">${r.error||"Lỗi"}</div>`); return; }
+    const u = r.user;
+    const html = `
+      <div class="modal-title">📦 ${escapeHtml(u.first_name || u.username || "User")}<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>ID</span><span>${u.id}</span></div>
+      <div class="info-row"><span>Số dư</span><span>${fmt(u.balance)}</span></div>
+      <div class="info-row"><span>Tổng chi</span><span>${fmt(u.total_spent)}</span></div>
+      <div class="info-row"><span>Proxy đã mua</span><span>${u.total_proxy}</span></div>
+      <div class="info-row"><span>Tham gia</span><span>${escapeHtml(u.created_at||"")}</span></div>
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">📜 Lịch sử đơn hàng (${r.orders.length})</div>
+      ${r.orders.length ? r.orders.map(o => `
+        <div style="background:var(--card2);border-radius:10px;padding:10px;margin-bottom:8px;font-size:12px">
+          <div style="font-weight:600;margin-bottom:6px">${escapeHtml(o.name)}</div>
+          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>SL</span><span>${o.amount}</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>${o.created_at}</span></div>
+        </div>
+      `).join("") : '<div class="empty" style="padding:20px">Chưa có đơn hàng</div>'}
+    `;
+    openModal(html);
+  } catch(e) {
+    openModal(`<div class="modal-title">Lỗi<button class="close-x" onclick="closeModal()">✕</button></div><div class="empty">Lỗi kết nối</div>`);
+  }
 }
 
 init();
