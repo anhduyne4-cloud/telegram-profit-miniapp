@@ -80,8 +80,8 @@ body {
 .card.promo::before  { background: linear-gradient(180deg, var(--warn-1), var(--warn-2)); }
 
 .card .name { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-.card .meta { font-size: 13px; opacity: .85; line-height: 1.7; display: flex; align-items: center; gap: 6px; }
-.card .actions { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; }
+.card .meta { font-size: 13px; opacity: .85; line-height: 1.7; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card .actions { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .card .actions button {
   padding: 7px 14px; border-radius: 8px; border: none;
   font-size: 13px; font-weight: 600; cursor: pointer;
@@ -89,6 +89,31 @@ body {
   color: #fff; box-shadow: 0 2px 8px rgba(231,76,60,.25);
 }
 .card .actions button:active { transform: scale(.95); }
+
+/* Mật khẩu */
+.pwd-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--tg-theme-secondary-bg-color, #f4f6f9);
+  padding: 8px 12px; border-radius: 8px;
+  margin-top: 8px; font-size: 13px;
+  border: 1px solid rgba(0,0,0,.04);
+}
+.pwd-row .label { color: #888; font-size: 12px; font-weight: 600; }
+.pwd-row .pwd {
+  font-family: 'Courier New', monospace;
+  font-weight: 700; letter-spacing: 1px;
+  flex: 1; word-break: break-all;
+  color: var(--accent-2);
+}
+.pwd-row .icon-btn {
+  background: rgba(36,129,204,.1); border: none;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; padding: 0;
+  transition: all .15s ease; color: var(--accent-1);
+}
+.pwd-row .icon-btn:active { transform: scale(.9); background: rgba(36,129,204,.2); }
+.pwd-row .icon-btn.loading { opacity: .5; pointer-events: none; }
 
 form label { display: block; margin-bottom: 14px; font-size: 13px; font-weight: 600; opacity: .9; }
 form input, form select {
@@ -115,12 +140,21 @@ form label.row input[type="checkbox"] {
   background: linear-gradient(135deg, rgba(243,156,18,.08), rgba(230,126,34,.06));
   border: 1.5px dashed rgba(243,156,18,.4);
   border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  margin-bottom: 14px;
+  padding: 12px 14px; margin-bottom: 14px;
   animation: slideDown .25s ease;
 }
 .promo-field label { margin-bottom: 0; color: var(--warn-2); font-weight: 700; }
 .promo-field input { margin-top: 8px; background: #fff; border-color: rgba(243,156,18,.3); }
+
+.fee-info {
+  background: linear-gradient(135deg, rgba(255,92,92,.08), rgba(231,76,60,.06));
+  border: 1.5px dashed rgba(255,92,92,.4);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px; margin-bottom: 14px;
+  font-size: 13px; color: var(--danger-2); font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+}
+
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -166,22 +200,23 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .profit-box .stat-row {
   display: flex; justify-content: space-around; margin-top: 12px;
   padding-top: 12px; border-top: 1px solid rgba(255,255,255,.25);
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; flex-wrap: wrap; gap: 6px;
 }
-.profit-box .stat-row > div { font-size: 12px; text-align: center; }
-.profit-box .stat-row b { display: block; font-size: 14px; margin-top: 2px; }
+.profit-box .stat-row > div { font-size: 12px; text-align: center; min-width: 70px; }
+.profit-box .stat-row b { display: block; font-size: 13px; margin-top: 2px; }
 
 .acc-row {
   padding: 12px 0; border-bottom: 1px dashed rgba(0,0,0,.1);
-  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
 }
 .acc-row:last-child { border-bottom: none; }
 .acc-row .lbl { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
-.acc-row .val { text-align: right; font-size: 13px; line-height: 1.5; }
+.acc-row .val { text-align: right; font-size: 13px; line-height: 1.6; }
 .acc-row .val .pos { color: var(--success-2); font-weight: 700; }
 .acc-row .val .neg { color: var(--danger-2); font-weight: 700; }
 .acc-row .val .km  { color: var(--warn-2); font-weight: 700; }
-.acc-row .val .sub { font-size: 12px; opacity: .7; display: block; margin-top: 2px; }
+.acc-row .val .fee { color: var(--danger-2); font-weight: 600; }
+.acc-row .val .sub { font-size: 12px; opacity: .75; display: block; margin-top: 2px; }
 
 .loading { text-align: center; padding: 40px 20px; opacity: .7; font-size: 14px; }
 .spinner {
@@ -234,10 +269,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   content: ""; width: 8px; height: 8px;
   background: #fff; border-radius: 50%; animation: blink 1.5s ease infinite;
 }
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .3; }
-}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 </style>
 </head>
 <body>
@@ -254,12 +286,10 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <button data-view="history">📜 Lịch sử</button>
 </nav>
 
-<!-- ============ DANH SÁCH ============ -->
 <section id="view-list" class="view active">
   <div id="accounts"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </section>
 
-<!-- ============ THÊM ============ -->
 <section id="view-add" class="view">
   <div class="section-title">➕ Thêm tài khoản mới</div>
   <form id="form-add">
@@ -284,7 +314,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   </form>
 </section>
 
-<!-- ============ PHIÊN ============ -->
 <section id="view-session" class="view">
   <div id="session-info" class="card">
     <div class="meta">Chưa có phiên nào đang mở.</div>
@@ -306,7 +335,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       <label>Loại giao dịch
         <select name="type" id="tx-type">
           <option value="deposit">💵 Nạp tiền</option>
-          <option value="withdraw">💸 Rút tiền</option>
+          <option value="withdraw">💸 Rút tiền (phí 10%)</option>
         </select>
       </label>
       <label>Số tiền
@@ -320,6 +349,10 @@ button:disabled { opacity: .5; cursor: not-allowed; }
         </label>
       </div>
 
+      <div class="fee-info" id="fee-tx-wrap" style="display:none;">
+        💸 Phí rút 10% sẽ được tự động trừ vào số tiền rút
+      </div>
+
       <button type="submit" class="primary">➕ Ghi nhận giao dịch</button>
     </form>
   </div>
@@ -328,7 +361,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <div id="session-detail"></div>
 </section>
 
-<!-- ============ LỊCH SỬ ============ -->
 <section id="view-history" class="view">
   <div id="history"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </section>
@@ -338,9 +370,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 <script>
 /* ============================================================
    ⚙️ SỬA DUY NHẤT DÒNG NÀY: URL backend (tunnel HTTPS)
-   Dùng dấu nháy đơn ' để tránh lỗi smart-quote
    ============================================================ */
-const API_BASE = 'https://bottom-imposed-dpi-longitude.trycloudflare.com';
+const API_BASE = 'https://pmid-adapters-endless-healthcare.trycloudflare.com/';
 /* ============================================================ */
 
 const tg = window.Telegram.WebApp;
@@ -414,9 +445,15 @@ async function loadAccounts() {
       <div class="card ${a.promotion ? "promo" : ""}">
         <div class="name">👤 ${esc(a.account_name)}</div>
         <div class="meta">🔢 STK: <b>${esc(a.account_number)}</b></div>
+        <div class="pwd-row">
+          <span class="label">🔑</span>
+          <span class="pwd" id="pwd-${a.id}">••••••••</span>
+          <button class="icon-btn" onclick="togglePassword(${a.id}, this)" title="Xem mật khẩu">👁</button>
+          <button class="icon-btn" onclick="copyPassword(${a.id})" title="Sao chép">📋</button>
+        </div>
         ${a.promotion
-          ? `<div class="meta">🎁 Khuyến mãi: <b>${fmt(a.promotion_amount)}</b></div>`
-          : `<div class="meta" style="opacity:.5;">❌ Không có khuyến mãi</div>`}
+          ? `<div class="meta" style="margin-top:8px;">🎁 Khuyến mãi: <b>${fmt(a.promotion_amount)}</b></div>`
+          : `<div class="meta" style="margin-top:8px; opacity:.5;">❌ Không có khuyến mãi</div>`}
         <div class="actions">
           <button onclick="delAccount(${a.id})">🗑 Xóa</button>
         </div>
@@ -428,10 +465,74 @@ async function loadAccounts() {
       <div class="hint">${esc(e.message)}</div></div>`;
   }
 }
+
+/* Cache mật khẩu đã giải mã trong session */
+const pwdCache = {};
+
+async function fetchPassword(id) {
+  if (pwdCache[id]) return pwdCache[id];
+  const r = await api("/api/accounts/" + id + "/password");
+  pwdCache[id] = r.password;
+  return r.password;
+}
+
+window.togglePassword = async function (id, btn) {
+  const span = document.getElementById("pwd-" + id);
+  const isHidden = span.textContent.startsWith("•");
+  if (isHidden) {
+    btn.classList.add("loading");
+    try {
+      const pwd = await fetchPassword(id);
+      span.textContent = pwd;
+      btn.textContent = "🙈";
+      btn.title = "Ẩn mật khẩu";
+    } catch (e) {
+      toast("Không lấy được mật khẩu: " + e.message, "error");
+    } finally {
+      btn.classList.remove("loading");
+    }
+  } else {
+    span.textContent = "••••••••";
+    btn.textContent = "👁";
+    btn.title = "Xem mật khẩu";
+  }
+};
+
+window.copyPassword = async function (id) {
+  try {
+    const pwd = await fetchPassword(id);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(pwd);
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = pwd;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    toast("Đã sao chép mật khẩu ✅", "success");
+    const span = document.getElementById("pwd-" + id);
+    span.textContent = pwd;
+    setTimeout(() => {
+      if (span.textContent === pwd) {
+        span.textContent = "••••••••";
+        const btn = span.parentElement.querySelector('.icon-btn');
+        if (btn) { btn.textContent = "👁"; btn.title = "Xem mật khẩu"; }
+      }
+    }, 3000);
+  } catch (e) {
+    toast("Lỗi: " + e.message, "error");
+  }
+};
+
 window.delAccount = async (id) => {
   if (!confirm("Xóa tài khoản này?")) return;
   try {
     await api("/api/accounts/" + id, { method: "DELETE" });
+    delete pwdCache[id];
     toast("Đã xóa tài khoản", "success");
     loadAccounts();
   } catch (e) { toast("Lỗi: " + e.message, "error"); }
@@ -511,10 +612,14 @@ async function loadSessionView() {
           <div class="hint">Ghi nạp/rút ở form phía trên</div></div>`;
       } else {
         const rows = st.accounts.map(a => {
-          const p = a.withdraw - a.deposit;
+          const netWithdraw = a.withdraw - a.fee;
+          const p = netWithdraw - a.deposit;
           const cls = p >= 0 ? "pos" : "neg";
           const promoLine = a.promotion > 0
-            ? `<span class="sub">🎁 Khuyến mãi được tặng: <b class="km">+${fmt(a.promotion)}</b></span>`
+            ? `<span class="sub">🎁 Khuyến mãi: <b class="km">+${fmt(a.promotion)}</b></span>`
+            : "";
+          const feeLine = a.fee > 0
+            ? `<span class="sub">💸 Phí rút 10%: <b class="fee">-${fmt(a.fee)}</b></span>`
             : "";
           return `
             <div class="acc-row">
@@ -522,16 +627,20 @@ async function loadSessionView() {
               <div class="val">
                 💵 ${fmt(a.deposit)} <span style="opacity:.5;">→</span> 💸 ${fmt(a.withdraw)}
                 ${promoLine}
+                ${feeLine}
                 <span class="sub">Lợi nhuận: <b class="${cls}">${fmt(p)}</b></span>
               </div>
             </div>`;
         }).join("");
 
-        const totalProfit = st.total_withdraw - st.total_deposit;
+        const netWithdraw = st.total_withdraw - st.total_fee;
+        const totalProfit = netWithdraw - st.total_deposit;
         const totalPct = st.total_deposit > 0
           ? (totalProfit / st.total_deposit) * 100 : 0;
         const promoStat = st.total_promotion > 0
           ? `<div>🎁 Khuyến mãi<b>${fmt(st.total_promotion)}</b></div>` : "";
+        const feeStat = st.total_fee > 0
+          ? `<div>💸 Phí rút<b>${fmt(st.total_fee)}</b></div>` : "";
 
         detail.innerHTML = `
           <div class="card profit">${rows}</div>
@@ -541,7 +650,8 @@ async function loadSessionView() {
             <div class="percent">${totalProfit >= 0 ? "📈" : "📉"} ${fmtPct(totalPct)}</div>
             <div class="stat-row">
               <div>💵 Tổng nạp<b>${fmt(st.total_deposit)}</b></div>
-              <div>💸 Tổng rút<b>${fmt(st.total_withdraw)}</b></div>
+              <div>💸 Rút gộp<b>${fmt(st.total_withdraw)}</b></div>
+              ${feeStat}
               ${promoStat}
             </div>
           </div>
@@ -564,9 +674,10 @@ async function loadSessionView() {
 }
 
 document.getElementById("tx-type").onchange = (e) => {
-  const wrap = document.getElementById("promo-tx-wrap");
-  wrap.style.display = e.target.value === "deposit" ? "block" : "none";
-  if (e.target.value === "withdraw") {
+  const isDeposit = e.target.value === "deposit";
+  document.getElementById("promo-tx-wrap").style.display = isDeposit ? "block" : "none";
+  document.getElementById("fee-tx-wrap").style.display = isDeposit ? "none" : "flex";
+  if (!isDeposit) {
     e.target.form.elements["promotion_amount"].value = 0;
   }
 };
@@ -593,21 +704,28 @@ document.getElementById("form-tx").onsubmit = async (e) => {
   const submitBtn = e.target.querySelector('button[type="submit"]');
   const fd = new FormData(e.target);
   const type = fd.get("type");
+  const amount = parseFloat(fd.get("amount"));
   const body = {
     account_id: parseInt(fd.get("account_id")),
     type: type,
-    amount: parseFloat(fd.get("amount")),
+    amount: amount,
     promotion_amount: type === "deposit" ? parseFloat(fd.get("promotion_amount") || 0) : 0,
   };
   if (!body.account_id) { toast("Chưa có tài khoản", "error"); return; }
   submitBtn.disabled = true;
   submitBtn.textContent = "⏳ Đang ghi...";
   try {
-    await api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
-    const km = body.promotion_amount > 0 ? ` (+${fmt(body.promotion_amount)} KM)` : "";
-    toast(`Đã ghi nhận ${type === "deposit" ? "nạp" : "rút"}${km} ✅`, "success");
+    const r = await api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
+    let msg = `Đã ghi nhận ${type === "deposit" ? "nạp" : "rút"} ✅`;
+    if (type === "withdraw" && r.fee) {
+      msg = `Rút ${fmt(amount)} → thực nhận ${fmt(amount - r.fee)} (phí ${fmt(r.fee)}) ✅`;
+    } else if (body.promotion_amount > 0) {
+      msg = `Đã ghi nhận nạp +${fmt(body.promotion_amount)} KM ✅`;
+    }
+    toast(msg, "success");
     e.target.reset();
     document.getElementById("promo-tx-wrap").style.display = "block";
+    document.getElementById("fee-tx-wrap").style.display = "none";
     loadSessionView();
   } catch (err) {
     toast(err.message, "error");
@@ -634,11 +752,14 @@ async function loadHistory() {
       const isProfit = r.profit >= 0;
       const promoLine = (r.promotion || 0) > 0
         ? `<div class="meta">🎁 Khuyến mãi: <b>${fmt(r.promotion)}</b></div>` : "";
+      const feeLine = (r.fee || 0) > 0
+        ? `<div class="meta">💸 Phí rút: <b style="color:#e74c3c;">${fmt(r.fee)}</b></div>` : "";
       return `
         <div class="card ${isProfit ? "profit" : "loss"}">
           <div class="name">📅 Phiên #${r.id}</div>
           <div class="meta">🕐 ${new Date(r.start).toLocaleString("vi-VN")}</div>
-          <div class="meta">💵 Nạp: <b>${fmt(r.deposit)}</b> • 💸 Rút: <b>${fmt(r.withdraw)}</b></div>
+          <div class="meta">💵 Nạp: <b>${fmt(r.deposit)}</b> • 💸 Rút gộp: <b>${fmt(r.withdraw)}</b></div>
+          ${feeLine}
           ${promoLine}
         </div>
         <div class="profit-box ${isProfit ? "" : "loss"}" style="margin-top:-6px;">
