@@ -6,75 +6,443 @@
 <title>Quản lý tài khoản</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-  margin: 0; padding: 16px;
-  padding-bottom: calc(40px + env(safe-area-inset-bottom));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--tg-theme-bg-color, #fff);
-  color: var(--tg-theme-text-color, #000);
+/* ============ RESET & BASE ============ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+:root {
+  --accent-1: #2481cc;
+  --accent-2: #1e6fa8;
+  --success-1: #2ecc71;
+  --success-2: #27ae60;
+  --danger-1: #ff5c5c;
+  --danger-2: #e74c3c;
+  --warn-1: #f39c12;
+  --warn-2: #e67e22;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 2px 6px rgba(0,0,0,.06);
+  --shadow: 0 4px 14px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
 }
-h1 { font-size: 20px; margin: 8px 0 4px; }
-h3 { font-size: 16px; margin: 20px 0 10px; }
-.tabs { display: flex; gap: 6px; margin: 12px 0 16px; overflow-x: auto; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background: var(--tg-theme-bg-color, #f5f6f8);
+  color: var(--tg-theme-text-color, #1a1a1a);
+  padding: 0 0 calc(30px + env(safe-area-inset-bottom)) 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ HEADER ============ */
+.header {
+  background: linear-gradient(135deg, #2481cc 0%, #1e6fa8 50%, #155d8f 100%);
+  color: #fff;
+  padding: calc(20px + env(safe-area-inset-top)) 18px 22px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 4px 20px rgba(36,129,204,.25);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.header::before {
+  content: "";
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,.15), transparent 70%);
+  border-radius: 50%;
+}
+.header::after {
+  content: "";
+  position: absolute;
+  bottom: -40%; left: -10%;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(255,255,255,.1), transparent 70%);
+  border-radius: 50%;
+}
+.header .title {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -0.3px;
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 8px;
+}
+.header .subtitle {
+  font-size: 13px; opacity: .85;
+  margin-top: 4px;
+  position: relative; z-index: 1;
+}
+
+/* ============ TABS ============ */
+.tabs {
+  display: flex; gap: 6px; margin: 0 14px 18px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
 .tabs button {
-  flex: 1 1 auto; min-width: 80px; padding: 9px 12px;
-  border: none; border-radius: 8px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: var(--tg-theme-text-color, #000);
-  font-weight: 500; font-size: 13px; white-space: nowrap;
+  flex: 1 0 auto;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--tg-theme-secondary-bg-color, #fff);
+  color: var(--tg-theme-text-color, #555);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 5px;
+  justify-content: center;
 }
 .tabs button.active {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-text-color, #fff);
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(36,129,204,.35);
+  transform: translateY(-1px);
 }
-.view { display: none; }
+.tabs button:active { transform: scale(.97); }
+
+/* ============ VIEW ============ */
+.view { display: none; padding: 0 14px; animation: fadeIn .25s ease; }
 .view.active { display: block; }
-form label { display: block; margin-bottom: 12px; font-size: 14px; font-weight: 500; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ CARDS ============ */
+.card {
+  background: var(--tg-theme-bg-color, #fff);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0,0,0,.03);
+  transition: transform .15s ease, box-shadow .15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card:active { transform: scale(.985); }
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+}
+.card.profit::before   { background: linear-gradient(180deg, var(--success-1), var(--success-2)); }
+.card.loss::before     { background: linear-gradient(180deg, var(--danger-1), var(--danger-2)); }
+.card.promo::before    { background: linear-gradient(180deg, var(--warn-1), var(--warn-2)); }
+
+.card .name {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+  color: var(--tg-theme-text-color, #1a1a1a);
+}
+.card .meta {
+  font-size: 13px;
+  opacity: .85;
+  line-height: 1.7;
+  display: flex; align-items: center; gap: 6px;
+}
+.card .actions {
+  margin-top: 12px;
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.card .actions button {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s ease;
+  background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(231,76,60,.25);
+}
+.card .actions button:active { transform: scale(.95); }
+
+/* ============ FORM ============ */
+form label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #333);
+  opacity: .9;
+}
 form input, form select {
-  width: 100%; padding: 11px; margin-top: 5px;
-  border-radius: 8px; border: 1px solid #ccc8;
-  font-size: 16px;
+  width: 100%;
+  padding: 13px 14px;
+  margin-top: 6px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(0,0,0,.08);
+  font-size: 15px;
+  font-weight: 500;
   background: var(--tg-theme-bg-color, #fff);
   color: var(--tg-theme-text-color, #000);
+  transition: all .2s ease;
+  outline: none;
+  font-family: inherit;
 }
-form label.row { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
-form label.row input[type="checkbox"] { width: auto; margin: 0; transform: scale(1.2); }
+form input:focus, form select:focus {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 4px rgba(36,129,204,.12);
+}
+form label.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--tg-theme-secondary-bg-color, #f8f9fb);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+form label.row input[type="checkbox"] {
+  width: 20px; height: 20px;
+  margin: 0;
+  accent-color: var(--accent-1);
+  cursor: pointer;
+}
+
+/* ============ BUTTONS ============ */
 button.primary, button.danger, button.ghost {
-  width: 100%; padding: 13px; border: none; border-radius: 8px;
-  font-size: 15px; font-weight: 600; margin-top: 8px;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+  letter-spacing: .2px;
 }
-button.primary { background: var(--tg-theme-button-color, #2481cc); color: #fff; }
-button.danger  { background: #e74c3c; color: #fff; }
-button.ghost   { background: transparent; color: var(--tg-theme-text-color, #000); border: 1px solid #8884; }
-button:active { opacity: .75; }
-.card {
-  background: var(--tg-theme-secondary-bg-color, #f8f8f8);
-  padding: 12px 14px; border-radius: 10px; margin-bottom: 10px;
+button.primary {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(36,129,204,.3);
 }
-.card .name { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
-.card .meta { font-size: 13px; opacity: .85; line-height: 1.5; }
-.card .actions { margin-top: 10px; display: flex; gap: 8px; }
-.card .actions button {
-  padding: 6px 12px; border-radius: 6px; border: none;
-  font-size: 13px; background: #e74c3c; color: #fff;
+button.danger {
+  background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(231,76,60,.3);
 }
-.loading { opacity: .6; font-style: italic; text-align: center; padding: 20px; }
-.empty { opacity: .6; text-align: center; padding: 30px 10px; }
+button.ghost {
+  background: var(--tg-theme-secondary-bg-color, #f0f2f5);
+  color: var(--tg-theme-text-color, #333);
+}
+button.primary:active, button.danger:active, button.ghost:active {
+  transform: scale(.97);
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ============ PROFIT BOX ============ */
+.profit-box {
+  background: linear-gradient(135deg, var(--success-1), var(--success-2));
+  color: #fff;
+  padding: 18px;
+  border-radius: var(--radius);
+  margin: 14px 0;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(46,204,113,.3);
+  position: relative;
+  overflow: hidden;
+  animation: pulseIn .4s ease;
+}
+@keyframes pulseIn {
+  0%   { transform: scale(.95); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.profit-box.loss {
+  background: linear-gradient(135deg, var(--danger-1), var(--danger-2));
+  box-shadow: 0 6px 20px rgba(231,76,60,.3);
+}
+.profit-box::before {
+  content: "";
+  position: absolute;
+  top: -60%; right: -20%;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(255,255,255,.15), transparent 70%);
+  border-radius: 50%;
+}
+.profit-box .label {
+  font-size: 12px;
+  opacity: .9;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  position: relative; z-index: 1;
+}
+.profit-box .value {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0;
+  letter-spacing: -0.5px;
+  position: relative; z-index: 1;
+}
+.profit-box .percent {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: .95;
+  position: relative; z-index: 1;
+  display: inline-block;
+  background: rgba(255,255,255,.2);
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+.profit-box .stat-row {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.25);
+  position: relative; z-index: 1;
+}
+.profit-box .stat-row > div { font-size: 13px; }
+.profit-box .stat-row b { display: block; font-size: 14px; margin-top: 2px; }
+
+/* ============ ACCOUNT ROW ============ */
+.acc-row {
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(0,0,0,.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.acc-row:last-child { border-bottom: none; }
+.acc-row .lbl {
+  font-weight: 600;
+  font-size: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.acc-row .val {
+  text-align: right;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.acc-row .val .pos { color: var(--success-2); font-weight: 700; }
+.acc-row .val .neg { color: var(--danger-2); font-weight: 700; }
+.acc-row .val .sub { font-size: 12px; opacity: .7; display: block; }
+
+/* ============ LOADING & EMPTY ============ */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: .7;
+  font-size: 14px;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(36,129,204,.15);
+  border-top-color: var(--accent-1);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  opacity: .65;
+}
+.empty .icon { font-size: 52px; display: block; margin-bottom: 12px; opacity: .6; }
+.empty .title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.empty .hint { font-size: 13px; opacity: .7; }
+
+/* ============ SECTION TITLE ============ */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  opacity: .55;
+  margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ============ TOAST ============ */
 #toast {
-  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom));
-  left: 50%; transform: translateX(-50%);
-  background: #333; color: #fff; padding: 10px 20px;
-  border-radius: 20px; opacity: 0; transition: opacity .3s;
-  pointer-events: none; z-index: 1000; font-size: 14px; max-width: 90%;
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2c3e50;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 999px;
+  opacity: 0;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 90%;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  display: flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-#toast.show { opacity: 1; }
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+#toast.success { background: linear-gradient(135deg, var(--success-1), var(--success-2)); }
+#toast.error   { background: linear-gradient(135deg, var(--danger-1), var(--danger-2)); }
+#toast.info    { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
+
+/* ============ SESSION INFO CARD ============ */
+.session-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--success-1), var(--success-2));
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(46,204,113,.35);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(46,204,113,.35); }
+  50%      { box-shadow: 0 2px 16px rgba(46,204,113,.55); }
+}
+.session-active-badge::before {
+  content: "";
+  width: 8px; height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: blink 1.5s ease infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .3; }
+}
 </style>
 </head>
 <body>
 
-<h1>💼 Quản lý tài khoản</h1>
+<!-- ==================== HEADER ==================== -->
+<div class="header">
+  <div class="title">💼 Quản lý tài khoản</div>
+  <div class="subtitle">Theo dõi nạp/rút & tính lợi nhuận</div>
+</div>
 
+<!-- ==================== TABS ==================== -->
 <nav class="tabs">
   <button data-view="list" class="active">📋 Danh sách</button>
   <button data-view="add">➕ Thêm</button>
@@ -82,70 +450,88 @@ button:active { opacity: .75; }
   <button data-view="history">📜 Lịch sử</button>
 </nav>
 
-<!-- View: Danh sách -->
+<!-- ==================== VIEW: DANH SÁCH ==================== -->
 <section id="view-list" class="view active">
-  <div id="accounts"><p class="loading">Đang tải...</p></div>
+  <div id="accounts">
+    <div class="loading"><div class="spinner"></div>Đang tải...</div>
+  </div>
 </section>
 
-<!-- View: Thêm -->
+<!-- ==================== VIEW: THÊM ==================== -->
 <section id="view-add" class="view">
+  <div class="section-title">➕ Thêm tài khoản mới</div>
   <form id="form-add">
     <label>Tên account
-      <input name="account_name" required placeholder="VD: ACC-001" />
+      <input name="account_name" required placeholder="VD: ACC-001" autocomplete="off" />
     </label>
     <label>Mật khẩu rút tiền
-      <input type="password" name="withdraw_password" required placeholder="••••••" />
+      <input type="password" name="withdraw_password" required placeholder="••••••" autocomplete="new-password" />
     </label>
     <label>Số tài khoản
-      <input name="account_number" required placeholder="123456789" />
+      <input name="account_number" required placeholder="123456789" inputmode="numeric" autocomplete="off" />
     </label>
     <label class="row">
-      <input type="checkbox" name="promotion" id="chk-promo" /> Có khuyến mãi
+      <input type="checkbox" name="promotion" id="chk-promo" />
+      <span>🎁 Có khuyến mãi</span>
     </label>
     <label id="promo-amount-wrap" style="display:none;">Số tiền khuyến mãi
       <input type="number" name="promotion_amount" value="0" min="0" step="1000" />
     </label>
-    <button type="submit" class="primary">💾 Lưu</button>
-    <button type="button" class="ghost" onclick="tg.close()">Hủy</button>
+    <button type="submit" class="primary">💾 Lưu tài khoản</button>
+    <button type="button" class="ghost" id="btn-reset">🔄 Nhập lại</button>
   </form>
 </section>
 
-<!-- View: Phiên -->
+<!-- ==================== VIEW: PHIÊN ==================== -->
 <section id="view-session" class="view">
-  <div id="session-info" class="card">Chưa có phiên nào đang mở.</div>
-  <button id="btn-start" class="primary">▶️ Bắt đầu phiên</button>
-  <button id="btn-end" class="danger">⏹ Kết thúc phiên</button>
-  <h3>Ghi giao dịch</h3>
-  <form id="form-tx">
-    <label>Tài khoản
-      <select name="account_id" id="tx-account" required></select>
-    </label>
-    <label>Loại
-      <select name="type" id="tx-type">
-        <option value="deposit">💵 Nạp</option>
-        <option value="withdraw">💸 Rút</option>
-      </select>
-    </label>
-    <label>Số tiền
-      <input type="number" name="amount" required min="0" step="1000" placeholder="1000000" />
-    </label>
-    <label id="tx-promo-wrap">Khuyến mãi (chỉ khi nạp)
-      <input type="number" name="promotion_amount" value="0" min="0" step="1000" />
-    </label>
-    <button type="submit" class="primary">➕ Ghi nhận</button>
-  </form>
+  <div id="session-info" class="card">
+    <div class="meta">Chưa có phiên nào đang mở.</div>
+  </div>
+
+  <div id="session-actions">
+    <button id="btn-start" class="primary">▶️ Bắt đầu phiên mới</button>
+  </div>
+
+  <div id="btn-end-wrap" style="display:none;">
+    <button id="btn-end" class="danger">⏹ Kết thúc phiên</button>
+  </div>
+
+  <div id="session-entry" style="display:none;">
+    <div class="section-title">➕ Ghi giao dịch</div>
+    <form id="form-tx">
+      <label>Tài khoản
+        <select name="account_id" id="tx-account" required></select>
+      </label>
+      <label>Loại giao dịch
+        <select name="type" id="tx-type">
+          <option value="deposit">💵 Nạp tiền</option>
+          <option value="withdraw">💸 Rút tiền</option>
+        </select>
+      </label>
+      <label>Số tiền
+        <input type="number" name="amount" required min="0" step="1000" placeholder="1000000" inputmode="numeric" />
+      </label>
+      <button type="submit" class="primary">➕ Ghi nhận giao dịch</button>
+    </form>
+  </div>
+
+  <div class="section-title">📊 Chi tiết phiên</div>
+  <div id="session-detail"></div>
 </section>
 
-<!-- View: Lịch sử -->
+<!-- ==================== VIEW: LỊCH SỬ ==================== -->
 <section id="view-history" class="view">
-  <div id="history"><p class="loading">Đang tải...</p></div>
+  <div id="history">
+    <div class="loading"><div class="spinner"></div>Đang tải...</div>
+  </div>
 </section>
 
 <div id="toast"></div>
 
 <script>
 /* ============================================================
-   ⚙️ SỬA DUY NHẤT DÒNG NÀY: URL của backend (tunnel HTTPS)
+   ⚙️ SỬA DUY NHẤT DÒNG NÀY: URL backend (tunnel HTTPS)
+   Dùng dấu nháy đơn ' để tránh lỗi smart-quote
    ============================================================ */
 const API_BASE = 'https://round-paid-miller-processor.trycloudflare.com';
 /* ============================================================ */
@@ -153,9 +539,11 @@ const API_BASE = 'https://round-paid-miller-processor.trycloudflare.com';
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
+try { tg.setHeaderColor('secondary_bg_color'); } catch (e) {}
 
 const initData = tg.initData;
 
+/* ============ API WRAPPER ============ */
 async function api(path, opts = {}) {
   const res = await fetch(API_BASE + path, {
     ...opts,
@@ -173,23 +561,27 @@ async function api(path, opts = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+/* ============ TOAST ============ */
 let toastTimer;
-function toast(msg) {
+function toast(msg, type = "info") {
   const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
+  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+  el.innerHTML = `<span>${icons[type] || ""}</span><span>${msg}</span>`;
+  el.className = "show " + type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  toastTimer = setTimeout(() => { el.className = ""; }, 2500);
 }
 
+/* ============ HELPERS ============ */
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
   );
 }
 function fmt(n) { return Number(n || 0).toLocaleString("vi-VN"); }
+function fmtPct(n) { return (Number(n || 0)).toFixed(2) + "%"; }
 
-/* ---------- Tabs ---------- */
+/* ============ TAB NAV ============ */
 document.querySelectorAll(".tabs button").forEach(btn => {
   btn.onclick = () => switchView(btn.dataset.view);
 });
@@ -203,46 +595,67 @@ function switchView(view) {
   if (view === "session") loadSessionView();
 }
 
-/* ---------- Danh sách ---------- */
+/* ============ DANH SÁCH ============ */
 async function loadAccounts() {
   const box = document.getElementById("accounts");
-  box.innerHTML = `<p class="loading">Đang tải...</p>`;
+  box.innerHTML = `<div class="loading"><div class="spinner"></div>Đang tải...</div>`;
   try {
     const accs = await api("/api/accounts");
     if (!accs.length) {
-      box.innerHTML = `<p class="empty">Chưa có tài khoản nào.</p>`;
+      box.innerHTML = `
+        <div class="empty">
+          <span class="icon">📭</span>
+          <div class="title">Chưa có tài khoản nào</div>
+          <div class="hint">Vào tab ➕ Thêm để tạo tài khoản đầu tiên</div>
+        </div>`;
       return;
     }
     box.innerHTML = accs.map(a => `
-      <div class="card">
-        <div class="name">${esc(a.account_name)}</div>
-        <div class="meta">🔢 STK: ${esc(a.account_number)}</div>
-        <div class="meta">🎁 Khuyến mãi: ${a.promotion ? "✅ " + fmt(a.promotion_amount) : "❌"}</div>
+      <div class="card ${a.promotion ? "promo" : ""}">
+        <div class="name">👤 ${esc(a.account_name)}</div>
+        <div class="meta">🔢 STK: <b>${esc(a.account_number)}</b></div>
+        ${a.promotion
+          ? `<div class="meta">🎁 Khuyến mãi: <b>${fmt(a.promotion_amount)}</b></div>`
+          : `<div class="meta" style="opacity:.5;">❌ Không có khuyến mãi</div>`}
         <div class="actions">
           <button onclick="delAccount(${a.id})">🗑 Xóa</button>
         </div>
       </div>`).join("");
   } catch (e) {
-    box.innerHTML = `<p class="empty">Lỗi: ${esc(e.message)}</p>`;
+    box.innerHTML = `
+      <div class="empty">
+        <span class="icon">⚠️</span>
+        <div class="title">Lỗi tải dữ liệu</div>
+        <div class="hint">${esc(e.message)}</div>
+      </div>`;
   }
 }
+
 window.delAccount = async (id) => {
   if (!confirm("Xóa tài khoản này?")) return;
   try {
     await api("/api/accounts/" + id, { method: "DELETE" });
-    toast("Đã xóa");
+    toast("Đã xóa tài khoản", "success");
     loadAccounts();
-  } catch (e) { toast("Lỗi: " + e.message); }
+  } catch (e) { toast("Lỗi: " + e.message, "error"); }
 };
 
-/* ---------- Form thêm ---------- */
+/* ============ FORM THÊM ============ */
 const chkPromo = document.getElementById("chk-promo");
 const promoWrap = document.getElementById("promo-amount-wrap");
 chkPromo.onchange = () => {
   promoWrap.style.display = chkPromo.checked ? "block" : "none";
 };
+
+document.getElementById("btn-reset").onclick = () => {
+  document.getElementById("form-add").reset();
+  promoWrap.style.display = "none";
+  toast("Đã xóa form", "info");
+};
+
 document.getElementById("form-add").onsubmit = async (e) => {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const fd = new FormData(e.target);
   const body = {
     account_name: fd.get("account_name"),
@@ -251,104 +664,197 @@ document.getElementById("form-add").onsubmit = async (e) => {
     promotion: fd.get("promotion") === "on",
     promotion_amount: parseFloat(fd.get("promotion_amount") || 0),
   };
+  submitBtn.disabled = true;
+  submitBtn.textContent = "⏳ Đang lưu...";
   try {
     await api("/api/accounts", { method: "POST", body: JSON.stringify(body) });
-    toast("Đã lưu ✅");
+    toast("Đã lưu tài khoản ✅", "success");
     e.target.reset();
     promoWrap.style.display = "none";
-    setTimeout(() => tg.close(), 700);
-  } catch (err) { toast("Lỗi: " + err.message); }
+
+    // ⚡ KHÔNG đóng Mini App — chuyển sang tab Danh sách để xem kết quả
+    setTimeout(() => switchView("list"), 600);
+  } catch (err) {
+    toast("Lỗi: " + err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "💾 Lưu tài khoản";
+  }
 };
 
-/* ---------- Phiên ---------- */
+/* ============ PHIÊN ============ */
 async function loadSessionView() {
+  // Load accounts vào select
   try {
     const accs = await api("/api/accounts");
     const sel = document.getElementById("tx-account");
     sel.innerHTML = accs.length
       ? accs.map(a => `<option value="${a.id}">${esc(a.account_name)} — ${esc(a.account_number)}</option>`).join("")
-      : `<option value="">— Chưa có tài khoản —</option>`;
+      : `<option value="">— Chưa có tài khoản nào —</option>`;
   } catch (e) { /* ignore */ }
 
   try {
     const st = await api("/api/sessions/current");
     const info = document.getElementById("session-info");
+    const entry = document.getElementById("session-entry");
+    const detail = document.getElementById("session-detail");
+    const btnStart = document.getElementById("btn-start");
+    const btnEndWrap = document.getElementById("btn-end-wrap");
+
     if (st.active) {
       info.innerHTML = `
-        <div class="name">🟢 Phiên #${st.id} đang mở</div>
-        <div class="meta">🕐 ${new Date(st.start_time).toLocaleString("vi-VN")}</div>
-        <div class="meta">💵 Nạp: ${fmt(st.total_deposit)} | 💸 Rút: ${fmt(st.total_withdraw)} | 🎁 KM: ${fmt(st.total_promotion)}</div>
-        <div class="meta"><b>Tạm tính: ${fmt(st.total_withdraw - st.total_deposit + st.total_promotion)}</b></div>`;
+        <div class="name">
+          <span class="session-active-badge">ĐANG MỞ • Phiên #${st.id}</span>
+        </div>
+        <div class="meta" style="margin-top:8px;">🕐 Bắt đầu: <b>${new Date(st.start_time).toLocaleString("vi-VN")}</b></div>
+      `;
+      entry.style.display = "block";
+      btnStart.style.display = "none";
+      btnEndWrap.style.display = "block";
+
+      if (!st.accounts || !st.accounts.length) {
+        detail.innerHTML = `
+          <div class="empty">
+            <span class="icon">📝</span>
+            <div class="title">Chưa có giao dịch nào</div>
+            <div class="hint">Ghi nạp/rút ở form phía trên</div>
+          </div>`;
+      } else {
+        const rows = st.accounts.map(a => {
+          const p = a.withdraw - a.deposit;
+          const cls = p >= 0 ? "pos" : "neg";
+          return `
+            <div class="acc-row">
+              <div class="lbl">👤 ${esc(a.account_name)}</div>
+              <div class="val">
+                💵 ${fmt(a.deposit)} <span style="opacity:.5;">→</span> 💸 ${fmt(a.withdraw)}
+                <span class="sub">Lợi nhuận: <b class="${cls}">${fmt(p)}</b></span>
+              </div>
+            </div>`;
+        }).join("");
+
+        const totalProfit = st.total_withdraw - st.total_deposit;
+        const totalPct = st.total_deposit > 0
+          ? (totalProfit / st.total_deposit) * 100 : 0;
+
+        detail.innerHTML = `
+          <div class="card profit">
+            ${rows}
+          </div>
+          <div class="profit-box ${totalProfit < 0 ? "loss" : ""}">
+            <div class="label">TỔNG LỢI NHUẬN TẠM TÍNH</div>
+            <div class="value">${totalProfit >= 0 ? "+" : ""}${fmt(totalProfit)}</div>
+            <div class="percent">${totalProfit >= 0 ? "📈" : "📉"} ${fmtPct(totalPct)}</div>
+            <div class="stat-row">
+              <div>💵 Tổng nạp<b>${fmt(st.total_deposit)}</b></div>
+              <div>💸 Tổng rút<b>${fmt(st.total_withdraw)}</b></div>
+            </div>
+          </div>
+        `;
+      }
     } else {
-      info.innerHTML = `<div class="meta">Chưa có phiên nào đang mở.</div>`;
+      info.innerHTML = `<div class="meta">💤 Chưa có phiên nào đang mở.</div>`;
+      entry.style.display = "none";
+      btnStart.style.display = "block";
+      btnEndWrap.style.display = "none";
+      detail.innerHTML = `
+        <div class="empty">
+          <span class="icon">▶️</span>
+          <div class="title">Bắt đầu phiên để ghi giao dịch</div>
+          <div class="hint">Mỗi phiên có thể ghi nhiều tài khoản</div>
+        </div>`;
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    document.getElementById("session-info").innerHTML =
+      `<div class="meta">⚠️ Lỗi: ${esc(e.message)}</div>`;
+  }
 }
 
-document.getElementById("tx-type").onchange = (e) => {
-  document.getElementById("tx-promo-wrap").style.display =
-    e.target.value === "deposit" ? "block" : "none";
-};
 document.getElementById("btn-start").onclick = async () => {
   try {
     const r = await api("/api/sessions/start", { method: "POST" });
-    toast(r.resumed ? "Tiếp tục phiên cũ" : "Đã bắt đầu phiên mới");
+    toast(r.resumed ? "Tiếp tục phiên cũ" : "Đã bắt đầu phiên mới", "success");
     loadSessionView();
-  } catch (e) { toast("Lỗi: " + e.message); }
+  } catch (e) { toast("Lỗi: " + e.message, "error"); }
 };
+
 document.getElementById("btn-end").onclick = async () => {
   if (!confirm("Kết thúc phiên và tính lợi nhuận?")) return;
   try {
     const r = await api("/api/sessions/end", { method: "POST" });
-    toast(`✅ Lợi nhuận: ${fmt(r.profit)}`);
+    toast(`Lợi nhuận: ${fmt(r.profit)} (${fmtPct(r.profit_percent)})`, "success");
     loadSessionView();
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message, "error"); }
 };
+
 document.getElementById("form-tx").onsubmit = async (e) => {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
   const fd = new FormData(e.target);
   const body = {
     account_id: parseInt(fd.get("account_id")),
     type: fd.get("type"),
     amount: parseFloat(fd.get("amount")),
-    promotion_amount: parseFloat(fd.get("promotion_amount") || 0),
+    promotion_amount: 0,
   };
-  if (!body.account_id) { toast("Chưa có tài khoản"); return; }
+  if (!body.account_id) { toast("Chưa có tài khoản", "error"); return; }
+  submitBtn.disabled = true;
+  submitBtn.textContent = "⏳ Đang ghi...";
   try {
     await api("/api/transactions", { method: "POST", body: JSON.stringify(body) });
-    toast("Đã ghi nhận ✅");
+    toast("Đã ghi nhận giao dịch ✅", "success");
     e.target.reset();
-    document.getElementById("tx-promo-wrap").style.display = "block";
     loadSessionView();
-  } catch (err) { toast(err.message); }
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "➕ Ghi nhận giao dịch";
+  }
 };
 
-/* ---------- Lịch sử ---------- */
+/* ============ LỊCH SỬ ============ */
 async function loadHistory() {
   const box = document.getElementById("history");
-  box.innerHTML = `<p class="loading">Đang tải...</p>`;
+  box.innerHTML = `<div class="loading"><div class="spinner"></div>Đang tải...</div>`;
   try {
     const rows = await api("/api/sessions/history");
     if (!rows.length) {
-      box.innerHTML = `<p class="empty">Chưa có phiên nào hoàn thành.</p>`;
+      box.innerHTML = `
+        <div class="empty">
+          <span class="icon">📜</span>
+          <div class="title">Chưa có phiên nào hoàn thành</div>
+          <div class="hint">Kết thúc phiên đầu tiên để xem lịch sử</div>
+        </div>`;
       return;
     }
     box.innerHTML = rows.map(r => {
-      const color = r.profit >= 0 ? "#2ecc71" : "#e74c3c";
+      const isProfit = r.profit >= 0;
       return `
-        <div class="card">
-          <div class="name">Phiên #${r.id}</div>
+        <div class="card ${isProfit ? "profit" : "loss"}">
+          <div class="name">📅 Phiên #${r.id}</div>
           <div class="meta">🕐 ${new Date(r.start).toLocaleString("vi-VN")}</div>
-          <div class="meta">💵 Nạp: ${fmt(r.deposit)} | 💸 Rút: ${fmt(r.withdraw)} | 🎁 KM: ${fmt(r.promotion)}</div>
-          <div class="meta" style="color:${color};font-weight:600;">📈 Lợi nhuận: ${fmt(r.profit)}</div>
-        </div>`;
+          <div class="meta">💵 Nạp: <b>${fmt(r.deposit)}</b> • 💸 Rút: <b>${fmt(r.withdraw)}</b></div>
+        </div>
+        <div class="profit-box ${isProfit ? "" : "loss"}" style="margin-top:-6px;">
+          <div class="label">LỢI NHUẬN</div>
+          <div class="value">${isProfit ? "+" : ""}${fmt(r.profit)}</div>
+          <div class="percent">${isProfit ? "📈" : "📉"} ${fmtPct(r.profit_percent || 0)}</div>
+        </div>
+        <div style="height:8px;"></div>
+      `;
     }).join("");
   } catch (e) {
-    box.innerHTML = `<p class="empty">Lỗi: ${esc(e.message)}</p>`;
+    box.innerHTML = `
+      <div class="empty">
+        <span class="icon">⚠️</span>
+        <div class="title">Lỗi tải lịch sử</div>
+        <div class="hint">${esc(e.message)}</div>
+      </div>`;
   }
 }
 
-/* ---------- Init ---------- */
+/* ============ INIT ============ */
 (function () {
   const view = new URLSearchParams(location.search).get("view") || "list";
   switchView(view);
