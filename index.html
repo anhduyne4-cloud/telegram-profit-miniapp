@@ -109,6 +109,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <body>
 
 <script>
+  // ====== ĐỔI THÀNH URL TUNNEL CỦA BẠN ======
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
 </script>
 
@@ -177,9 +178,14 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Broadcast</button>
   </div>
   <div class="stats-grid" id="adminStats"></div>
+
+  <div class="section-title" style="margin-top:16px"><span>🌐 Proxy đang hoạt động</span></div>
+  <div class="stats-grid" id="proxyStatsBox"></div>
+
   <div class="tabs" style="margin-top:14px">
     <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
     <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn</div>
+    <div class="tab" onclick="adminTab('proxies',this)">🌐 Proxy</div>
     <div class="tab" onclick="adminTab('keys',this)">🔑 Keys</div>
     <div class="tab" onclick="adminTab('logs',this)">📜 Log</div>
   </div>
@@ -297,6 +303,7 @@ function openModal(html) {
   document.getElementById("modalBg").classList.add("active");
 }
 
+// ===== PRODUCTS =====
 async function loadProducts() {
   const list = document.getElementById("productsList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
@@ -412,7 +419,7 @@ function showPurchased(r) {
 
   const proxiesHtml = hasStructured
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
-    : `<div class="code-box">${escapeHtml(raw || "(không có dữ liệu)")}</div>`;
+    : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
 
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -576,7 +583,7 @@ async function rotateOne(key, idx) {
 }
 
 async function deleteKey(keyId) {
-  if (!confirm("Xoá key này? Không thể hoàn tác.")) return;
+  if (!confirm("Xoá key này?")) return;
   try {
     const r = await api("/api/delete-key", {key_id: keyId});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
@@ -659,7 +666,6 @@ async function loadRotationHistory() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ===== ADD KEY MODAL =====
 function openAddKeyModal() {
   openModal(`
     <div class="modal-title">➕ Nhập key xoay<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -670,7 +676,6 @@ function openAddKeyModal() {
     <button class="btn btn-success btn-block" onclick="submitAddKey()">➕ Thêm key</button>
   `);
 }
-
 async function submitAddKey() {
   const key = document.getElementById("newKeyInput").value.trim();
   if (!key) { toast("Nhập key", "error"); return; }
@@ -779,7 +784,25 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
       <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
     `;
+    loadProxyStats();
     adminTab("users");
+  } catch(e) {}
+}
+
+async function loadProxyStats() {
+  try {
+    const r = await api("/api/admin/proxy-stats");
+    if (!r.ok) return;
+    const box = document.getElementById("proxyStatsBox");
+    if (!box) return;
+    box.innerHTML = `
+      <div class="stat-card gold"><div class="stat-val">${r.total_proxy_sold}</div><div class="stat-label">Tổng proxy</div></div>
+      <div class="stat-card green"><div class="stat-val">${r.alive_count}</div><div class="stat-label">🟢 Hoạt động</div></div>
+      <div class="stat-card pink"><div class="stat-val">${r.dead_count}</div><div class="stat-label">🔴 Hết hạn</div></div>
+      <div class="stat-card"><div class="stat-val">${r.unique_proxies}</div><div class="stat-label">Proxy unique</div></div>
+      <div class="stat-card green"><div class="stat-val">${r.alive_rate}%</div><div class="stat-label">Tỉ lệ sống</div></div>
+      <div class="stat-card"><div class="stat-val">${r.total_keys}</div><div class="stat-label">Keys xoay</div></div>
+    `;
   } catch(e) {}
 }
 
@@ -827,6 +850,54 @@ async function adminTab(tab, el) {
           <div class="info-row"><span>TG</span><span>${escapeHtml(o.created_at)}</span></div>
         </div>
       `).join("") || '<div class="empty">Chưa có</div>';
+    } else if (tab === "proxies") {
+      const filterUserId = prompt("Nhập User ID để lọc (bỏ trống = tất cả):") || "";
+      box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+      const r = await api("/api/admin/all-proxies", {
+        user_id: filterUserId ? parseInt(filterUserId) : null,
+        limit: 300
+      });
+      if (!r.ok) { box.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+      const summary = `
+        <div class="card" style="background:rgba(74,158,255,.1);border-color:var(--primary)">
+          <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px">📊 Tổng quan</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div>Tổng đơn: <b>${r.orders.length}</b></div>
+            <div>Tổng proxy: <b>${r.total_proxies}</b></div>
+            <div>🟢 Còn hạn: <b style="color:var(--success)">${r.alive_count}</b></div>
+            <div>🔴 Hết hạn: <b style="color:var(--danger)">${r.dead_count}</b></div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="adminTab('proxies', event.target)">🔄 Làm mới</button>
+        </div>
+      `;
+      const list = r.orders.map(o => {
+        const alive = o.is_alive;
+        const statusIcon = alive ? '<span style="color:var(--success)">🟢</span>' : '<span style="color:var(--danger)">🔴</span>';
+        const statusText = alive ? '<span style="color:var(--success);font-weight:700">Còn hạn</span>' : '<span style="color:var(--danger);font-weight:700">Hết hạn</span>';
+        const remaining = o.remaining ? ` (${o.remaining})` : "";
+
+        const proxiesHtml = (o.proxies || []).map(p =>
+          `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${statusIcon} ${escapeHtml(p)}</div>`
+        ).join("") || '<div style="font-size:11px;color:var(--muted)">Không có proxy</div>';
+
+        return `
+          <div class="card" style="border-color:${alive ? 'rgba(37,211,102,.3)' : 'rgba(255,71,87,.3)'}">
+            <div class="product-head">
+              <div class="product-name">${escapeHtml(o.resource_name || "")}</div>
+              <div class="stock-tag">SL: ${o.amount}</div>
+            </div>
+            <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || "?")} (${o.user_id})</span></div>
+            <div class="info-row"><span>Trạng thái</span><span>${statusText}${remaining}</span></div>
+            ${o.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin:4px 0">🔄 SP xoay</div>` : ""}
+            ${o.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span style="font-family:monospace;font-size:11px">${escapeHtml(o.proxy_key)}</span></div>` : ""}
+            ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
+            <div class="info-row"><span>Mua lúc</span><span>${escapeHtml(o.created_at)}</span></div>
+            <div style="margin-top:10px;margin-bottom:6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Proxy (${(o.proxies||[]).length}):</div>
+            ${proxiesHtml}
+          </div>
+        `;
+      }).join("");
+      box.innerHTML = summary + (list || '<div class="empty">Chưa có proxy nào</div>');
     } else if (tab === "keys") {
       const r = await api("/api/admin/keys");
       if (!r.ok) { box.innerHTML = ""; return; }
@@ -925,7 +996,6 @@ async function submitMessage(userId) {
   } catch(e) { toast("Lỗi", "error"); }
 }
 
-// ===== ADMIN KEY ACTIONS =====
 function openGiftKeyModal(userId, name) {
   openModal(`
     <div class="modal-title">🎁 Tặng key cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -954,7 +1024,7 @@ function openTransferKeyModal(proxyKey, currentOwner) {
     <div class="modal-title">🔀 Chuyển key<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Key</span><span style="font-family:monospace;font-size:11px">${escapeHtml(proxyKey)}</span></div>
     <div class="info-row"><span>Chủ hiện tại</span><span>${currentOwner}</span></div>
-    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Nhập User ID nhận:</div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">User ID nhận:</div>
     <input class="input" id="transferUserId" type="number" placeholder="VD: 123456789" inputmode="numeric">
     <button class="btn btn-purple btn-block" onclick='submitTransferKey(${JSON.stringify(proxyKey)})'>🔀 Chuyển key</button>
   `);
@@ -973,7 +1043,7 @@ async function submitTransferKey(proxyKey) {
 }
 
 async function revokeKey(keyId) {
-  if (!confirm("Thu hồi key này? User sẽ mất quyền xoay.")) return;
+  if (!confirm("Thu hồi key này?")) return;
   try {
     const r = await api("/api/admin/revoke-key", {key_id: keyId});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
