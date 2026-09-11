@@ -20,7 +20,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
 .page{padding:16px;display:none}
 .page.active{display:block}
 .section-title{font-size:16px;font-weight:700;margin:8px 0 12px;display:flex;align-items:center;gap:8px;justify-content:space-between}
-.section-title > span:first-child{display:flex;align-items:center;gap:8px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;transition:.2s}
 .card:active{transform:scale(.98)}
 .product-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
@@ -73,9 +72,9 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .stat-card.green .stat-val{color:var(--success)}
 .stat-card.pink .stat-val{color:#ff6b9d}
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50}
-.nav-item{flex:1;text-align:center;padding:6px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:500}
+.nav-item{flex:1;text-align:center;padding:6px 2px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500}
 .nav-item.active{color:var(--primary)}
-.nav-icon{font-size:20px;display:block;margin-bottom:2px}
+.nav-icon{font-size:19px;display:block;margin-bottom:2px}
 .loading{text-align:center;padding:40px;color:var(--muted)}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -91,12 +90,25 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .proxy-item{background:#000;color:var(--success);padding:10px 12px;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .proxy-item span{word-break:break-all}
 .proxy-item button{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;flex-shrink:0}
+.rotate-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;position:relative}
+.rotate-card.selected{border-color:var(--primary);background:rgba(74,158,255,.08)}
+.rotate-checkbox{position:absolute;top:12px;right:12px;width:24px;height:24px;accent-color:var(--primary);cursor:pointer}
+.rotate-ip-box{background:#000;color:var(--gold);padding:8px 12px;border-radius:8px;font-family:monospace;font-size:12px;margin:8px 0;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rotate-ip-box .ip-label{color:var(--muted);font-size:10px}
+.rotate-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.bulk-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:12px;margin:16px -16px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:20}
+.bulk-count{font-size:13px;color:var(--muted)}
+.bulk-count b{color:var(--gold);font-size:15px}
+.source-tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600}
+.source-tag.purchase{background:rgba(37,211,102,.15);color:var(--success)}
+.source-tag.manual{background:rgba(74,158,255,.15);color:var(--primary)}
+.source-tag.admin_gift{background:rgba(255,215,0,.15);color:var(--gold)}
+.source-tag.admin_transfer{background:rgba(168,85,247,.15);color:#a855f7}
 </style>
 </head>
 <body>
 
 <script>
-  // ====== ĐỔI THÀNH URL TUNNEL CỦA BẠN ======
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
 </script>
 
@@ -123,11 +135,28 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div id="ordersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </div>
 
+<!-- ROTATE -->
+<div class="page" id="page-rotate">
+  <div class="section-title">
+    <span>🔄 Xoay IP</span>
+    <button class="btn btn-primary btn-xs" onclick="openAddKeyModal()">➕ Nhập key</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="rotate" onclick="rotateTab('rotate',this)">🔑 Key của tôi</div>
+    <div class="tab" data-tab="history" onclick="rotateTab('history',this)">📜 Lịch sử</div>
+  </div>
+  <div id="rotateList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+  <div id="bulkBar" class="bulk-bar" style="display:none">
+    <div class="bulk-count">Đã chọn: <b id="bulkCount">0</b></div>
+    <button class="btn btn-gold btn-sm" onclick="bulkRotate()">🔄 Xoay hàng loạt</button>
+  </div>
+</div>
+
 <!-- DEPOSIT -->
 <div class="page" id="page-deposit">
   <div class="section-title"><span>💳 Nạp tiền tự động</span></div>
   <div class="card">
-    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền muốn nạp (tối thiểu <b style="color:var(--gold)">10,000đ</b>). Hệ thống tạo QR tự động, mã có hiệu lực <b style="color:var(--gold)">5 phút</b>.</div>
+    <div style="margin-bottom:10px;color:var(--muted);font-size:13px">Nhập số tiền (tối thiểu <b style="color:var(--gold)">10,000đ</b>). Mã có hiệu lực <b style="color:var(--gold)">5 phút</b>.</div>
     <input class="input" id="depAmount" type="number" placeholder="Số tiền (VD: 50000)" inputmode="numeric">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button class="btn btn-outline btn-sm" onclick="setAmt(10000)">10K</button>
@@ -143,18 +172,16 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <!-- ADMIN -->
 <div class="page" id="page-admin">
   <div class="section-title"><span>👑 Admin Panel</span></div>
-
   <div class="admin-tools">
-    <div class="admin-tools-title">📢 Công cụ Admin</div>
-    <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Gửi thông báo đến TẤT CẢ khách</button>
+    <div class="admin-tools-title">📢 Công cụ</div>
+    <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Broadcast</button>
   </div>
-
   <div class="stats-grid" id="adminStats"></div>
-
   <div class="tabs" style="margin-top:14px">
     <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
-    <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn hàng</div>
-    <div class="tab" onclick="adminTab('logs',this)">📜 Lịch sử</div>
+    <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn</div>
+    <div class="tab" onclick="adminTab('keys',this)">🔑 Keys</div>
+    <div class="tab" onclick="adminTab('logs',this)">📜 Log</div>
   </div>
   <div id="adminList"></div>
 </div>
@@ -162,15 +189,15 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <!-- NAV -->
 <div class="nav">
   <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Shop</div>
-  <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn hàng</div>
-  <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp tiền</div>
+  <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn</div>
+  <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
+  <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
 
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -182,11 +209,13 @@ let currentProduct = null;
 let currentCat = "";
 let depositPolling = null;
 let balancePolling = null;
+let ROTATIONS = [];
+let SELECTED_KEYS = new Set();
+let currentRotateTab = "rotate";
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
 
-// ========== CLOCK ==========
 function startClock() {
   const tick = () => {
     const d = new Date();
@@ -195,12 +224,10 @@ function startClock() {
     const days = ["CN","T2","T3","T4","T5","T6","T7"];
     document.getElementById("clockDate").textContent = `• ${days[d.getDay()]}, ${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
   };
-  tick();
-  setInterval(tick, 1000);
+  tick(); setInterval(tick, 1000);
 }
 startClock();
 
-// ========== HELPERS ==========
 function toast(msg, type="success") {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -218,7 +245,6 @@ async function api(path, data={}) {
 function fmt(n) { return (n||0).toLocaleString("vi-VN") + "đ"; }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-// ========== INIT ==========
 async function init() {
   try {
     const r = await api("/api/auth");
@@ -228,11 +254,9 @@ async function init() {
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     loadProducts();
     loadOrders();
+    loadRotations();
     startBalancePolling();
-  } catch(e) {
-    toast("Lỗi kết nối server", "error");
-    console.error(e);
-  }
+  } catch(e) { toast("Lỗi kết nối", "error"); }
 }
 
 function startBalancePolling() {
@@ -258,13 +282,13 @@ async function refreshBalance() {
   } catch(e) {}
 }
 
-// ========== NAV ==========
 function nav(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-" + page).classList.add("active");
   document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
   if (page === "orders") loadOrders();
+  if (page === "rotate") loadRotations();
   if (page === "admin") loadAdmin();
 }
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
@@ -273,22 +297,16 @@ function openModal(html) {
   document.getElementById("modalBg").classList.add("active");
 }
 
-// ========== PRODUCTS ==========
 async function loadProducts() {
   const list = document.getElementById("productsList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/products");
-    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải sản phẩm</div>'; return; }
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải</div>'; return; }
     ALL_PRODUCTS = r.products || [];
-    if (!ALL_PRODUCTS.length) {
-      list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm</div>';
-      return;
-    }
+    if (!ALL_PRODUCTS.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm</div>'; return; }
     buildCatTabs(); renderProducts();
-  } catch(e) {
-    list.innerHTML = '<div class="empty">Lỗi kết nối</div>';
-  }
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 function shortCat(name) { return !name ? "Khác" : (name.length > 35 ? name.substring(0,33) + "…" : name); }
 function buildCatTabs() {
@@ -312,7 +330,7 @@ function filterCat(catId, el) {
 function renderProducts() {
   const list = document.getElementById("productsList");
   const items = currentCat === "" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => p.category_id === currentCat);
-  if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có sản phẩm</div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có SP</div>'; return; }
   list.innerHTML = items.map(p => `
     <div class="card" onclick="openBuy('${p.id}')">
       <div class="product-head">
@@ -320,7 +338,8 @@ function renderProducts() {
         <div class="stock-tag">${p.stock} có sẵn</div>
       </div>
       ${p.category_name ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">📂 ${escapeHtml(shortCat(p.category_name))}</div>` : ""}
-      ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
+      ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
+      ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Min ${p.min_buy}</div>` : ""}
       ${p.desc ? `<div class="product-desc">${escapeHtml(p.desc.split("\\n")[0].substring(0,120))}${p.desc.length>120?"…":""}</div>` : ""}
       <div class="product-foot">
         <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
@@ -341,7 +360,8 @@ function openBuy(id) {
     <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
     <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
-    ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
+    ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
+    ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Min</span><span style="color:var(--gold)">${minBuy}</span></div>` : ""}
     ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
     <div class="qty-row">
@@ -349,7 +369,7 @@ function openBuy(id) {
       <div class="qty-val" id="buyQty">${minBuy}</div>
       <button class="qty-btn" onclick="changeQty(1)">+</button>
     </div>
-    <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
+    <div class="info-row"><span>Tổng</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
   `);
   window._qty = minBuy;
@@ -374,6 +394,7 @@ async function doBuy() {
     closeModal();
     setTimeout(() => showPurchased(r), 300);
     loadOrders();
+    if (r.is_rotate) loadRotations();
   } catch(e) {
     toast("Lỗi kết nối", "error");
     btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
@@ -385,80 +406,66 @@ function showPurchased(r) {
   const expire = r.expire || "";
   const raw = r.raw || "";
   const hasStructured = proxies.length > 0;
+  const pname = r.product_name || "";
+  const isRotate = r.is_rotate || false;
+  const proxyKey = r.proxy_key || "";
 
   const proxiesHtml = hasStructured
-    ? proxies.map(p => `
-        <div class="proxy-item">
-          <span>${escapeHtml(p)}</span>
-          <button onclick='copyOne(${JSON.stringify(p)})'>📋</button>
-        </div>
-      `).join("")
+    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có dữ liệu)")}</div>`;
 
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
-
-    <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(r.product_name||"")}</span></div>
+    <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(pname)}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
     ${r.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(r.order_code)}</span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
-    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(r.buy_time || r.created_at || "")}</span></div>
-
+    ${isRotate && proxyKey ? `<div class="info-row"><span>🔑 Key xoay</span><span><code>${escapeHtml(proxyKey)}</code></span></div>` : ""}
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
-      <span>🔑 Danh sách Proxy (${proxies.length || "?"})</span>
-      <button class="btn btn-xs" onclick="copyAll()">📋 Copy tất cả</button>
+      <span>🔑 Danh sách (${proxies.length || "?"})</span>
+      <button class="btn btn-xs" onclick="copyAll()">📋 Copy</button>
     </div>
-
     ${proxiesHtml}
-
-    ${!hasStructured && raw ? `<div style="margin-top:10px;font-size:11px;color:var(--muted)">⚠️ Không parse được cấu trúc proxy — hiển thị dữ liệu gốc</div>` : ""}
-
-    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">
-      💡 Định dạng: <code>IP:PORT:USER:PASS</code>
-    </div>
+    ${isRotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay IP ngay</button>` : ""}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
-function copyOne(txt) {
-  navigator.clipboard.writeText(txt).then(() => toast("Đã copy!", "success"));
-}
-function copyAll() {
-  navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy toàn bộ!", "success"));
-}
+function copyOne(txt) { navigator.clipboard.writeText(txt).then(() => toast("Đã copy!", "success")); }
+function copyAll() { navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy!", "success")); }
 
-// ========== ORDERS ==========
 async function loadOrders() {
   const list = document.getElementById("ordersList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/my-orders");
-    if (!r.ok || !r.orders.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn hàng nào</div>'; return; }
+    if (!r.ok || !r.orders.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Chưa có đơn</div>'; return; }
     list.innerHTML = r.orders.map(o => {
       const proxyList = (o.proxies || []).slice(0, 3);
       const more = (o.proxies || []).length - proxyList.length;
       const previewHtml = proxyList.length
         ? proxyList.map(p => `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${escapeHtml(p)}</div>`).join("") +
-          (more > 0 ? `<div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">+${more} proxy khác...</div>` : "")
-        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Không có dữ liệu proxy</div>`;
+          (more > 0 ? `<div style="font-size:11px;color:var(--muted);text-align:center">+${more} khác...</div>` : "")
+        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Không có data</div>`;
       return `
         <div class="card">
           <div class="product-head">
             <div class="product-name">${escapeHtml(o.name)}</div>
             <div class="stock-tag">SL: ${o.amount}</div>
           </div>
-          <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
-          <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
-          ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(o.expire)}</span></div>` : ""}
-          ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
-          <div style="margin-top:10px;margin-bottom:8px;font-size:12px;color:var(--muted);font-weight:600">🔑 Proxy:</div>
+          ${o.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Proxy xoay</div>` : ""}
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
+          <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
+          ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
+          ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
+          <div style="margin:10px 0 6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Data:</div>
           ${previewHtml}
-          <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o))})'>👁 Xem đầy đủ</button>
+          <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o))})'>👁 Xem</button>
         </div>
       `;
     }).join("");
-  } catch(e) { list.innerHTML = '<div class="empty">Lỗi tải đơn hàng</div>'; }
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
 function viewOrder(orderJson) {
@@ -466,43 +473,219 @@ function viewOrder(orderJson) {
   const proxies = o.proxies || [];
   const expire = o.expire || "";
   const raw = o.raw || "";
-
   const proxiesHtml = proxies.length
-    ? proxies.map(p => `
-        <div class="proxy-item">
-          <span>${escapeHtml(p)}</span>
-          <button onclick='copyOne(${JSON.stringify(p)})'>📋</button>
-        </div>
-      `).join("")
-    : `<div class="code-box">${escapeHtml(raw || "(không có dữ liệu)")}</div>`;
-
+    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
+    : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
   openModal(`
-    <div class="modal-title">👁 Chi tiết đơn hàng<button class="close-x" onclick="closeModal()">✕</button></div>
-
+    <div class="modal-title">👁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
-    <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
-    ${o.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
-    ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
-    <div class="info-row"><span>Thời gian mua</span><span>${escapeHtml(o.buy_time || o.created_at||"")}</span></div>
-
-    <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
-      <span>🔑 Proxy (${proxies.length})</span>
-      <button class="btn btn-xs" onclick="copyAll()">📋 Copy tất cả</button>
-    </div>
-
+    <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
+    ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
+    ${expire ? `<div class="info-row"><span>⏰</span><span style="color:var(--gold)">${escapeHtml(expire)}</span></div>` : ""}
+    ${o.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span><code>${escapeHtml(o.proxy_key)}</code></span></div>` : ""}
+    <div style="margin:14px 0 8px;font-weight:700">🔑 Data (${proxies.length})</div>
     ${proxiesHtml}
-
-    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">
-      💡 Định dạng: <code>IP:PORT:USER:PASS</code>
-    </div>
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
-// ========== DEPOSIT ==========
-function setAmt(n) { document.getElementById("depAmount").value = n; }
+// ===== ROTATE =====
+function rotateTab(tab, el) {
+  currentRotateTab = tab;
+  document.querySelectorAll("#page-rotate .tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  if (tab === "rotate") loadRotations();
+  else loadRotationHistory();
+}
 
+async function loadRotations() {
+  if (currentRotateTab !== "rotate") return;
+  const list = document.getElementById("rotateList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  SELECTED_KEYS.clear();
+  updateBulkBar();
+  try {
+    const r = await api("/api/my-keys");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    ROTATIONS = r.keys || [];
+    if (!ROTATIONS.length) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">🔑</div>
+        <div>Chưa có key nào</div>
+        <div style="font-size:12px;margin-top:8px;color:var(--muted)">Mua SP xoay hoặc bấm "➕ Nhập key"</div>
+      </div>`;
+      return;
+    }
+    const srcMap = {"purchase":"Mua","manual":"Nhập","admin_gift":"Admin tặng","admin_transfer":"Admin chuyển"};
+    const srcCls = {"purchase":"purchase","manual":"manual","admin_gift":"admin_gift","admin_transfer":"admin_transfer"};
+    list.innerHTML = ROTATIONS.map((o, i) => `
+      <div class="rotate-card" id="rc_${i}">
+        <input type="checkbox" class="rotate-checkbox" onchange="toggleSelect('${escapeHtml(o.proxy_key)}', this, ${i})">
+        <div class="product-name" style="padding-right:32px;font-family:monospace;font-size:13px">${escapeHtml(o.proxy_key)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          <span class="source-tag ${srcCls[o.source]||''}">${srcMap[o.source]||o.source}</span>
+          ${o.note ? ` • ${escapeHtml(o.note)}` : ""}
+        </div>
+        <div class="rotate-ip-box" id="ip_${i}">
+          <span><span class="ip-label">IP: </span><b id="ipval_${i}">Đang tải...</b></span>
+          <button onclick="checkIP('${escapeHtml(o.proxy_key)}', ${i})" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔄</button>
+        </div>
+        <div class="rotate-actions">
+          <button class="btn btn-gold btn-sm" onclick="rotateOne('${escapeHtml(o.proxy_key)}', ${i})">🔄 Xoay</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteKey(${o.id})">🗑 Xoá</button>
+        </div>
+      </div>
+    `).join("");
+    ROTATIONS.forEach((o, i) => checkIP(o.proxy_key, i));
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+async function checkIP(key, idx) {
+  const el = document.getElementById("ipval_" + idx);
+  if (!el) return;
+  el.textContent = "Đang tải...";
+  try {
+    const r = await api("/api/proxy-ip", {key});
+    if (r.ok && r.ip) { el.textContent = r.ip; el.style.color = "var(--gold)"; }
+    else { el.textContent = "Không lấy được"; el.style.color = "var(--muted)"; }
+  } catch(e) { el.textContent = "Lỗi"; }
+}
+
+async function rotateOne(key, idx) {
+  const el = document.getElementById("ipval_" + idx);
+  const oldIp = el ? el.textContent : "";
+  if (el) { el.textContent = "Đang xoay..."; el.style.color = "var(--primary)"; }
+  try {
+    const r = await api("/api/rotate", {keys: [key]});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); if(el) el.textContent = oldIp; return; }
+    const res = (r.results || [])[0] || {};
+    if (res.success) {
+      toast(`✅ Xoay thành công!`, "success");
+      if (el) { el.textContent = res.new_ip || "Đã xoay"; el.style.color = "var(--success)"; }
+      openModal(`
+        <div class="modal-title">🔄 Xoay thành công<button class="close-x" onclick="closeModal()">✕</button></div>
+        <div class="info-row"><span>IP cũ</span><span style="color:var(--muted)">${escapeHtml(res.old_ip||"—")}</span></div>
+        <div class="info-row"><span>IP mới</span><span style="color:var(--success);font-weight:700">${escapeHtml(res.new_ip||"—")}</span></div>
+        <button class="btn btn-block" style="margin-top:14px" onclick="closeModal()">Đóng</button>
+      `);
+    } else {
+      toast(`❌ Xoay thất bại`, "error");
+      if (el) { el.textContent = oldIp; el.style.color = "var(--gold)"; }
+    }
+  } catch(e) { toast("Lỗi", "error"); if(el) el.textContent = oldIp; }
+}
+
+async function deleteKey(keyId) {
+  if (!confirm("Xoá key này? Không thể hoàn tác.")) return;
+  try {
+    const r = await api("/api/delete-key", {key_id: keyId});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã xoá", "success");
+    loadRotations();
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+function toggleSelect(key, checkbox, idx) {
+  const card = document.getElementById("rc_" + idx);
+  if (checkbox.checked) { SELECTED_KEYS.add(key); card.classList.add("selected"); }
+  else { SELECTED_KEYS.delete(key); card.classList.remove("selected"); }
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulkBar");
+  const cnt = document.getElementById("bulkCount");
+  cnt.textContent = SELECTED_KEYS.size;
+  bar.style.display = SELECTED_KEYS.size > 0 ? "flex" : "none";
+}
+
+async function bulkRotate() {
+  const keys = Array.from(SELECTED_KEYS);
+  if (!keys.length) { toast("Chưa chọn key", "error"); return; }
+  if (!confirm(`Xoay ${keys.length} key?`)) return;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = `Đang xoay ${keys.length}...`;
+  try {
+    const r = await api("/api/rotate", {keys});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt"; return; }
+    const results = r.results || [];
+    const ok = results.filter(x => x.success).length;
+    const fail = results.length - ok;
+    toast(`✅ ${ok}/${results.length} thành công`, ok > 0 ? "success" : "error");
+    const rows = results.map(res => `
+      <div style="background:var(--card2);padding:10px;border-radius:8px;margin-bottom:8px;font-size:12px">
+        <div style="font-family:monospace;color:var(--muted);word-break:break-all;margin-bottom:6px">${escapeHtml(res.key)}</div>
+        <div style="display:flex;justify-content:space-between;color:var(--muted)">
+          <span>Cũ: ${escapeHtml(res.old_ip||"—")}</span>
+          <span style="color:${res.success?'var(--success)':'var(--danger)'}">→ ${escapeHtml(res.new_ip||"—")}</span>
+        </div>
+      </div>
+    `).join("");
+    openModal(`
+      <div class="modal-title">🔄 Kết quả<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-val">${ok}</div><div class="stat-label">OK</div></div>
+        <div class="stat-card pink"><div class="stat-val">${fail}</div><div class="stat-label">Lỗi</div></div>
+      </div>
+      ${rows}
+      <button class="btn btn-block" style="margin-top:14px" onclick="closeModal(); loadRotations()">Đóng</button>
+    `);
+    SELECTED_KEYS.clear();
+    updateBulkBar();
+  } catch(e) { toast("Lỗi", "error"); }
+  btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
+}
+
+async function loadRotationHistory() {
+  const list = document.getElementById("rotateList");
+  document.getElementById("bulkBar").style.display = "none";
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/rotation-history");
+    if (!r.ok || !r.history.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📜</div>Chưa có lịch sử</div>'; return; }
+    list.innerHTML = r.history.map(h => `
+      <div class="card">
+        <div class="product-head">
+          <div class="product-name" style="font-family:monospace;font-size:12px">${escapeHtml(h.proxy_key)}</div>
+          <div class="stock-tag" style="background:${h.status==='success'?'rgba(37,211,102,.15)':'rgba(255,71,87,.15)'};color:${h.status==='success'?'var(--success)':'var(--danger)'}">
+            ${h.status==='success'?'✅':'❌'}
+          </div>
+        </div>
+        <div class="info-row"><span>Cũ</span><span style="color:var(--muted)">${escapeHtml(h.old_ip||"—")}</span></div>
+        <div class="info-row"><span>Mới</span><span style="color:var(--success)">${escapeHtml(h.new_ip||"—")}</span></div>
+        <div class="info-row"><span>TG</span><span>${escapeHtml(h.created_at)}</span></div>
+      </div>
+    `).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+// ===== ADD KEY MODAL =====
+function openAddKeyModal() {
+  openModal(`
+    <div class="modal-title">➕ Nhập key xoay<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      💡 Mỗi key chỉ thuộc 1 người dùng. Nếu key đã có chủ sẽ bị từ chối.
+    </div>
+    <input class="input" id="newKeyInput" placeholder="Dán key vào đây..." autocomplete="off">
+    <button class="btn btn-success btn-block" onclick="submitAddKey()">➕ Thêm key</button>
+  `);
+}
+
+async function submitAddKey() {
+  const key = document.getElementById("newKeyInput").value.trim();
+  if (!key) { toast("Nhập key", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
+  try {
+    const r = await api("/api/add-key", {key});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; return; }
+    toast(r.msg || "Đã thêm!", "success");
+    closeModal();
+    setTimeout(() => loadRotations(), 300);
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; }
+}
+
+// ===== DEPOSIT =====
+function setAmt(n) { document.getElementById("depAmount").value = n; }
 async function createDeposit() {
   const amt = parseInt(document.getElementById("depAmount").value || "0");
   if (amt < 10000) { toast("Nạp tối thiểu 10,000đ", "error"); return; }
@@ -511,32 +694,30 @@ async function createDeposit() {
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
     const totalSec = r.expire_seconds || 300;
     openModal(`
-      <div class="modal-title">💳 Quét QR để nạp<button class="close-x" onclick="closeDeposit()">✕</button></div>
+      <div class="modal-title">💳 QR nạp tiền<button class="close-x" onclick="closeDeposit()">✕</button></div>
       <div style="text-align:center;margin-bottom:12px;font-size:13px;font-weight:600">
-        <span style="color:var(--muted)">⏰ Mã có hiệu lực: </span>
+        <span style="color:var(--muted)">⏰ </span>
         <span id="depCountdown" style="color:var(--gold);font-variant-numeric:tabular-nums">05:00</span>
       </div>
       <div class="qr-box"><img src="${r.qr}" alt="QR"></div>
-      <div class="info-row"><span>Ngân hàng</span><span>${r.bank}</span></div>
-      <div class="info-row"><span>Số TK</span><span>${r.account_no}</span></div>
-      <div class="info-row"><span>Chủ TK</span><span>${r.account_name}</span></div>
-      <div class="info-row"><span>Số tiền</span><span>${fmt(r.amount)}</span></div>
-      <div class="info-row"><span>Nội dung</span><span style="color:var(--gold);font-weight:700">${r.content}</span></div>
+      <div class="info-row"><span>NH</span><span>${r.bank}</span></div>
+      <div class="info-row"><span>STK</span><span>${r.account_no}</span></div>
+      <div class="info-row"><span>Chủ</span><span>${r.account_name}</span></div>
+      <div class="info-row"><span>Tiền</span><span>${fmt(r.amount)}</span></div>
+      <div class="info-row"><span>ND</span><span style="color:var(--gold);font-weight:700">${r.content}</span></div>
       <div id="depStatusMsg" style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">
-        ⏳ Đang chờ thanh toán... Hệ thống sẽ tự động duyệt
+        ⏳ Đang chờ... Tự động duyệt
       </div>
     `);
     startDepositPoll(r.code, totalSec);
-  } catch(e) { toast("Lỗi kết nối", "error"); }
+  } catch(e) { toast("Lỗi", "error"); }
 }
 
 function startDepositPoll(code, totalSec) {
   totalSec = totalSec || 300;
   if (depositPolling) clearInterval(depositPolling);
   if (window._depCountdownTimer) clearInterval(window._depCountdownTimer);
-
   const startTime = Date.now();
-
   window._depCountdownTimer = setInterval(() => {
     const el = document.getElementById("depCountdown");
     if (!el) { clearInterval(window._depCountdownTimer); return; }
@@ -549,30 +730,26 @@ function startDepositPoll(code, totalSec) {
     if (remaining === 0) {
       clearInterval(window._depCountdownTimer);
       const st = document.getElementById("depStatusMsg");
-      if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực!</span><br><span style="font-size:11px">Vui lòng tạo mã nạp mới</span>';
+      if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Hết hiệu lực!</span>';
     }
   }, 1000);
-
   depositPolling = setInterval(async () => {
     try {
       const r = await api("/api/deposit/check", {code});
       if (!r.ok) return;
-
       if (r.status === "paid") {
         clearInterval(depositPolling); depositPolling = null;
         clearInterval(window._depCountdownTimer);
         USER.balance = r.balance;
         document.getElementById("hdrBal").textContent = fmt(r.balance);
         closeModal();
-        toast("✅ Nạp tiền thành công!", "success");
+        toast("✅ Nạp thành công!", "success");
       } else if (r.status === "expired") {
         clearInterval(depositPolling); depositPolling = null;
         clearInterval(window._depCountdownTimer);
-        const cd = document.getElementById("depCountdown");
-        if (cd) { cd.textContent = "00:00"; cd.style.color = "var(--danger)"; }
         const st = document.getElementById("depStatusMsg");
-        if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực!</span><br><span style="font-size:11px">Giao dịch sau 5 phút sẽ KHÔNG được tự động duyệt. Vui lòng tạo mã mới.</span>';
-        toast("⏰ Mã đã hết hiệu lực", "error");
+        if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực</span>';
+        toast("⏰ Hết hiệu lực", "error");
       }
     } catch(e) {}
   }, 3000);
@@ -584,26 +761,26 @@ function closeDeposit() {
   closeModal();
 }
 
-// ========== ADMIN ==========
+// ===== ADMIN =====
 async function loadAdmin() {
   try {
     const r = await api("/api/admin/stats");
     if (!r.ok) return;
     const s = r.stats;
     document.getElementById("adminStats").innerHTML = `
-      <div class="stat-card gold"><div class="stat-val">${fmt(s.today_revenue)}</div><div class="stat-label">Doanh thu hôm nay</div></div>
-      <div class="stat-card green"><div class="stat-val">${fmt(s.today_profit)}</div><div class="stat-label">Lợi nhuận hôm nay</div></div>
-      <div class="stat-card"><div class="stat-val">${fmt(s.week_revenue)}</div><div class="stat-label">Tuần này</div></div>
-      <div class="stat-card"><div class="stat-val">${fmt(s.month_revenue)}</div><div class="stat-label">30 ngày</div></div>
-      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_profit)}</div><div class="stat-label">Tổng lợi nhuận</div></div>
-      <div class="stat-card gold"><div class="stat-val">${fmt(s.total_revenue)}</div><div class="stat-label">Tổng doanh thu</div></div>
-      <div class="stat-card"><div class="stat-val">${s.total_orders}</div><div class="stat-label">Tổng đơn</div></div>
-      <div class="stat-card green"><div class="stat-val">${s.total_proxy_sold}</div><div class="stat-label">Proxy đã bán</div></div>
-      <div class="stat-card"><div class="stat-val">${s.total_users}</div><div class="stat-label">Khách đã ghé</div></div>
-      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
+      <div class="stat-card gold"><div class="stat-val">${fmt(s.today_revenue)}</div><div class="stat-label">DT hôm nay</div></div>
+      <div class="stat-card green"><div class="stat-val">${fmt(s.today_profit)}</div><div class="stat-label">LN hôm nay</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(s.total_revenue)}</div><div class="stat-label">Tổng DT</div></div>
+      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_profit)}</div><div class="stat-label">Tổng LN</div></div>
+      <div class="stat-card"><div class="stat-val">${s.total_orders}</div><div class="stat-label">Đơn</div></div>
+      <div class="stat-card green"><div class="stat-val">${s.total_proxy_sold}</div><div class="stat-label">Proxy</div></div>
+      <div class="stat-card"><div class="stat-val">${s.total_users}</div><div class="stat-label">Khách</div></div>
+      <div class="stat-card pink"><div class="stat-val">${s.total_rotations}</div><div class="stat-label">Lượt xoay</div></div>
+      <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
+      <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
     `;
     adminTab("users");
-  } catch(e) { toast("Lỗi tải admin", "error"); }
+  } catch(e) {}
 }
 
 async function adminTab(tab, el) {
@@ -624,14 +801,13 @@ async function adminTab(tab, el) {
             <div class="stock-tag">💰 ${fmt(u.balance)}</div>
           </div>
           <div class="info-row"><span>Đã chi</span><span>${fmt(u.total_spent)}</span></div>
-          <div class="info-row"><span>Proxy đã mua</span><span>${u.total_proxy}</span></div>
-          <div class="info-row"><span>Lần cuối</span><span>${escapeHtml(u.last_seen || "")}</span></div>
+          <div class="info-row"><span>Proxy</span><span>${u.total_proxy}</span></div>
           <div class="user-actions">
             <button class="btn btn-success btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "add")'>➕ Cộng</button>
             <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "sub")'>➖ Trừ</button>
             <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance})'>✏️ Đặt</button>
-            <button class="btn btn-purple btn-xs" onclick='openMessageModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>💬 Nhắn</button>
-            <button class="btn btn-outline btn-xs" onclick='viewUserOrders(${u.id})'>📦 Đơn hàng</button>
+            <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>🎁 Tặng key</button>
+            <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>💬</button>
           </div>
         </div>
       `).join("") || '<div class="empty">Chưa có user</div>';
@@ -645,162 +821,188 @@ async function adminTab(tab, el) {
             <div class="stock-tag">SL: ${o.amount}</div>
           </div>
           <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || o.user_id)}</span></div>
-          <div class="info-row"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
+          <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
           <div class="info-row"><span>Vốn</span><span>${fmt(o.cost)}</span></div>
           <div class="info-row"><span>Lãi</span><span style="color:var(--success)">${fmt(o.price - o.cost)}</span></div>
-          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
+          <div class="info-row"><span>TG</span><span>${escapeHtml(o.created_at)}</span></div>
         </div>
-      `).join("") || '<div class="empty">Chưa có đơn</div>';
+      `).join("") || '<div class="empty">Chưa có</div>';
+    } else if (tab === "keys") {
+      const r = await api("/api/admin/keys");
+      if (!r.ok) { box.innerHTML = ""; return; }
+      const srcMap = {"purchase":"Mua","manual":"Nhập tay","admin_gift":"Admin tặng","admin_transfer":"Admin chuyển"};
+      box.innerHTML = r.keys.map(k => `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name" style="font-family:monospace;font-size:12px">${escapeHtml(k.proxy_key)}</div>
+            <div class="stock-tag">${srcMap[k.source]||k.source}</div>
+          </div>
+          <div class="info-row"><span>Chủ</span><span>${escapeHtml(k.first_name || k.username || "?")} (${k.user_id})</span></div>
+          ${k.note ? `<div class="info-row"><span>Ghi chú</span><span>${escapeHtml(k.note)}</span></div>` : ""}
+          <div class="info-row"><span>Tạo</span><span>${escapeHtml(k.created_at)}</span></div>
+          <div class="user-actions">
+            <button class="btn btn-purple btn-xs" onclick='openTransferKeyModal(${JSON.stringify(k.proxy_key)}, ${k.user_id})'>🔀 Chuyển</button>
+            <button class="btn btn-danger btn-xs" onclick='revokeKey(${k.id})'>🗑 Thu hồi</button>
+          </div>
+        </div>
+      `).join("") || '<div class="empty">Chưa có key</div>';
     } else {
       const r = await api("/api/admin/logs");
       if (!r.ok) { box.innerHTML = ""; return; }
-      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin nhắn"};
+      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin", key_transfer:"🔀 Chuyển key", key_gift:"🎁 Tặng key", key_revoke:"🗑 Thu hồi"};
       box.innerHTML = r.logs.map(l => `
         <div class="card">
           <div class="product-head">
             <div class="product-name">${actionText[l.action] || l.action}</div>
             ${l.amount ? `<div class="stock-tag">${l.action==="sub"?"-":"+"}${fmt(l.amount)}</div>` : ""}
           </div>
-          <div class="info-row"><span>Target ID</span><span>${l.target_id || "ALL"}</span></div>
-          ${l.reason ? `<div class="info-row"><span>Lý do</span><span>${escapeHtml(l.reason)}</span></div>` : ""}
-          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(l.created_at)}</span></div>
+          <div class="info-row"><span>Target</span><span>${l.target_id || "ALL"}</span></div>
+          ${l.reason ? `<div class="info-row"><span>Lý do</span><span style="font-size:11px">${escapeHtml(l.reason)}</span></div>` : ""}
+          <div class="info-row"><span>TG</span><span>${escapeHtml(l.created_at)}</span></div>
         </div>
       `).join("") || '<div class="empty">Chưa có log</div>';
     }
-  } catch(e) { box.innerHTML = '<div class="empty">Lỗi tải</div>'; }
+  } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ========== ADMIN MODALS ==========
 function openBalanceModal(userId, name, balance, action) {
   const isAdd = action === "add";
   openModal(`
-    <div class="modal-title">${isAdd?"➕ Cộng tiền":"➖ Trừ tiền"}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">${isAdd?"➕ Cộng":"➖ Trừ"}<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
-    <div class="info-row"><span>Số dư hiện tại</span><span>${fmt(balance)}</span></div>
-    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số tiền</div>
-    <input class="input" id="admAmount" type="number" placeholder="VD: 50000" inputmode="numeric" value="10000">
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=10000">10K</button>
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=50000">50K</button>
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('admAmount').value=100000">100K</button>
-    </div>
-    <div style="margin:8px 0;font-weight:600;font-size:13px">Lý do (tùy chọn)</div>
-    <input class="input" id="admReason" placeholder="VD: Đền bù sự cố">
+    <div class="info-row"><span>Số dư</span><span>${fmt(balance)}</span></div>
+    <input class="input" id="admAmount" type="number" value="10000" inputmode="numeric">
+    <input class="input" id="admReason" placeholder="Lý do (tùy chọn)">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
       <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
-      <span>Gửi thông báo cho user</span>
+      <span>Thông báo user</span>
     </label>
-    <button class="btn ${isAdd?"btn-success":"btn-danger"} btn-block" onclick='submitBalance(${userId}, "${action}")'>Xác nhận ${isAdd?"cộng":"trừ"}</button>
+    <button class="btn ${isAdd?"btn-success":"btn-danger"} btn-block" onclick='submitBalance(${userId}, "${action}")'>Xác nhận</button>
   `);
 }
-
 function openSetBalanceModal(userId, name, balance) {
   openModal(`
-    <div class="modal-title">✏️ Đặt số dư mới<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">✏️ Đặt số dư<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
-    <div class="info-row"><span>Số dư hiện tại</span><span>${fmt(balance)}</span></div>
-    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số dư mới</div>
-    <input class="input" id="admAmount" type="number" placeholder="VD: 100000" inputmode="numeric" value="${balance}">
-    <div style="margin:8px 0;font-weight:600;font-size:13px">Lý do (tùy chọn)</div>
-    <input class="input" id="admReason" placeholder="VD: Reset số dư">
+    <div class="info-row"><span>Hiện</span><span>${fmt(balance)}</span></div>
+    <input class="input" id="admAmount" type="number" value="${balance}" inputmode="numeric">
+    <input class="input" id="admReason" placeholder="Lý do">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
       <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
-      <span>Gửi thông báo cho user</span>
+      <span>Thông báo user</span>
     </label>
-    <button class="btn btn-block" onclick='submitBalance(${userId}, "set")'>Xác nhận đặt</button>
+    <button class="btn btn-block" onclick='submitBalance(${userId}, "set")'>Xác nhận</button>
   `);
 }
-
 async function submitBalance(userId, action) {
   const amount = parseInt(document.getElementById("admAmount").value || "0");
   const reason = document.getElementById("admReason").value.trim();
   const notify = document.getElementById("admNotify").checked;
-  if (amount < 0 || (action !== "set" && amount === 0)) { toast("Số tiền không hợp lệ", "error"); return; }
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang xử lý...";
+  if (amount < 0) { toast("Không hợp lệ", "error"); return; }
+  const btn = event.target; btn.disabled = true;
   try {
     const r = await api("/api/admin/balance", {user_id: userId, amount, action, reason, notify});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
-    toast(`✅ Thành công! Số dư mới: ${fmt(r.new_balance)}`, "success");
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
+    toast(`✅ ${fmt(r.new_balance)}`, "success");
     closeModal();
     setTimeout(() => loadAdmin(), 400);
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
 }
-
 function openMessageModal(userId, name) {
   openModal(`
-    <div class="modal-title">💬 Nhắn tin cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="info-row" style="margin-bottom:12px"><span>User ID</span><span>${userId}</span></div>
-    <textarea class="input" id="admMsg" placeholder="Nhập nội dung tin nhắn..."></textarea>
-    <button class="btn btn-purple btn-block" onclick='submitMessage(${userId})'>📤 Gửi tin nhắn</button>
+    <div class="modal-title">💬 Nhắn ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <textarea class="input" id="admMsg" placeholder="Nội dung..."></textarea>
+    <button class="btn btn-purple btn-block" onclick='submitMessage(${userId})'>📤 Gửi</button>
   `);
 }
-
 async function submitMessage(userId) {
   const message = document.getElementById("admMsg").value.trim();
   if (!message) { toast("Nhập nội dung", "error"); return; }
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang gửi...";
   try {
     const r = await api("/api/admin/message", {user_id: userId, message});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
-    toast("✅ Đã gửi!", "success");
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã gửi!", "success"); closeModal();
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+// ===== ADMIN KEY ACTIONS =====
+function openGiftKeyModal(userId, name) {
+  openModal(`
+    <div class="modal-title">🎁 Tặng key cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      Nhập key để tặng. Nếu key đã có chủ khác, hệ thống sẽ <b style="color:var(--gold)">chuyển quyền sở hữu</b>.
+    </div>
+    <input class="input" id="giftKeyInput" placeholder="Dán key..." autocomplete="off">
+    <button class="btn btn-purple btn-block" onclick='submitGiftKey(${userId})'>🎁 Tặng key</button>
+  `);
+}
+async function submitGiftKey(userId) {
+  const key = document.getElementById("giftKeyInput").value.trim();
+  if (!key) { toast("Nhập key", "error"); return; }
+  const btn = event.target; btn.disabled = true;
+  try {
+    const r = await api("/api/admin/transfer-key", {user_id: userId, key});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
+    toast("✅ " + r.msg, "success");
     closeModal();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
+    setTimeout(() => adminTab("keys"), 400);
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
+}
+
+function openTransferKeyModal(proxyKey, currentOwner) {
+  openModal(`
+    <div class="modal-title">🔀 Chuyển key<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Key</span><span style="font-family:monospace;font-size:11px">${escapeHtml(proxyKey)}</span></div>
+    <div class="info-row"><span>Chủ hiện tại</span><span>${currentOwner}</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Nhập User ID nhận:</div>
+    <input class="input" id="transferUserId" type="number" placeholder="VD: 123456789" inputmode="numeric">
+    <button class="btn btn-purple btn-block" onclick='submitTransferKey(${JSON.stringify(proxyKey)})'>🔀 Chuyển key</button>
+  `);
+}
+async function submitTransferKey(proxyKey) {
+  const userId = parseInt(document.getElementById("transferUserId").value || "0");
+  if (!userId) { toast("Nhập user ID", "error"); return; }
+  const btn = event.target; btn.disabled = true;
+  try {
+    const r = await api("/api/admin/transfer-key", {user_id: userId, key: proxyKey});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
+    toast("✅ " + r.msg, "success");
+    closeModal();
+    setTimeout(() => adminTab("keys"), 400);
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
+}
+
+async function revokeKey(keyId) {
+  if (!confirm("Thu hồi key này? User sẽ mất quyền xoay.")) return;
+  try {
+    const r = await api("/api/admin/revoke-key", {key_id: keyId});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã thu hồi", "success");
+    adminTab("keys");
+  } catch(e) { toast("Lỗi", "error"); }
 }
 
 function openBroadcast() {
   openModal(`
-    <div class="modal-title">📢 Gửi thông báo đến TẤT CẢ<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">📢 Broadcast<button class="close-x" onclick="closeModal()">✕</button></div>
     <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);padding:10px;border-radius:10px;font-size:12px;color:var(--danger);margin-bottom:12px">
-      ⚠️ Tin nhắn sẽ gửi đến <b>TẤT CẢ khách hàng</b>. Không thể hoàn tác!
+      ⚠️ Gửi đến TẤT CẢ khách hàng
     </div>
-    <textarea class="input" id="bcMsg" placeholder="Nhập nội dung thông báo...&#10;&#10;VD: 🎉 Shop khuyến mãi giảm giá 20% tất cả proxy hôm nay!"></textarea>
-    <button class="btn btn-purple btn-block" onclick="submitBroadcast()">📢 Gửi đến tất cả</button>
+    <textarea class="input" id="bcMsg" placeholder="Nội dung..."></textarea>
+    <button class="btn btn-purple btn-block" onclick="submitBroadcast()">📢 Gửi</button>
   `);
 }
-
 async function submitBroadcast() {
   const message = document.getElementById("bcMsg").value.trim();
   if (!message) { toast("Nhập nội dung", "error"); return; }
-  if (!confirm("Bạn chắc chắn muốn gửi thông báo này đến TẤT CẢ khách hàng?")) return;
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang gửi...";
+  if (!confirm("Gửi đến TẤT CẢ khách?")) return;
+  const btn = event.target; btn.disabled = true;
   try {
     const r = await api("/api/admin/broadcast", {message});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Thử lại"; return; }
-    toast(`✅ Đang gửi đến ${r.total} khách hàng...`, "success");
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
+    toast(`✅ Đang gửi đến ${r.total} khách`, "success");
     closeModal();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Thử lại"; }
-}
-
-async function viewUserOrders(userId) {
-  openModal(`
-    <div class="modal-title">📦 Đơn hàng của user<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="loading"><div class="spinner"></div>Đang tải...</div>
-  `);
-  try {
-    const r = await api("/api/admin/user-orders", {user_id: userId});
-    if (!r.ok) { openModal(`<div class="modal-title">Lỗi<button class="close-x" onclick="closeModal()">✕</button></div><div class="empty">${r.error||"Lỗi"}</div>`); return; }
-    const u = r.user;
-    const html = `
-      <div class="modal-title">📦 ${escapeHtml(u.first_name || u.username || "User")}<button class="close-x" onclick="closeModal()">✕</button></div>
-      <div class="info-row"><span>ID</span><span>${u.id}</span></div>
-      <div class="info-row"><span>Số dư</span><span>${fmt(u.balance)}</span></div>
-      <div class="info-row"><span>Tổng chi</span><span>${fmt(u.total_spent)}</span></div>
-      <div class="info-row"><span>Proxy đã mua</span><span>${u.total_proxy}</span></div>
-      <div class="info-row"><span>Tham gia</span><span>${escapeHtml(u.created_at||"")}</span></div>
-      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">📜 Lịch sử đơn hàng (${r.orders.length})</div>
-      ${r.orders.length ? r.orders.map(o => `
-        <div style="background:var(--card2);border-radius:10px;padding:10px;margin-bottom:8px;font-size:12px">
-          <div style="font-weight:600;margin-bottom:6px">${escapeHtml(o.name)}</div>
-          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>SL</span><span>${o.amount}</span></div>
-          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>Thanh toán</span><span>${fmt(o.price)}</span></div>
-          <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>${o.created_at}</span></div>
-        </div>
-      `).join("") : '<div class="empty" style="padding:20px">Chưa có đơn hàng</div>'}
-    `;
-    openModal(html);
-  } catch(e) {
-    openModal(`<div class="modal-title">Lỗi<button class="close-x" onclick="closeModal()">✕</button></div><div class="empty">Lỗi kết nối</div>`);
-  }
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
 }
 
 init();
