@@ -468,62 +468,167 @@ function renderProducts() {
   const list = document.getElementById("productsList");
   const items = currentCat === "" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => p.category_id === currentCat);
   if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có SP</div>'; return; }
-  list.innerHTML = items.map(p => `
-    <div class="card" onclick="openBuy('${p.id}')">
-      <div class="product-head">
-        <div class="product-name">${escapeHtml(p.name)}</div>
-        <div class="stock-tag">${p.stock} có sẵn</div>
+  list.innerHTML = items.map(p => {
+    const cfgType = p.config_type || "daily";
+    let label = "";
+    if (cfgType === "combo") label = `📦 Combo ${p.combo_size}`;
+    else if (cfgType === "fixed") label = `📅 ${p.duration_days} ngày (cố định)`;
+    else label = `📅 Theo ngày`;
+    return `
+      <div class="card" onclick="openBuy('${p.id}')">
+        <div class="product-head">
+          <div class="product-name">${escapeHtml(p.name)}</div>
+          <div class="stock-tag">${p.stock} có sẵn</div>
+        </div>
+        ${p.category_name ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">📂 ${escapeHtml(shortCat(p.category_name))}</div>` : ""}
+        <div style="font-size:11px;color:var(--primary);margin-bottom:6px">${label}${p.is_rotate ? " • 🔄 Xoay IP" : ""}</div>
+        ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Min ${p.min_buy}</div>` : ""}
+        ${p.desc ? `<div class="product-desc">${escapeHtml(p.desc.split("\\n")[0].substring(0,120))}${p.desc.length>120?"…":""}</div>` : ""}
+        <div class="product-foot">
+          <div class="price">${fmt(p.price)} <small>/ proxy/ngày</small></div>
+          <button class="btn btn-sm">Mua ngay</button>
+        </div>
       </div>
-      ${p.category_name ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">📂 ${escapeHtml(shortCat(p.category_name))}</div>` : ""}
-      ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
-      ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Min ${p.min_buy}</div>` : ""}
-      ${p.desc ? `<div class="product-desc">${escapeHtml(p.desc.split("\\n")[0].substring(0,120))}${p.desc.length>120?"…":""}</div>` : ""}
-      <div class="product-foot">
-        <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
-        <button class="btn btn-sm">Mua ngay</button>
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function openBuy(id) {
   const p = ALL_PRODUCTS.find(x => x.id === id);
   if (!p) return;
   currentProduct = p;
+
+  const cfgType = p.config_type || "daily";
+  const hasDay = p.has_day_selector !== false;
+  const comboSize = p.combo_size || 1;
   const minBuy = p.min_buy || 1;
+
+  const canChooseAmount = (cfgType !== "combo");
+  const initAmount = (cfgType === "combo") ? comboSize : minBuy;
+  const initDays = 1;
+
+  const daysRow = hasDay ? `
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">📅 Số ngày (tối thiểu 1)</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeDays(-1)">−</button>
+      <div class="qty-val" id="buyDays">${initDays}</div>
+      <button class="qty-btn" onclick="changeDays(1)">+</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      ${[1,3,7,15,30].map(d => `<button class="btn btn-outline btn-xs" onclick="setDays(${d})">${d} ngày</button>`).join("")}
+    </div>
+  ` : `
+    <div style="background:rgba(255,215,0,.08);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;text-align:center;color:var(--gold)">
+      ⚙️ Sản phẩm đã cố định <b>${p.duration_days} ngày</b> — không cần chọn
+    </div>
+  `;
+
+  const amountRow = canChooseAmount ? `
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">🔢 Số lượng proxy${minBuy > 1 ? ` (tối thiểu ${minBuy})` : ""}</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <div class="qty-val" id="buyQty">${initAmount}</div>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+    </div>
+  ` : `
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">🔢 Số lượng proxy</div>
+    <div class="qty-row">
+      <div class="qty-val" style="background:var(--card2);color:var(--gold);font-weight:700">${comboSize} <span style="font-size:12px;color:var(--muted)">(Combo cố định)</span></div>
+    </div>
+  `;
+
   openModal(`
     <div class="modal-title">${escapeHtml(p.name)}<button class="close-x" onclick="closeModal()">✕</button></div>
     ${p.category_name ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">📂 ${escapeHtml(p.category_name)}</div>` : ""}
-    <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
+    <div class="info-row"><span>Giá/1 proxy/1 ngày</span><span>${fmt(p.price)}</span></div>
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
     <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
     ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
-    ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Min</span><span style="color:var(--gold)">${minBuy}</span></div>` : ""}
     ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
-    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
-    <div class="qty-row">
-      <button class="qty-btn" onclick="changeQty(-1)">−</button>
-      <div class="qty-val" id="buyQty">${minBuy}</div>
-      <button class="qty-btn" onclick="changeQty(1)">+</button>
+
+    ${amountRow}
+    ${daysRow}
+
+    <div class="info-row" style="background:rgba(255,215,0,.08);border-radius:8px;padding:10px;margin-top:10px">
+      <span style="color:var(--gold);font-weight:700">💰 Tổng tiền</span>
+      <span id="buyTotal" style="color:var(--gold);font-weight:700;font-size:16px">${fmt(p.price * initAmount * initDays)}</span>
     </div>
-    <div class="info-row"><span>Tổng</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
+
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
+    <div id="buySummary" style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">
+      ${initAmount} proxy × ${initDays} ngày
+    </div>
   `);
-  window._qty = minBuy;
+
+  window._qty = initAmount;
+  window._days = initDays;
+  window._cfgType = cfgType;
+  window._hasDay = hasDay;
+  window._comboSize = comboSize;
+  window._canChooseAmount = canChooseAmount;
+  updateBuyTotal();
 }
+
+function updateBuyTotal() {
+  if (!currentProduct) return;
+  const qty = window._qty || 1;
+  const days = window._days || 1;
+  const cfgType = window._cfgType || "daily";
+
+  let total;
+  if (cfgType === "fixed") {
+    total = currentProduct.price * qty;
+  } else {
+    total = currentProduct.price * qty * days;
+  }
+
+  const totEl = document.getElementById("buyTotal");
+  if (totEl) totEl.textContent = fmt(total);
+
+  const sumEl = document.getElementById("buySummary");
+  if (sumEl) {
+    if (cfgType === "combo") {
+      sumEl.textContent = `Combo ${qty} proxy × ${days} ngày = ${qty * days} proxy-days`;
+    } else if (cfgType === "fixed") {
+      sumEl.textContent = `${qty} proxy × ${currentProduct.duration_days} ngày (cố định)`;
+    } else {
+      sumEl.textContent = `${qty} proxy × ${days} ngày`;
+    }
+  }
+}
+
 function changeQty(d) {
+  if (!window._canChooseAmount) return;
   const minBuy = currentProduct.min_buy || 1;
   window._qty = Math.max(minBuy, (window._qty || minBuy) + d);
-  document.getElementById("buyQty").textContent = window._qty;
-  document.getElementById("buyTotal").textContent = fmt(currentProduct.price * window._qty);
+  const qEl = document.getElementById("buyQty");
+  if (qEl) qEl.textContent = window._qty;
+  updateBuyTotal();
+}
+
+function changeDays(d) {
+  if (!window._hasDay) return;
+  window._days = Math.max(1, (window._days || 1) + d);
+  const dEl = document.getElementById("buyDays");
+  if (dEl) dEl.textContent = window._days;
+  updateBuyTotal();
+}
+
+function setDays(n) {
+  if (!window._hasDay) return;
+  window._days = Math.max(1, parseInt(n) || 1);
+  const dEl = document.getElementById("buyDays");
+  if (dEl) dEl.textContent = window._days;
+  updateBuyTotal();
 }
 
 async function doBuy() {
   const qty = window._qty || (currentProduct.min_buy || 1);
+  const days = window._days || 1;
   const btn = event.target;
   btn.disabled = true; btn.textContent = "Đang xử lý...";
   try {
-    const r = await api("/api/buy", {id: currentProduct.id, amount: qty});
+    const r = await api("/api/buy", {id: currentProduct.id, amount: qty, days: days});
     if (!r.ok) {
       if (r.contact_admin) {
         closeModal();
@@ -575,13 +680,17 @@ function showPurchased(r) {
   const pname = r.product_name || "";
   const isRotate = r.is_rotate || false;
   const proxyKey = r.proxy_key || "";
+  const days = r.days || 1;
+
   const proxiesHtml = hasStructured
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
+
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(pname)}</span></div>
-    <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
+    <div class="info-row"><span>Số lượng</span><span>${r.amount} proxy</span></div>
+    ${days > 1 ? `<div class="info-row"><span>📅 Số ngày</span><span style="color:var(--primary);font-weight:700">${days} ngày</span></div>` : ""}
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
     ${r.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(r.order_code)}</span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
@@ -619,6 +728,7 @@ async function loadOrders() {
           </div>
           ${o.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Proxy xoay</div>` : ""}
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
+          ${(o.days && o.days > 1) ? `<div class="info-row"><span>📅 Số ngày</span><span style="color:var(--primary);font-weight:700">${o.days} ngày</span></div>` : ""}
           <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
           ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
           ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
@@ -642,7 +752,8 @@ function viewOrder(orderJson) {
   openModal(`
     <div class="modal-title">👁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
-    <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
+    <div class="info-row"><span>Số lượng</span><span>${o.amount} proxy</span></div>
+    ${(o.days && o.days > 1) ? `<div class="info-row"><span>📅 Số ngày</span><span style="color:var(--primary);font-weight:700">${o.days} ngày</span></div>` : ""}
     <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
     ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰</span><span style="color:var(--gold)">${escapeHtml(expire)}</span></div>` : ""}
@@ -1185,7 +1296,7 @@ async function adminTab(tab, el) {
           <div class="card" style="border-color:${alive ? 'rgba(37,211,102,.3)' : 'rgba(255,71,87,.3)'}">
             <div class="product-head">
               <div class="product-name">${escapeHtml(o.resource_name || "")}</div>
-              <div class="stock-tag">SL: ${o.amount}</div>
+              <div class="stock-tag">SL: ${o.amount}${o.days > 1 ? ` × ${o.days}n` : ""}</div>
             </div>
             <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || "?")} (${o.user_id})</span></div>
             <div class="info-row"><span>Trạng thái</span><span>${statusText}${remaining}</span></div>
