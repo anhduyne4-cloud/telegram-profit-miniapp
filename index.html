@@ -104,6 +104,19 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .source-tag.manual{background:rgba(74,158,255,.15);color:var(--primary)}
 .source-tag.admin_gift{background:rgba(255,215,0,.15);color:var(--gold)}
 .source-tag.admin_transfer{background:rgba(168,85,247,.15);color:#a855f7}
+.rate-badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px}
+.rate-badge.r15{background:rgba(37,211,102,.2);color:var(--success)}
+.rate-badge.r25{background:rgba(255,215,0,.2);color:var(--gold)}
+.rate-badge.r30{background:rgba(255,71,87,.2);color:var(--danger)}
+.rate-badge.r0{background:rgba(139,147,168,.2);color:var(--muted)}
+.balance-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.wallet-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;position:relative}
+.wallet-card.primary{border-color:rgba(74,158,255,.4);background:linear-gradient(135deg,rgba(74,158,255,.1),rgba(74,158,255,.02))}
+.wallet-card.gold{border-color:rgba(255,215,0,.4);background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,215,0,.02))}
+.wallet-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.wallet-val{font-size:18px;font-weight:700;word-break:break-all}
+.wallet-card.primary .wallet-val{color:var(--primary)}
+.wallet-card.gold .wallet-val{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -153,6 +166,72 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
 </div>
 
+<!-- REFERRAL -->
+<div class="page" id="page-referral">
+  <div class="section-title">
+    <span>🎁 Mời bạn nhận hoa hồng</span>
+    <button class="btn btn-outline btn-xs" onclick="loadReferrals()">🔄</button>
+  </div>
+
+  <div class="balance-2col">
+    <div class="wallet-card gold">
+      <div class="wallet-label">💎 Ví hoa hồng</div>
+      <div class="wallet-val" id="refBalance">0đ</div>
+    </div>
+    <div class="wallet-card primary">
+      <div class="wallet-label">💳 Số dư mua hàng</div>
+      <div class="wallet-val" id="refMainBalance">0đ</div>
+    </div>
+  </div>
+
+  <button class="btn btn-gold btn-block" onclick="openWithdrawModal()" style="margin-bottom:14px">💸 Rút hoa hồng về số dư</button>
+
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-val" id="refEarned">0đ</div>
+      <div class="stat-label">Tổng hoa hồng nhận</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="refCount">0</div>
+      <div class="stat-label">Người đã mời</div>
+    </div>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.1));border-color:var(--gold)">
+    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">💎 Bảng hoa hồng lũy tiến</div>
+    <div class="info-row"><span>Người được mời chi 50,000đ</span><span style="color:var(--success)">15%</span></div>
+    <div class="info-row"><span>Người được mời chi 100,000đ</span><span style="color:var(--success)">25%</span></div>
+    <div class="info-row"><span>Người được mời chi trên 200,000đ</span><span style="color:var(--success)">30%</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+      💡 Hoa hồng tính <b style="color:var(--gold)">lũy tiến</b> theo tổng chi tiêu của người bạn mời
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔗 Link mời của bạn</div>
+    <div class="code-box" style="font-size:11px;max-height:none;color:var(--gold)" id="refLink">Đang tạo...</div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-success btn-block" onclick="copyRefLink()">📋 Copy</button>
+      <button class="btn btn-outline" onclick="shareRefLink()">📤 Chia sẻ</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:16px">
+    <span>👥 Người bạn đã mời</span>
+  </div>
+  <div id="referredList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+
+  <div class="section-title" style="margin-top:16px">
+    <span>💰 Lịch sử hoa hồng</span>
+  </div>
+  <div id="earningsList"></div>
+
+  <div class="section-title" style="margin-top:16px">
+    <span>📜 Lịch sử rút</span>
+  </div>
+  <div id="withdrawalList"></div>
+</div>
+
 <!-- DEPOSIT -->
 <div class="page" id="page-deposit">
   <div class="section-title"><span>💳 Nạp tiền tự động</span></div>
@@ -186,6 +265,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
     <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn</div>
     <div class="tab" onclick="adminTab('proxies',this)">🌐 Proxy</div>
+    <div class="tab" onclick="adminTab('referrals',this)">🎁 Ref</div>
     <div class="tab" onclick="adminTab('keys',this)">🔑 Keys</div>
     <div class="tab" onclick="adminTab('logs',this)">📜 Log</div>
   </div>
@@ -197,6 +277,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Shop</div>
   <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn</div>
   <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
+  <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
@@ -218,6 +299,7 @@ let balancePolling = null;
 let ROTATIONS = [];
 let SELECTED_KEYS = new Set();
 let currentRotateTab = "rotate";
+let REF_DATA = null;
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
@@ -261,6 +343,7 @@ async function init() {
     loadProducts();
     loadOrders();
     loadRotations();
+    loadReferrals();
     startBalancePolling();
   } catch(e) { toast("Lỗi kết nối", "error"); }
 }
@@ -284,7 +367,11 @@ function startBalancePolling() {
 async function refreshBalance() {
   try {
     const r = await api("/api/me/refresh");
-    if (r.ok) { USER.balance = r.balance; document.getElementById("hdrBal").textContent = fmt(r.balance); toast("Đã cập nhật!", "success"); }
+    if (r.ok) {
+      USER.balance = r.balance;
+      document.getElementById("hdrBal").textContent = fmt(r.balance);
+      toast("Đã cập nhật!", "success");
+    }
   } catch(e) {}
 }
 
@@ -292,9 +379,11 @@ function nav(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   document.getElementById("page-" + page).classList.add("active");
-  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+  const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navEl) navEl.classList.add("active");
   if (page === "orders") loadOrders();
   if (page === "rotate") loadRotations();
+  if (page === "referral") loadReferrals();
   if (page === "admin") loadAdmin();
 }
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
@@ -416,11 +505,9 @@ function showPurchased(r) {
   const pname = r.product_name || "";
   const isRotate = r.is_rotate || false;
   const proxyKey = r.proxy_key || "";
-
   const proxiesHtml = hasStructured
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
-
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(pname)}</span></div>
@@ -602,6 +689,7 @@ function toggleSelect(key, checkbox, idx) {
 function updateBulkBar() {
   const bar = document.getElementById("bulkBar");
   const cnt = document.getElementById("bulkCount");
+  if (!bar || !cnt) return;
   cnt.textContent = SELECTED_KEYS.size;
   bar.style.display = SELECTED_KEYS.size > 0 ? "flex" : "none";
 }
@@ -687,6 +775,135 @@ async function submitAddKey() {
     closeModal();
     setTimeout(() => loadRotations(), 300);
   } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; }
+}
+
+// ===== REFERRAL =====
+async function loadReferrals() {
+  const referredBox = document.getElementById("referredList");
+  const earningsBox = document.getElementById("earningsList");
+  const wdBox = document.getElementById("withdrawalList");
+  if (!referredBox) return;
+  referredBox.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  earningsBox.innerHTML = '';
+  wdBox.innerHTML = '';
+  try {
+    const r = await api("/api/my-referrals");
+    if (!r.ok) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    REF_DATA = r;
+    const botUser = r.bot_username || "PROXY2GAME_bot";
+    const refLink = `https://t.me/${botUser}?start=ref_${USER.id}`;
+    document.getElementById("refLink").textContent = refLink;
+    window._refLink = refLink;
+    document.getElementById("refEarned").textContent = fmt(r.total_earned);
+    document.getElementById("refCount").textContent = r.total_referred;
+    document.getElementById("refBalance").textContent = fmt(r.referral_balance);
+    document.getElementById("refMainBalance").textContent = fmt(r.main_balance);
+
+    if (!r.referred || !r.referred.length) {
+      referredBox.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Chưa mời được ai<br><span style="font-size:12px;color:var(--muted)">Chia sẻ link để bắt đầu kiếm hoa hồng!</span></div>';
+    } else {
+      referredBox.innerHTML = r.referred.map(p => {
+        const rateCls = p.current_rate >= 30 ? "r30" : p.current_rate >= 25 ? "r25" : p.current_rate >= 15 ? "r15" : "r0";
+        const rateText = p.current_rate > 0 ? `${p.current_rate}%` : "Chưa đủ mốc";
+        return `
+          <div class="card">
+            <div class="product-head">
+              <div class="product-name">${escapeHtml(p.first_name || p.username || "User")}</div>
+              <span class="rate-badge ${rateCls}">${rateText}</span>
+            </div>
+            <div class="info-row"><span>ID</span><span>${p.id}</span></div>
+            <div class="info-row"><span>Đã chi tiêu</span><span style="color:var(--gold)">${fmt(p.total_spent)}</span></div>
+            <div class="info-row"><span>Hoa hồng cho bạn</span><span style="color:var(--success)">${fmt(p.referral_paid)}</span></div>
+            <div class="info-row"><span>Tham gia</span><span>${escapeHtml(p.created_at || "")}</span></div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    if (!r.earnings || !r.earnings.length) {
+      earningsBox.innerHTML = '<div class="empty" style="padding:20px;font-size:12px">Chưa có hoa hồng</div>';
+    } else {
+      earningsBox.innerHTML = r.earnings.slice(0, 30).map(e => `
+        <div class="card" style="border-color:rgba(37,211,102,.3)">
+          <div class="product-head">
+            <div class="product-name" style="font-size:13px">Người bạn mời #${e.referred_id}</div>
+            <div class="stock-tag" style="background:rgba(37,211,102,.15);color:var(--success)">+${fmt(e.commission)}</div>
+          </div>
+          <div class="info-row"><span>Đơn hàng</span><span>${fmt(e.order_amount)}</span></div>
+          <div class="info-row"><span>Tổng chi tiêu</span><span>${fmt(e.total_spent)}</span></div>
+          <div class="info-row"><span>Mức hoa hồng</span><span>${e.rate}%</span></div>
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(e.created_at)}</span></div>
+        </div>
+      `).join("");
+    }
+
+    if (!r.withdrawals || !r.withdrawals.length) {
+      wdBox.innerHTML = '<div class="empty" style="padding:20px;font-size:12px">Chưa có lần rút nào</div>';
+    } else {
+      wdBox.innerHTML = r.withdrawals.map(w => `
+        <div class="card" style="border-color:rgba(255,215,0,.3)">
+          <div class="product-head">
+            <div class="product-name" style="font-size:13px">Rút hoa hồng</div>
+            <div class="stock-tag" style="background:rgba(255,215,0,.15);color:var(--gold)">${fmt(w.amount)}</div>
+          </div>
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(w.created_at)}</span></div>
+        </div>
+      `).join("");
+    }
+  } catch(e) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; console.error(e); }
+}
+
+function copyRefLink() {
+  const link = window._refLink || "";
+  if (!link) { toast("Chưa có link", "error"); return; }
+  navigator.clipboard.writeText(link).then(() => toast("✅ Đã copy link!", "success"));
+}
+
+function shareRefLink() {
+  const link = window._refLink || "";
+  if (!link) { toast("Chưa có link", "error"); return; }
+  if (tg && tg.openTelegramLink) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🎁 Tham gia Proxy Shop!")}`);
+  } else {
+    navigator.clipboard.writeText(`🎁 Tham gia Proxy Shop!\n${link}`).then(() => toast("Đã copy nội dung chia sẻ!", "success"));
+  }
+}
+
+function openWithdrawModal() {
+  const refBal = REF_DATA ? (REF_DATA.referral_balance || 0) : 0;
+  if (refBal < 1000) { toast("Số dư hoa hồng chưa đủ 1,000đ", "error"); return; }
+  openModal(`
+    <div class="modal-title">💸 Rút hoa hồng<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Ví hoa hồng</span><span style="color:var(--gold);font-weight:700">${fmt(refBal)}</span></div>
+    <div class="info-row"><span>Số dư mua hàng</span><span>${fmt(REF_DATA ? REF_DATA.main_balance : 0)}</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số tiền muốn rút</div>
+    <input class="input" id="wdAmount" type="number" placeholder="Nhập số tiền..." inputmode="numeric" value="${refBal}">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=10000">10K</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=50000">50K</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=100000">100K</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=${refBal}">Tất cả</button>
+    </div>
+    <button class="btn btn-gold btn-block" onclick="submitWithdraw()">💸 Rút về số dư</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
+      💡 Tiền rút sẽ được cộng ngay vào số dư mua hàng
+    </div>
+  `);
+}
+
+async function submitWithdraw() {
+  const amount = parseInt(document.getElementById("wdAmount").value || "0");
+  if (amount < 1000) { toast("Rút tối thiểu 1,000đ", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang rút...";
+  try {
+    const r = await api("/api/withdraw-referral", {amount});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "💸 Rút về số dư"; return; }
+    toast(`✅ Đã rút ${fmt(amount)} về số dư!`, "success");
+    USER.balance = r.balance;
+    document.getElementById("hdrBal").textContent = fmt(r.balance);
+    closeModal();
+    setTimeout(() => loadReferrals(), 300);
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "💸 Rút về số dư"; }
 }
 
 // ===== DEPOSIT =====
@@ -783,6 +1000,8 @@ async function loadAdmin() {
       <div class="stat-card pink"><div class="stat-val">${s.total_rotations}</div><div class="stat-label">Lượt xoay</div></div>
       <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
       <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
+      <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
+      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
     `;
     loadProxyStats();
     adminTab("users");
@@ -854,8 +1073,7 @@ async function adminTab(tab, el) {
       const filterUserId = prompt("Nhập User ID để lọc (bỏ trống = tất cả):") || "";
       box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
       const r = await api("/api/admin/all-proxies", {
-        user_id: filterUserId ? parseInt(filterUserId) : null,
-        limit: 300
+        user_id: filterUserId ? parseInt(filterUserId) : null, limit: 300
       });
       if (!r.ok) { box.innerHTML = '<div class="empty">Lỗi</div>'; return; }
       const summary = `
@@ -875,11 +1093,9 @@ async function adminTab(tab, el) {
         const statusIcon = alive ? '<span style="color:var(--success)">🟢</span>' : '<span style="color:var(--danger)">🔴</span>';
         const statusText = alive ? '<span style="color:var(--success);font-weight:700">Còn hạn</span>' : '<span style="color:var(--danger);font-weight:700">Hết hạn</span>';
         const remaining = o.remaining ? ` (${o.remaining})` : "";
-
         const proxiesHtml = (o.proxies || []).map(p =>
           `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${statusIcon} ${escapeHtml(p)}</div>`
         ).join("") || '<div style="font-size:11px;color:var(--muted)">Không có proxy</div>';
-
         return `
           <div class="card" style="border-color:${alive ? 'rgba(37,211,102,.3)' : 'rgba(255,71,87,.3)'}">
             <div class="product-head">
@@ -898,6 +1114,36 @@ async function adminTab(tab, el) {
         `;
       }).join("");
       box.innerHTML = summary + (list || '<div class="empty">Chưa có proxy nào</div>');
+    } else if (tab === "referrals") {
+      const r = await api("/api/admin/referrals");
+      if (!r.ok) { box.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+      const summary = `
+        <div class="card" style="background:rgba(255,215,0,.1);border-color:var(--gold)">
+          <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:8px">📊 Tổng quan Referral</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div>HH đã trả: <b style="color:var(--success)">${fmt(r.total_commission_paid)}</b></div>
+            <div>HH đã rút: <b style="color:var(--gold)">${fmt(r.total_withdrawn)}</b></div>
+            <div>Tổng lượt mời: <b>${r.total_referrals}</b></div>
+            <div>Số người mời: <b>${r.total_referrers}</b></div>
+          </div>
+        </div>
+      `;
+      const list = r.referrers.map(ref => `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${escapeHtml(ref.first_name || ref.username || "User")}</div>
+            <div class="stock-tag" style="background:rgba(255,215,0,.15);color:var(--gold)">💰 ${fmt(ref.referral_earned)}</div>
+          </div>
+          <div class="info-row"><span>User ID</span><span>${ref.id}</span></div>
+          <div class="info-row"><span>Số người đã mời</span><span style="color:var(--primary);font-weight:700">${ref.referred_count}</span></div>
+          <div class="info-row"><span>Tổng chi tiêu F1</span><span>${fmt(ref.total_referred_spent)}</span></div>
+          <div class="info-row"><span>Ví HH hiện tại</span><span style="color:var(--gold)">${fmt(ref.referral_balance)}</span></div>
+          <div class="user-actions">
+            <button class="btn btn-gold btn-xs" onclick='openReferrerDetail(${ref.id})'>👁 Xem chi tiết</button>
+          </div>
+        </div>
+      `).join("");
+      box.innerHTML = summary + (list || '<div class="empty">Chưa có ai mời được người nào</div>');
     } else if (tab === "keys") {
       const r = await api("/api/admin/keys");
       if (!r.ok) { box.innerHTML = ""; return; }
@@ -920,7 +1166,8 @@ async function adminTab(tab, el) {
     } else {
       const r = await api("/api/admin/logs");
       if (!r.ok) { box.innerHTML = ""; return; }
-      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin", key_transfer:"🔀 Chuyển key", key_gift:"🎁 Tặng key", key_revoke:"🗑 Thu hồi"};
+      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin",
+                          key_transfer:"🔀 Chuyển key", key_gift:"🎁 Tặng key", key_revoke:"🗑 Thu hồi"};
       box.innerHTML = r.logs.map(l => `
         <div class="card">
           <div class="product-head">
@@ -936,6 +1183,7 @@ async function adminTab(tab, el) {
   } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
+// ===== ADMIN MODALS =====
 function openBalanceModal(userId, name, balance, action) {
   const isAdd = action === "add";
   openModal(`
@@ -995,12 +1243,11 @@ async function submitMessage(userId) {
     toast("✅ Đã gửi!", "success"); closeModal();
   } catch(e) { toast("Lỗi", "error"); }
 }
-
 function openGiftKeyModal(userId, name) {
   openModal(`
     <div class="modal-title">🎁 Tặng key cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-      Nhập key để tặng. Nếu key đã có chủ khác, hệ thống sẽ <b style="color:var(--gold)">chuyển quyền sở hữu</b>.
+      Nhập key để tặng. Nếu key đã có chủ khác, sẽ <b style="color:var(--gold)">chuyển quyền</b>.
     </div>
     <input class="input" id="giftKeyInput" placeholder="Dán key..." autocomplete="off">
     <button class="btn btn-purple btn-block" onclick='submitGiftKey(${userId})'>🎁 Tặng key</button>
@@ -1018,7 +1265,6 @@ async function submitGiftKey(userId) {
     setTimeout(() => adminTab("keys"), 400);
   } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
 }
-
 function openTransferKeyModal(proxyKey, currentOwner) {
   openModal(`
     <div class="modal-title">🔀 Chuyển key<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -1041,7 +1287,6 @@ async function submitTransferKey(proxyKey) {
     setTimeout(() => adminTab("keys"), 400);
   } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
 }
-
 async function revokeKey(keyId) {
   if (!confirm("Thu hồi key này?")) return;
   try {
@@ -1050,6 +1295,71 @@ async function revokeKey(keyId) {
     toast("✅ Đã thu hồi", "success");
     adminTab("keys");
   } catch(e) { toast("Lỗi", "error"); }
+}
+
+async function openReferrerDetail(referrerId) {
+  openModal(`
+    <div class="modal-title">🎁 Chi tiết Referral<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="loading"><div class="spinner"></div>Đang tải...</div>
+  `);
+  try {
+    const r = await api("/api/admin/referrer-detail", {referrer_id: referrerId});
+    if (!r.ok) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Không tải được</div>`); return; }
+    const u = r.user;
+    const referredHtml = r.referred.length
+      ? r.referred.map(p => {
+          const spent = p.total_spent || 0;
+          let rate = 0;
+          if (spent >= 200000) rate = 30;
+          else if (spent >= 100000) rate = 25;
+          else if (spent >= 50000) rate = 15;
+          return `
+            <div style="background:var(--card2);padding:10px;border-radius:8px;margin-bottom:8px;font-size:12px">
+              <div style="font-weight:600;margin-bottom:4px">${escapeHtml(p.first_name || p.username || "User")} (${p.id})</div>
+              <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>Đã chi:</span><span style="color:var(--gold)">${fmt(spent)}</span></div>
+              <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Mức:</span><span>${rate}%</span></div>
+            </div>
+          `;
+        }).join("")
+      : '<div class="empty" style="padding:20px">Chưa mời được ai</div>';
+
+    const earningsHtml = r.earnings.length
+      ? r.earnings.slice(0, 20).map(e => `
+          <div style="background:var(--card2);padding:8px;border-radius:6px;margin-bottom:6px;font-size:11px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="color:var(--muted)">Từ user #${e.referred_id}</span>
+              <span style="color:var(--success);font-weight:700">+${fmt(e.commission)}</span>
+            </div>
+            <div style="color:var(--muted);font-size:10px">${escapeHtml(e.created_at)} • ${e.rate}%</div>
+          </div>
+        `).join("")
+      : '<div class="empty" style="padding:20px">Chưa có hoa hồng</div>';
+
+    const wdHtml = (r.withdrawals && r.withdrawals.length)
+      ? r.withdrawals.slice(0, 20).map(w => `
+          <div style="background:var(--card2);padding:8px;border-radius:6px;margin-bottom:6px;font-size:11px;display:flex;justify-content:space-between">
+            <span style="color:var(--muted)">${escapeHtml(w.created_at)}</span>
+            <span style="color:var(--gold);font-weight:700">-${fmt(w.amount)}</span>
+          </div>
+        `).join("")
+      : '<div class="empty" style="padding:20px">Chưa rút</div>';
+
+    openModal(`
+      <div class="modal-title">🎁 ${escapeHtml(u.first_name || u.username || "User")}<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>User ID</span><span>${u.id}</span></div>
+      <div class="info-row"><span>Tổng HH nhận</span><span style="color:var(--gold);font-weight:700">${fmt(u.referral_earned)}</span></div>
+      <div class="info-row"><span>Ví HH hiện tại</span><span style="color:var(--gold)">${fmt(u.referral_balance)}</span></div>
+      <div class="info-row"><span>Số người đã mời</span><span>${r.referred.length}</span></div>
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">👥 Người được mời</div>
+      ${referredHtml}
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">💰 Lịch sử hoa hồng</div>
+      ${earningsHtml}
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">💸 Lịch sử rút</div>
+      ${wdHtml}
+    `);
+  } catch(e) {
+    openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`);
+  }
 }
 
 function openBroadcast() {
