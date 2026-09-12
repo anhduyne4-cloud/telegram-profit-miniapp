@@ -304,6 +304,7 @@ let REF_DATA = null;
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
 
+// ===== CLOCK =====
 function startClock() {
   const tick = () => {
     const d = new Date();
@@ -316,6 +317,7 @@ function startClock() {
 }
 startClock();
 
+// ===== HELPERS =====
 function toast(msg, type="success") {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -333,6 +335,50 @@ async function api(path, data={}) {
 function fmt(n) { return (n||0).toLocaleString("vi-VN") + "đ"; }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
+// ===== COPY HELPERS =====
+function copyIP(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) { toast("Không tìm thấy IP", "error"); return; }
+  const ip = (el.textContent || "").trim();
+  if (!ip || ip === "Đang tải..." || ip === "Không lấy được" || ip === "Lỗi") {
+    toast("Chưa có IP để copy", "error");
+    return;
+  }
+  doCopy(ip);
+}
+
+function copyText(txt) {
+  if (!txt || txt === "—") { toast("Không có gì để copy", "error"); return; }
+  doCopy(String(txt));
+}
+
+function doCopy(txt) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => {
+      toast(`✅ Đã copy: ${txt}`, "success");
+    }).catch(() => fallbackCopy(txt));
+  } else {
+    fallbackCopy(txt);
+  }
+}
+
+function fallbackCopy(txt) {
+  const ta = document.createElement("textarea");
+  ta.value = txt;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+    toast(`✅ Đã copy: ${txt}`, "success");
+  } catch(e) {
+    toast("Không copy được", "error");
+  }
+  document.body.removeChild(ta);
+}
+
+// ===== INIT =====
 async function init() {
   try {
     const r = await api("/api/auth");
@@ -375,6 +421,7 @@ async function refreshBalance() {
   } catch(e) {}
 }
 
+// ===== NAV =====
 function nav(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
@@ -506,7 +553,7 @@ function showPurchased(r) {
   const isRotate = r.is_rotate || false;
   const proxyKey = r.proxy_key || "";
   const proxiesHtml = hasStructured
-    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
+    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
   openModal(`
     <div class="modal-title">🎉 Mua thành công<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -526,8 +573,8 @@ function showPurchased(r) {
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
-function copyOne(txt) { navigator.clipboard.writeText(txt).then(() => toast("Đã copy!", "success")); }
-function copyAll() { navigator.clipboard.writeText(window._copyData || "").then(() => toast("Đã copy!", "success")); }
+function copyOne(txt) { copyText(txt); }
+function copyAll() { copyText(window._copyData || ""); }
 
 async function loadOrders() {
   const list = document.getElementById("ordersList");
@@ -568,7 +615,7 @@ function viewOrder(orderJson) {
   const expire = o.expire || "";
   const raw = o.raw || "";
   const proxiesHtml = proxies.length
-    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyOne(${JSON.stringify(p)})'>📋</button></div>`).join("")
+    ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
   openModal(`
     <div class="modal-title">👁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -621,8 +668,14 @@ async function loadRotations() {
           ${o.note ? ` • ${escapeHtml(o.note)}` : ""}
         </div>
         <div class="rotate-ip-box" id="ip_${i}">
-          <span><span class="ip-label">IP: </span><b id="ipval_${i}">Đang tải...</b></span>
-          <button onclick="checkIP('${escapeHtml(o.proxy_key)}', ${i})" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔄</button>
+          <span style="min-width:0;flex:1">
+            <span class="ip-label">IP: </span>
+            <b id="ipval_${i}">Đang tải...</b>
+          </span>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button onclick="copyIP('ipval_${i}')" title="Copy IP" style="background:transparent;border:1px solid var(--border);color:var(--success);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">📋</button>
+            <button onclick="checkIP('${escapeHtml(o.proxy_key)}', ${i})" title="Làm mới" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔄</button>
+          </div>
         </div>
         <div class="rotate-actions">
           <button class="btn btn-gold btn-sm" onclick="rotateOne('${escapeHtml(o.proxy_key)}', ${i})">🔄 Xoay</button>
@@ -638,11 +691,12 @@ async function checkIP(key, idx) {
   const el = document.getElementById("ipval_" + idx);
   if (!el) return;
   el.textContent = "Đang tải...";
+  el.style.color = "var(--gold)";
   try {
     const r = await api("/api/proxy-ip", {key});
     if (r.ok && r.ip) { el.textContent = r.ip; el.style.color = "var(--gold)"; }
     else { el.textContent = "Không lấy được"; el.style.color = "var(--muted)"; }
-  } catch(e) { el.textContent = "Lỗi"; }
+  } catch(e) { el.textContent = "Lỗi"; el.style.color = "var(--danger)"; }
 }
 
 async function rotateOne(key, idx) {
@@ -656,11 +710,28 @@ async function rotateOne(key, idx) {
     if (res.success) {
       toast(`✅ Xoay thành công!`, "success");
       if (el) { el.textContent = res.new_ip || "Đã xoay"; el.style.color = "var(--success)"; }
+      const oldIpTxt = res.old_ip || "—";
+      const newIpTxt = res.new_ip || "—";
       openModal(`
         <div class="modal-title">🔄 Xoay thành công<button class="close-x" onclick="closeModal()">✕</button></div>
-        <div class="info-row"><span>IP cũ</span><span style="color:var(--muted)">${escapeHtml(res.old_ip||"—")}</span></div>
-        <div class="info-row"><span>IP mới</span><span style="color:var(--success);font-weight:700">${escapeHtml(res.new_ip||"—")}</span></div>
-        <button class="btn btn-block" style="margin-top:14px" onclick="closeModal()">Đóng</button>
+
+        <div style="background:rgba(139,147,168,.1);border-radius:10px;padding:12px;margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">IP cũ</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;font-family:monospace;font-size:13px;color:var(--muted);word-break:break-all">${escapeHtml(oldIpTxt)}</div>
+            <button class="btn btn-outline btn-xs" onclick='copyText(${JSON.stringify(oldIpTxt)})' style="flex-shrink:0">📋 Copy</button>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,rgba(37,211,102,.15),rgba(37,211,102,.05));border:1px solid rgba(37,211,102,.4);border-radius:10px;padding:12px;margin-bottom:14px">
+          <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:700">✨ IP mới (đang dùng)</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;font-family:monospace;font-size:14px;color:var(--success);font-weight:700;word-break:break-all">${escapeHtml(newIpTxt)}</div>
+            <button class="btn btn-success btn-xs" onclick='copyText(${JSON.stringify(newIpTxt)})' style="flex-shrink:0">📋 Copy</button>
+          </div>
+        </div>
+
+        <button class="btn btn-block" onclick="closeModal()">Đóng</button>
       `);
     } else {
       toast(`❌ Xoay thất bại`, "error");
@@ -710,9 +781,13 @@ async function bulkRotate() {
     const rows = results.map(res => `
       <div style="background:var(--card2);padding:10px;border-radius:8px;margin-bottom:8px;font-size:12px">
         <div style="font-family:monospace;color:var(--muted);word-break:break-all;margin-bottom:6px">${escapeHtml(res.key)}</div>
-        <div style="display:flex;justify-content:space-between;color:var(--muted)">
-          <span>Cũ: ${escapeHtml(res.old_ip||"—")}</span>
-          <span style="color:${res.success?'var(--success)':'var(--danger)'}">→ ${escapeHtml(res.new_ip||"—")}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;color:var(--muted);margin-bottom:4px">
+          <span style="flex:1;word-break:break-all">Cũ: ${escapeHtml(res.old_ip||"—")}</span>
+          <button onclick='copyText(${JSON.stringify(res.old_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:6px">📋</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="flex:1;color:${res.success?'var(--success)':'var(--danger)'};word-break:break-all">→ ${escapeHtml(res.new_ip||"—")}</span>
+          <button onclick='copyText(${JSON.stringify(res.new_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:6px">📋</button>
         </div>
       </div>
     `).join("");
@@ -746,8 +821,20 @@ async function loadRotationHistory() {
             ${h.status==='success'?'✅':'❌'}
           </div>
         </div>
-        <div class="info-row"><span>Cũ</span><span style="color:var(--muted)">${escapeHtml(h.old_ip||"—")}</span></div>
-        <div class="info-row"><span>Mới</span><span style="color:var(--success)">${escapeHtml(h.new_ip||"—")}</span></div>
+        <div class="info-row">
+          <span>Cũ</span>
+          <span style="color:var(--muted);display:flex;align-items:center;gap:6px">
+            ${escapeHtml(h.old_ip||"—")}
+            <button onclick='copyText(${JSON.stringify(h.old_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button>
+          </span>
+        </div>
+        <div class="info-row">
+          <span>Mới</span>
+          <span style="color:var(--success);display:flex;align-items:center;gap:6px">
+            ${escapeHtml(h.new_ip||"—")}
+            <button onclick='copyText(${JSON.stringify(h.new_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button>
+          </span>
+        </div>
         <div class="info-row"><span>TG</span><span>${escapeHtml(h.created_at)}</span></div>
       </div>
     `).join("");
@@ -856,7 +943,7 @@ async function loadReferrals() {
 function copyRefLink() {
   const link = window._refLink || "";
   if (!link) { toast("Chưa có link", "error"); return; }
-  navigator.clipboard.writeText(link).then(() => toast("✅ Đã copy link!", "success"));
+  doCopy(link);
 }
 
 function shareRefLink() {
@@ -865,7 +952,7 @@ function shareRefLink() {
   if (tg && tg.openTelegramLink) {
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🎁 Tham gia Proxy Shop!")}`);
   } else {
-    navigator.clipboard.writeText(`🎁 Tham gia Proxy Shop!\n${link}`).then(() => toast("Đã copy nội dung chia sẻ!", "success"));
+    doCopy(`🎁 Tham gia Proxy Shop!\n${link}`);
   }
 }
 
@@ -1094,7 +1181,10 @@ async function adminTab(tab, el) {
         const statusText = alive ? '<span style="color:var(--success);font-weight:700">Còn hạn</span>' : '<span style="color:var(--danger);font-weight:700">Hết hạn</span>';
         const remaining = o.remaining ? ` (${o.remaining})` : "";
         const proxiesHtml = (o.proxies || []).map(p =>
-          `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${statusIcon} ${escapeHtml(p)}</div>`
+          `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <span style="flex:1;word-break:break-all">${statusIcon} ${escapeHtml(p)}</span>
+            <button onclick='copyText(${JSON.stringify(p)})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>
+          </div>`
         ).join("") || '<div style="font-size:11px;color:var(--muted)">Không có proxy</div>';
         return `
           <div class="card" style="border-color:${alive ? 'rgba(37,211,102,.3)' : 'rgba(255,71,87,.3)'}">
