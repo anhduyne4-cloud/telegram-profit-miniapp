@@ -124,6 +124,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <script>
   // ====== ĐỔI THÀNH URL TUNNEL CỦA BẠN ======
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
+  // ====== ĐỔI THÀNH USERNAME TELEGRAM ADMIN (không có @) ======
+  const ADMIN_USERNAME = "MARKPORA";
 </script>
 
 <div class="header">
@@ -341,41 +343,36 @@ function copyIP(elementId) {
   if (!el) { toast("Không tìm thấy IP", "error"); return; }
   const ip = (el.textContent || "").trim();
   if (!ip || ip === "Đang tải..." || ip === "Không lấy được" || ip === "Lỗi") {
-    toast("Chưa có IP để copy", "error");
-    return;
+    toast("Chưa có IP để copy", "error"); return;
   }
   doCopy(ip);
 }
-
 function copyText(txt) {
   if (!txt || txt === "—") { toast("Không có gì để copy", "error"); return; }
   doCopy(String(txt));
 }
-
 function doCopy(txt) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(txt).then(() => {
       toast(`✅ Đã copy: ${txt}`, "success");
     }).catch(() => fallbackCopy(txt));
-  } else {
-    fallbackCopy(txt);
-  }
+  } else { fallbackCopy(txt); }
 }
-
 function fallbackCopy(txt) {
   const ta = document.createElement("textarea");
-  ta.value = txt;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  try {
-    document.execCommand("copy");
-    toast(`✅ Đã copy: ${txt}`, "success");
-  } catch(e) {
-    toast("Không copy được", "error");
-  }
+  ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast(`✅ Đã copy: ${txt}`, "success"); }
+  catch(e) { toast("Không copy được", "error"); }
   document.body.removeChild(ta);
+}
+
+// ===== CONTACT ADMIN =====
+function contactAdmin() {
+  const text = encodeURIComponent("🚨 Em bị lỗi mua key xoay, cần admin hỗ trợ cấp key. User ID: " + (USER ? USER.id : ""));
+  const tgUrl = `https://t.me/${ADMIN_USERNAME}?text=${text}`;
+  if (tg && tg.openTelegramLink) { tg.openTelegramLink(tgUrl); }
+  else { window.open(tgUrl, "_blank"); }
 }
 
 // ===== INIT =====
@@ -386,10 +383,7 @@ async function init() {
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
-    loadProducts();
-    loadOrders();
-    loadRotations();
-    loadReferrals();
+    loadProducts(); loadOrders(); loadRotations(); loadReferrals();
     startBalancePolling();
   } catch(e) { toast("Lỗi kết nối", "error"); }
 }
@@ -530,7 +524,36 @@ async function doBuy() {
   btn.disabled = true; btn.textContent = "Đang xử lý...";
   try {
     const r = await api("/api/buy", {id: currentProduct.id, amount: qty});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "✅ Xác nhận mua"; return; }
+    if (!r.ok) {
+      if (r.contact_admin) {
+        closeModal();
+        openModal(`
+          <div class="modal-title">⚠️ Cần hỗ trợ<button class="close-x" onclick="closeModal()">✕</button></div>
+          <div style="background:linear-gradient(135deg,rgba(255,71,87,.15),rgba(255,215,0,.1));border:1px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px">🚨 Sản phẩm xoay IP đang lỗi</div>
+            <div style="font-size:13px;line-height:1.6;color:var(--text)">
+              Sản phẩm bạn muốn mua đang gặp sự cố kỹ thuật từ nhà cung cấp.<br><br>
+              💡 <b>Số tiền của bạn CHƯA bị trừ</b> — bạn có thể yên tâm.
+            </div>
+          </div>
+          <div style="background:var(--card2);border-radius:12px;padding:14px;margin-bottom:14px">
+            <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">📞 Cần làm gì tiếp theo?</div>
+            <div style="font-size:12px;line-height:1.7;color:var(--muted)">
+              1️⃣ Chụp màn hình này<br>
+              2️⃣ Gửi cho <b style="color:var(--gold)">Admin</b> qua Telegram<br>
+              3️⃣ Admin sẽ cấp key thủ công cho bạn<br>
+              4️⃣ Hoặc admin fix sản phẩm rồi bạn thử lại sau
+            </div>
+          </div>
+          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ Admin</button>
+          <button class="btn btn-outline btn-block" onclick="closeModal()">Đóng</button>
+        `);
+        return;
+      }
+      toast(r.error || "Lỗi", "error");
+      btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
+      return;
+    }
     USER.balance -= r.paid;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     toast("Mua thành công!", "success");
@@ -572,7 +595,6 @@ function showPurchased(r) {
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
-
 function copyOne(txt) { copyText(txt); }
 function copyAll() { copyText(window._copyData || ""); }
 
@@ -636,16 +658,14 @@ function rotateTab(tab, el) {
   currentRotateTab = tab;
   document.querySelectorAll("#page-rotate .tab").forEach(t => t.classList.remove("active"));
   el.classList.add("active");
-  if (tab === "rotate") loadRotations();
-  else loadRotationHistory();
+  if (tab === "rotate") loadRotations(); else loadRotationHistory();
 }
 
 async function loadRotations() {
   if (currentRotateTab !== "rotate") return;
   const list = document.getElementById("rotateList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
-  SELECTED_KEYS.clear();
-  updateBulkBar();
+  SELECTED_KEYS.clear(); updateBulkBar();
   try {
     const r = await api("/api/my-keys");
     if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
@@ -690,8 +710,7 @@ async function loadRotations() {
 async function checkIP(key, idx) {
   const el = document.getElementById("ipval_" + idx);
   if (!el) return;
-  el.textContent = "Đang tải...";
-  el.style.color = "var(--gold)";
+  el.textContent = "Đang tải..."; el.style.color = "var(--gold)";
   try {
     const r = await api("/api/proxy-ip", {key});
     if (r.ok && r.ip) { el.textContent = r.ip; el.style.color = "var(--gold)"; }
@@ -714,7 +733,6 @@ async function rotateOne(key, idx) {
       const newIpTxt = res.new_ip || "—";
       openModal(`
         <div class="modal-title">🔄 Xoay thành công<button class="close-x" onclick="closeModal()">✕</button></div>
-
         <div style="background:rgba(139,147,168,.1);border-radius:10px;padding:12px;margin-bottom:10px">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">IP cũ</div>
           <div style="display:flex;align-items:center;gap:8px">
@@ -722,7 +740,6 @@ async function rotateOne(key, idx) {
             <button class="btn btn-outline btn-xs" onclick='copyText(${JSON.stringify(oldIpTxt)})' style="flex-shrink:0">📋 Copy</button>
           </div>
         </div>
-
         <div style="background:linear-gradient(135deg,rgba(37,211,102,.15),rgba(37,211,102,.05));border:1px solid rgba(37,211,102,.4);border-radius:10px;padding:12px;margin-bottom:14px">
           <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:700">✨ IP mới (đang dùng)</div>
           <div style="display:flex;align-items:center;gap:8px">
@@ -730,7 +747,6 @@ async function rotateOne(key, idx) {
             <button class="btn btn-success btn-xs" onclick='copyText(${JSON.stringify(newIpTxt)})' style="flex-shrink:0">📋 Copy</button>
           </div>
         </div>
-
         <button class="btn btn-block" onclick="closeModal()">Đóng</button>
       `);
     } else {
@@ -745,8 +761,7 @@ async function deleteKey(keyId) {
   try {
     const r = await api("/api/delete-key", {key_id: keyId});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã xoá", "success");
-    loadRotations();
+    toast("✅ Đã xoá", "success"); loadRotations();
   } catch(e) { toast("Lỗi", "error"); }
 }
 
@@ -756,7 +771,6 @@ function toggleSelect(key, checkbox, idx) {
   else { SELECTED_KEYS.delete(key); card.classList.remove("selected"); }
   updateBulkBar();
 }
-
 function updateBulkBar() {
   const bar = document.getElementById("bulkBar");
   const cnt = document.getElementById("bulkCount");
@@ -800,8 +814,7 @@ async function bulkRotate() {
       ${rows}
       <button class="btn btn-block" style="margin-top:14px" onclick="closeModal(); loadRotations()">Đóng</button>
     `);
-    SELECTED_KEYS.clear();
-    updateBulkBar();
+    SELECTED_KEYS.clear(); updateBulkBar();
   } catch(e) { toast("Lỗi", "error"); }
   btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
 }
@@ -821,20 +834,8 @@ async function loadRotationHistory() {
             ${h.status==='success'?'✅':'❌'}
           </div>
         </div>
-        <div class="info-row">
-          <span>Cũ</span>
-          <span style="color:var(--muted);display:flex;align-items:center;gap:6px">
-            ${escapeHtml(h.old_ip||"—")}
-            <button onclick='copyText(${JSON.stringify(h.old_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button>
-          </span>
-        </div>
-        <div class="info-row">
-          <span>Mới</span>
-          <span style="color:var(--success);display:flex;align-items:center;gap:6px">
-            ${escapeHtml(h.new_ip||"—")}
-            <button onclick='copyText(${JSON.stringify(h.new_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button>
-          </span>
-        </div>
+        <div class="info-row"><span>Cũ</span><span style="color:var(--muted);display:flex;align-items:center;gap:6px">${escapeHtml(h.old_ip||"—")}<button onclick='copyText(${JSON.stringify(h.old_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button></span></div>
+        <div class="info-row"><span>Mới</span><span style="color:var(--success);display:flex;align-items:center;gap:6px">${escapeHtml(h.new_ip||"—")}<button onclick='copyText(${JSON.stringify(h.new_ip||"")})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer">📋</button></span></div>
         <div class="info-row"><span>TG</span><span>${escapeHtml(h.created_at)}</span></div>
       </div>
     `).join("");
@@ -871,8 +872,7 @@ async function loadReferrals() {
   const wdBox = document.getElementById("withdrawalList");
   if (!referredBox) return;
   referredBox.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
-  earningsBox.innerHTML = '';
-  wdBox.innerHTML = '';
+  earningsBox.innerHTML = ''; wdBox.innerHTML = '';
   try {
     const r = await api("/api/my-referrals");
     if (!r.ok) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; return; }
@@ -937,7 +937,7 @@ async function loadReferrals() {
         </div>
       `).join("");
     }
-  } catch(e) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; console.error(e); }
+  } catch(e) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
 function copyRefLink() {
@@ -945,7 +945,6 @@ function copyRefLink() {
   if (!link) { toast("Chưa có link", "error"); return; }
   doCopy(link);
 }
-
 function shareRefLink() {
   const link = window._refLink || "";
   if (!link) { toast("Chưa có link", "error"); return; }
@@ -977,7 +976,6 @@ function openWithdrawModal() {
     </div>
   `);
 }
-
 async function submitWithdraw() {
   const amount = parseInt(document.getElementById("wdAmount").value || "0");
   if (amount < 1000) { toast("Rút tối thiểu 1,000đ", "error"); return; }
@@ -1063,7 +1061,6 @@ function startDepositPoll(code, totalSec) {
     } catch(e) {}
   }, 3000);
 }
-
 function closeDeposit() {
   if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
   if (window._depCountdownTimer) { clearInterval(window._depCountdownTimer); window._depCountdownTimer = null; }
@@ -1090,11 +1087,9 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
       <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
     `;
-    loadProxyStats();
-    adminTab("users");
+    loadProxyStats(); adminTab("users");
   } catch(e) {}
 }
-
 async function loadProxyStats() {
   try {
     const r = await api("/api/admin/proxy-stats");
@@ -1273,7 +1268,6 @@ async function adminTab(tab, el) {
   } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ===== ADMIN MODALS =====
 function openBalanceModal(userId, name, balance, action) {
   const isAdd = action === "add";
   openModal(`
@@ -1283,8 +1277,7 @@ function openBalanceModal(userId, name, balance, action) {
     <input class="input" id="admAmount" type="number" value="10000" inputmode="numeric">
     <input class="input" id="admReason" placeholder="Lý do (tùy chọn)">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
-      <span>Thông báo user</span>
+      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px"><span>Thông báo user</span>
     </label>
     <button class="btn ${isAdd?"btn-success":"btn-danger"} btn-block" onclick='submitBalance(${userId}, "${action}")'>Xác nhận</button>
   `);
@@ -1297,8 +1290,7 @@ function openSetBalanceModal(userId, name, balance) {
     <input class="input" id="admAmount" type="number" value="${balance}" inputmode="numeric">
     <input class="input" id="admReason" placeholder="Lý do">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px">
-      <span>Thông báo user</span>
+      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px"><span>Thông báo user</span>
     </label>
     <button class="btn btn-block" onclick='submitBalance(${userId}, "set")'>Xác nhận</button>
   `);
@@ -1412,7 +1404,6 @@ async function openReferrerDetail(referrerId) {
           `;
         }).join("")
       : '<div class="empty" style="padding:20px">Chưa mời được ai</div>';
-
     const earningsHtml = r.earnings.length
       ? r.earnings.slice(0, 20).map(e => `
           <div style="background:var(--card2);padding:8px;border-radius:6px;margin-bottom:6px;font-size:11px">
@@ -1424,7 +1415,6 @@ async function openReferrerDetail(referrerId) {
           </div>
         `).join("")
       : '<div class="empty" style="padding:20px">Chưa có hoa hồng</div>';
-
     const wdHtml = (r.withdrawals && r.withdrawals.length)
       ? r.withdrawals.slice(0, 20).map(w => `
           <div style="background:var(--card2);padding:8px;border-radius:6px;margin-bottom:6px;font-size:11px;display:flex;justify-content:space-between">
@@ -1433,7 +1423,6 @@ async function openReferrerDetail(referrerId) {
           </div>
         `).join("")
       : '<div class="empty" style="padding:20px">Chưa rút</div>';
-
     openModal(`
       <div class="modal-title">🎁 ${escapeHtml(u.first_name || u.username || "User")}<button class="close-x" onclick="closeModal()">✕</button></div>
       <div class="info-row"><span>User ID</span><span>${u.id}</span></div>
@@ -1447,9 +1436,7 @@ async function openReferrerDetail(referrerId) {
       <div style="margin:14px 0 8px;font-weight:700;font-size:14px">💸 Lịch sử rút</div>
       ${wdHtml}
     `);
-  } catch(e) {
-    openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`);
-  }
+  } catch(e) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`); }
 }
 
 function openBroadcast() {
