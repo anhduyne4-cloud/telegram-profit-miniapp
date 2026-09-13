@@ -176,7 +176,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
   <div class="card" style="background:rgba(74,158,255,.1);border-color:var(--primary)">
     <div style="font-size:12px;color:var(--primary);line-height:1.5">
-      💡 Chọn đơn hàng cần gia hạn, nhập số ngày → hệ thống gọi API gia hạn tương ứng
+      💡 Chọn đơn hàng cần gia hạn, nhập số ngày
     </div>
   </div>
   <div id="extendOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
@@ -955,7 +955,7 @@ function setExtendDays(n) {
 async function submitExtend(orderCode) {
   const days = window._extendDays || 1;
   if (days < 1) { toast("Số ngày không hợp lệ", "error"); return; }
-  if (!confirm(`Gia hạn ${days} ngày?\n(Sẽ gọi API ${days} lần)`)) return;
+  if (!confirm(`Gia hạn ${days} ngày?`)) return;
 
   const btn = event.target;
   btn.disabled = true;
