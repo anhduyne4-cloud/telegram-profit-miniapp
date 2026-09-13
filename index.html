@@ -168,6 +168,20 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
 </div>
 
+<!-- EXTEND -->
+<div class="page" id="page-extend">
+  <div class="section-title">
+    <span>📅 Gia hạn Proxy</span>
+    <button class="btn btn-outline btn-xs" onclick="loadExtendOrders()">🔄</button>
+  </div>
+  <div class="card" style="background:rgba(74,158,255,.1);border-color:var(--primary)">
+    <div style="font-size:12px;color:var(--primary);line-height:1.5">
+      💡 Chọn đơn hàng cần gia hạn, nhập số ngày → hệ thống gọi API gia hạn tương ứng (VD: 3 ngày = gọi 3 lần)
+    </div>
+  </div>
+  <div id="extendOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+</div>
+
 <!-- REFERRAL -->
 <div class="page" id="page-referral">
   <div class="section-title">
@@ -279,6 +293,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Shop</div>
   <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn</div>
   <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
+  <div class="nav-item" data-page="extend" onclick="nav('extend')"><span class="nav-icon">📅</span>Gia hạn</div>
   <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
@@ -378,7 +393,7 @@ async function init() {
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
-    loadProducts(); loadOrders(); loadRotations(); loadReferrals();
+    loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
     startBalancePolling();
   } catch(e) { toast("Lỗi kết nối", "error"); }
 }
@@ -418,6 +433,7 @@ function nav(page) {
   if (navEl) navEl.classList.add("active");
   if (page === "orders") loadOrders();
   if (page === "rotate") loadRotations();
+  if (page === "extend") loadExtendOrders();
   if (page === "referral") loadReferrals();
   if (page === "admin") loadAdmin();
 }
@@ -556,6 +572,7 @@ async function doBuy() {
     setTimeout(() => showPurchased(r), 300);
     loadOrders();
     if (r.is_rotate) loadRotations();
+    loadExtendOrders();
   } catch(e) {
     toast("Lỗi kết nối", "error");
     btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
@@ -570,6 +587,7 @@ function showPurchased(r) {
   const pname = r.product_name || "";
   const isRotate = r.is_rotate || false;
   const proxyKey = r.proxy_key || "";
+  const orderCode = r.order_code || "";
   const proxiesHtml = hasStructured
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
     : `<div class="code-box">${escapeHtml(raw || "(không có)")}</div>`;
@@ -578,7 +596,7 @@ function showPurchased(r) {
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(pname)}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
-    ${r.order_code ? `<div class="info-row"><span>Mã đơn</span><span>${escapeHtml(r.order_code)}</span></div>` : ""}
+    ${orderCode ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px"><code>${escapeHtml(orderCode)}</code></span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(expire)}</span></div>` : ""}
     ${isRotate && proxyKey ? `<div class="info-row"><span>🔑 Key xoay</span><span><code>${escapeHtml(proxyKey)}</code></span></div>` : ""}
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
@@ -587,6 +605,7 @@ function showPurchased(r) {
     </div>
     ${proxiesHtml}
     ${isRotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay IP ngay</button>` : ""}
+    ${orderCode ? `<button class="btn btn-primary btn-block" style="margin-top:8px" onclick="closeModal(); setTimeout(()=>nav('extend'),100)">📅 Gia hạn đơn này</button>` : ""}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
@@ -615,8 +634,8 @@ async function loadOrders() {
           ${o.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Proxy xoay</div>` : ""}
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
           <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
+          ${o.order_code ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:11px"><code>${escapeHtml(o.order_code)}</code></span></div>` : ""}
           ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
-          ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
           <div style="margin:10px 0 6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Data:</div>
           ${previewHtml}
           <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o))})'>👁 Xem</button>
@@ -639,7 +658,7 @@ function viewOrder(orderJson) {
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
     <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
-    ${o.order_code ? `<div class="info-row"><span>Mã</span><span>${escapeHtml(o.order_code)}</span></div>` : ""}
+    ${o.order_code ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:11px"><code>${escapeHtml(o.order_code)}</code></span></div>` : ""}
     ${expire ? `<div class="info-row"><span>⏰</span><span style="color:var(--gold)">${escapeHtml(expire)}</span></div>` : ""}
     ${o.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span><code>${escapeHtml(o.proxy_key)}</code></span></div>` : ""}
     <div style="margin:14px 0 8px;font-weight:700">🔑 Data (${proxies.length})</div>
@@ -858,6 +877,130 @@ async function submitAddKey() {
     closeModal();
     setTimeout(() => loadRotations(), 300);
   } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; }
+}
+
+// ===== EXTEND =====
+async function loadExtendOrders() {
+  const list = document.getElementById("extendOrdersList");
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/my-extendable-orders");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải</div>'; return; }
+    const orders = r.orders || [];
+    if (!orders.length) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">📅</div>
+        <div>Chưa có đơn hàng nào</div>
+        <div style="font-size:12px;margin-top:8px;color:var(--muted)">Chỉ hiện đơn có mã đơn từ Olaproxy</div>
+      </div>`;
+      return;
+    }
+    list.innerHTML = orders.map(o => {
+      const alive = o.is_alive;
+      const statusText = alive
+        ? `<span style="color:var(--success);font-weight:700">🟢 Còn hạn</span>${o.remaining ? ` (${o.remaining})` : ""}`
+        : `<span style="color:var(--danger);font-weight:700">🔴 Hết hạn</span>`;
+      return `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">${escapeHtml(o.name)}</div>
+            <div class="stock-tag">SL: ${o.amount}</div>
+          </div>
+          <div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px"><code>${escapeHtml(o.order_code)}</code></span></div>
+          <div class="info-row"><span>Trạng thái</span><span>${statusText}</span></div>
+          ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
+          <div class="info-row"><span>Mua lúc</span><span>${escapeHtml(o.created_at)}</span></div>
+          <button class="btn btn-gold btn-block" style="margin-top:10px" onclick="openExtendModal('${escapeHtml(o.order_code)}', '${escapeHtml(o.name).replace(/'/g, "\\'")}', '${escapeHtml(o.expire || "")}')">📅 Gia hạn ngay</button>
+        </div>
+      `;
+    }).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+function openExtendModal(orderCode, orderName, currentExpire) {
+  openModal(`
+    <div class="modal-title">📅 Gia hạn Proxy<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(orderName)}</span></div>
+    <div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px">${escapeHtml(orderCode)}</span></div>
+    ${currentExpire ? `<div class="info-row"><span>⏰ Hết hạn hiện tại</span><span style="color:var(--gold)">${escapeHtml(currentExpire)}</span></div>` : ""}
+
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">📅 Số ngày muốn gia hạn</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeExtendDays(-1)">−</button>
+      <div class="qty-val" id="extendDays">1</div>
+      <button class="qty-btn" onclick="changeExtendDays(1)">+</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      ${[1,3,7,15,30].map(d => `<button class="btn btn-outline btn-xs" onclick="setExtendDays(${d})">${d} ngày</button>`).join("")}
+    </div>
+
+    <div class="info-row" style="background:rgba(255,215,0,.08);border-radius:8px;padding:10px">
+      <span style="color:var(--gold);font-weight:700">⚡ Sẽ gọi API</span>
+      <span id="extendCallCount" style="color:var(--gold);font-weight:700">1 lần</span>
+    </div>
+
+    <button class="btn btn-gold btn-block" style="margin-top:14px" onclick="submitExtend('${escapeHtml(orderCode)}')">📅 Xác nhận gia hạn</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
+      💡 1 ngày = 1 lần gọi API gia hạn
+    </div>
+  `);
+  window._extendDays = 1;
+  window._extendCode = orderCode;
+  updateExtendCount();
+}
+
+function changeExtendDays(d) {
+  window._extendDays = Math.max(1, Math.min(365, (window._extendDays || 1) + d));
+  const el = document.getElementById("extendDays");
+  if (el) el.textContent = window._extendDays;
+  updateExtendCount();
+}
+
+function setExtendDays(n) {
+  window._extendDays = Math.max(1, Math.min(365, parseInt(n) || 1));
+  const el = document.getElementById("extendDays");
+  if (el) el.textContent = window._extendDays;
+  updateExtendCount();
+}
+
+function updateExtendCount() {
+  const el = document.getElementById("extendCallCount");
+  if (el) el.textContent = `${window._extendDays} lần`;
+}
+
+async function submitExtend(orderCode) {
+  const days = window._extendDays || 1;
+  if (days < 1) { toast("Số ngày không hợp lệ", "error"); return; }
+  if (!confirm(`Gia hạn ${days} ngày?\n(Sẽ gọi API ${days} lần)`)) return;
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = `Đang gia hạn ${days} ngày...`;
+  try {
+    const r = await api("/api/extend-order", {order_code: orderCode, days});
+    if (!r.ok) {
+      toast(r.error || "Lỗi gia hạn", "error");
+      btn.disabled = false;
+      btn.textContent = "📅 Xác nhận gia hạn";
+      return;
+    }
+    closeModal();
+    toast(`✅ Gia hạn +${r.extended_days} ngày thành công!`, "success");
+    openModal(`
+      <div class="modal-title">✅ Gia hạn thành công<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px">${escapeHtml(r.order_code)}</span></div>
+      <div class="info-row"><span>📅 Đã gia hạn</span><span style="color:var(--success);font-weight:700">+${r.extended_days} ngày</span></div>
+      <div class="info-row"><span>⏰ Hết hạn mới</span><span style="color:var(--gold);font-weight:700">${escapeHtml(r.new_expire)}</span></div>
+      <div class="info-row"><span>✅ Thành công</span><span>${r.success_count} lần</span></div>
+      ${r.fail_count > 0 ? `<div class="info-row"><span>❌ Lỗi</span><span style="color:var(--danger)">${r.fail_count} lần</span></div>` : ""}
+      <button class="btn btn-block" style="margin-top:14px" onclick="closeModal(); loadExtendOrders(); loadOrders();">Đóng</button>
+    `);
+    setTimeout(() => { loadExtendOrders(); loadOrders(); }, 500);
+  } catch(e) {
+    toast("Lỗi kết nối", "error");
+    btn.disabled = false;
+    btn.textContent = "📅 Xác nhận gia hạn";
+  }
 }
 
 // ===== REFERRAL =====
@@ -1081,6 +1224,7 @@ async function loadAdmin() {
       <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
       <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
       <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
+      <div class="stat-card green"><div class="stat-val">${s.total_extends}</div><div class="stat-label">Lượt gia hạn</div></div>
     `;
     loadProxyStats(); adminTab("users");
   } catch(e) {}
@@ -1186,6 +1330,7 @@ async function adminTab(tab, el) {
             <div class="info-row"><span>Trạng thái</span><span>${statusText}${remaining}</span></div>
             ${o.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin:4px 0">🔄 SP xoay</div>` : ""}
             ${o.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span style="font-family:monospace;font-size:11px">${escapeHtml(o.proxy_key)}</span></div>` : ""}
+            ${o.order_code ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:11px">${escapeHtml(o.order_code)}</span></div>` : ""}
             ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
             <div class="info-row"><span>Mua lúc</span><span>${escapeHtml(o.created_at)}</span></div>
             <div style="margin-top:10px;margin-bottom:6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Proxy (${(o.proxies||[]).length}):</div>
