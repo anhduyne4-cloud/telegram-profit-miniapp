@@ -1209,6 +1209,8 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
       <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
       <div class="stat-card green"><div class="stat-val">${s.total_extends}</div><div class="stat-label">Lượt gia hạn</div></div>
+      <div class="stat-card gold" style="grid-column:1/-1;border-color:rgba(255,215,0,.5)"><div class="stat-val" style="font-size:20px">${fmt(s.total_balance || 0)}</div><div class="stat-label">💰 Tổng số dư khách hàng (${s.users_with_balance || 0} user còn tiền)</div></div>
+      <div class="stat-card pink" style="grid-column:1/-1;border-color:rgba(255,107,157,.5)"><div class="stat-val" style="font-size:20px">${fmt(s.total_referral_balance || 0)}</div><div class="stat-label">🎁 Tổng ví hoa hồng khách</div></div>
     `;
     loadProxyStats(); adminTab("users");
   } catch(e) {}
