@@ -71,8 +71,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .stat-card.gold .stat-val{color:var(--gold)}
 .stat-card.green .stat-val{color:var(--success)}
 .stat-card.pink .stat-val{color:#ff6b9d}
-.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50}
-.nav-item{flex:1;text-align:center;padding:6px 2px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:50;overflow-x:auto}
+.nav-item{flex:1;min-width:56px;text-align:center;padding:6px 2px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500}
 .nav-item.active{color:var(--primary)}
 .nav-icon{font-size:19px;display:block;margin-bottom:2px}
 .loading{text-align:center;padding:40px;color:var(--muted)}
@@ -117,14 +117,19 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .wallet-val{font-size:18px;font-weight:700;word-break:break-all}
 .wallet-card.primary .wallet-val{color:var(--primary)}
 .wallet-card.gold .wallet-val{color:var(--gold)}
+.rules-box{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,71,87,.08));border:1px solid var(--gold);border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.7}
+.rules-box h4{color:var(--gold);font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.rules-box .rule{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.rules-box .rule-icon{flex-shrink:0;font-size:14px}
+.rules-box .rule-text{flex:1;color:var(--text)}
+.rules-box .rule-text b{color:var(--gold)}
+.rules-note{background:rgba(255,71,87,.1);border-left:3px solid var(--danger);padding:8px 10px;border-radius:6px;font-size:12px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 <body>
 
 <script>
-  // ====== ĐỔI THÀNH URL TUNNEL CỦA BẠN ======
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
-  // ====== ĐỔI THÀNH USERNAME TELEGRAM ADMIN (không có @) ======
   const ADMIN_USERNAME = "MARKPORA";
 </script>
 
@@ -143,39 +148,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
   </div>
   <div id="productsList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
-</div>
-
-<!-- GSM -->
-<div class="page" id="page-gsm">
-  <div class="section-title">
-    <span>📱 Mua GSM</span>
-    <button class="btn btn-outline btn-xs" onclick="loadGsm()">🔄</button>
-  </div>
-  <div class="card">
-    <div class="product-head">
-      <div class="product-name">📱 GSM Link</div>
-      <div class="stock-tag" id="gsmStockTag">Kho: --</div>
-    </div>
-    <div class="info-row"><span>Đơn giá / 1 GSM</span><span class="price" id="gsmPrice">28.000đ</span></div>
-    <div class="info-row"><span>Còn trong kho</span><b id="gsmStock">--</b></div>
-    <div class="info-row"><span>Bạn đang sở hữu</span><b id="gsmOwned">--</b></div>
-    <div style="font-size:12px;color:var(--muted);margin:12px 0 6px">Số lượng muốn mua</div>
-    <div class="qty-row">
-      <button class="qty-btn" onclick="gsmChangeQty(-1)">−</button>
-      <input class="input" id="gsmQty" type="number" min="1" value="1" inputmode="numeric"
-             style="margin-bottom:0;text-align:center;font-weight:700;font-size:18px;flex:1;min-width:0"
-             oninput="gsmUpdateTotal()">
-      <button class="qty-btn" onclick="gsmChangeQty(1)">+</button>
-    </div>
-    <div class="info-row"><span>Thành tiền</span><span class="price" id="gsmTotal">28.000đ</span></div>
-    <button class="btn btn-success btn-block" id="gsmBuyBtn" onclick="buyGsm()" style="margin-top:10px">🛒 Mua GSM</button>
-  </div>
-
-  <div class="section-title" style="margin-top:16px">
-    <span>🔗 GSM của tôi</span>
-    <button class="btn btn-gold btn-xs" onclick="gsmCopyMine()">📋 Copy tất cả</button>
-  </div>
-  <div id="gsmMine"><div class="empty">Chưa có GSM</div></div>
 </div>
 
 <!-- ORDERS -->
@@ -298,6 +270,47 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
 </div>
 
+<!-- GSM -->
+<div class="page" id="page-gsm">
+  <div class="section-title">
+    <span>📱 Mua GSM</span>
+    <button class="btn btn-outline btn-xs" onclick="loadGsmInfo();loadGsmOrders()">🔄</button>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(74,158,255,.1),rgba(168,85,247,.1));border-color:var(--primary)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi GSM</div>
+        <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsmPrice">28,000đ</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kho còn</div>
+        <div style="font-size:20px;font-weight:700;color:var(--success)" id="gsmStock">--</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔢 Số lượng GSM muốn mua</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeGsmQty(-1)">−</button>
+      <div class="qty-val" id="gsmQty">1</div>
+      <button class="qty-btn" onclick="changeGsmQty(1)">+</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(1)">1</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(5)">5</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(10)">10</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(20)">20</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(50)">50</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty(100)">100</button>
+    </div>
+    <div class="info-row"><span>Số dư</span><span id="gsmBalance">--</span></div>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsmTotal">28,000đ</span></div>
+    <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm()">✅ Xác nhận mua</button>
+  </div>
+  <div class="section-title" style="margin-top:16px"><span>📦 GSM đã mua</span></div>
+  <div id="gsmOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+</div>
+
 <!-- ADMIN -->
 <div class="page" id="page-admin">
   <div class="section-title"><span>👑 Admin Panel</span></div>
@@ -328,8 +341,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn</div>
   <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
   <div class="nav-item" data-page="extend" onclick="nav('extend')"><span class="nav-icon">📅</span>Gia hạn</div>
-  <div class="nav-item" data-page="gsm" onclick="nav('gsm')"><span class="nav-icon">📱</span>GSM</div>
   <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
+  <div class="nav-item" data-page="gsm" onclick="nav('gsm')"><span class="nav-icon">📱</span>GSM</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
@@ -352,6 +365,11 @@ let ROTATIONS = [];
 let SELECTED_KEYS = new Set();
 let currentRotateTab = "rotate";
 let REF_DATA = null;
+
+// GSM state
+let GSM_PRICE = 28000;
+let GSM_STOCK = 0;
+let GSM_QTY = 1;
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
@@ -429,6 +447,7 @@ async function init() {
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
+    loadGsmInfo(); loadGsmOrders();
     startBalancePolling();
   } catch(e) { toast("Lỗi kết nối", "error"); }
 }
@@ -470,177 +489,13 @@ function nav(page) {
   if (page === "rotate") loadRotations();
   if (page === "extend") loadExtendOrders();
   if (page === "referral") loadReferrals();
-  if (page === "gsm") loadGsm();
+  if (page === "gsm") { loadGsmInfo(); loadGsmOrders(); }
   if (page === "admin") loadAdmin();
 }
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
 function openModal(html) {
   document.getElementById("modalContent").innerHTML = html;
   document.getElementById("modalBg").classList.add("active");
-}
-
-// ===== GSM =====
-let GSM = {price: 28000, stock: 0, owned: 0};
-let GSM_MY = [];
-
-async function loadGsm() {
-  try {
-    const r = await api("/api/gsm/info");
-    if (r.ok) { GSM = {price: r.price, stock: r.stock, owned: r.owned}; gsmRenderInfo(); }
-  } catch(e) {}
-  loadGsmMine();
-}
-function gsmRenderInfo() {
-  document.getElementById("gsmPrice").textContent = fmt(GSM.price);
-  document.getElementById("gsmStock").textContent = GSM.stock;
-  document.getElementById("gsmStockTag").textContent = "Kho: " + GSM.stock;
-  document.getElementById("gsmStockTag").style.color = GSM.stock > 0 ? "" : "var(--danger)";
-  document.getElementById("gsmOwned").textContent = GSM.owned;
-  document.getElementById("gsmBuyBtn").disabled = GSM.stock < 1;
-  gsmUpdateTotal();
-}
-function gsmGetQty() {
-  const n = parseInt(document.getElementById("gsmQty").value, 10);
-  return isNaN(n) || n < 1 ? 0 : n;
-}
-function gsmChangeQty(d) {
-  const el = document.getElementById("gsmQty");
-  let n = Math.max(1, (gsmGetQty() || 1) + d);
-  if (GSM.stock > 0) n = Math.min(n, GSM.stock);
-  el.value = n; gsmUpdateTotal();
-}
-function gsmUpdateTotal() {
-  document.getElementById("gsmTotal").textContent = fmt(gsmGetQty() * GSM.price);
-}
-function gsmConfirm(msg) {
-  return new Promise(res => {
-    if (tg && tg.showConfirm) tg.showConfirm(msg, ok => res(ok));
-    else res(confirm(msg));
-  });
-}
-async function buyGsm() {
-  const qty = gsmGetQty();
-  if (qty < 1) { toast("Nhập số lượng hợp lệ", "error"); return; }
-  if (qty > GSM.stock) { toast(`Kho chỉ còn ${GSM.stock} GSM`, "error"); return; }
-  const total = qty * GSM.price;
-  if (USER && USER.balance < total) { toast("Số dư không đủ, vui lòng nạp thêm", "error"); return; }
-  if (!(await gsmConfirm(`Mua ${qty} GSM với giá ${fmt(total)}?`))) return;
-  const btn = document.getElementById("gsmBuyBtn");
-  btn.disabled = true; btn.textContent = "Đang xử lý...";
-  try {
-    const r = await api("/api/gsm/buy", {qty});
-    if (!r.ok) { toast(r.error || "Mua thất bại", "error"); loadGsm(); return; }
-    USER.balance = r.balance;
-    document.getElementById("hdrBal").textContent = fmt(r.balance);
-    GSM.stock = r.stock; GSM.owned += r.qty;
-    gsmRenderInfo();
-    document.getElementById("gsmQty").value = 1; gsmUpdateTotal();
-    window._gsmLast = r.links.join("\n");
-    openModal(`
-      <div class="modal-title">✅ Mua thành công ${r.qty} GSM<button class="close-x" onclick="closeModal()">✕</button></div>
-      <div class="info-row"><span>Đã trả</span><span class="price">${fmt(r.paid)}</span></div>
-      <div class="info-row"><span>Kho còn lại</span><span>${r.stock}</span></div>
-      <div style="margin:12px 0;max-height:40vh;overflow-y:auto">
-        ${r.links.map(l => `<div class="info-row" style="gap:8px"><span style="font-family:monospace;font-size:11px;word-break:break-all;text-align:left">${escapeHtml(l)}</span></div>`).join("")}
-      </div>
-      <button class="btn btn-gold btn-block" onclick="gsmCopyText(window._gsmLast)">📋 Copy tất cả link</button>
-    `);
-    loadGsmMine();
-  } catch(e) { toast("Lỗi kết nối", "error"); }
-  finally { btn.textContent = "🛒 Mua GSM"; btn.disabled = GSM.stock < 1; }
-}
-async function loadGsmMine() {
-  const box = document.getElementById("gsmMine");
-  try {
-    const r = await api("/api/gsm/my");
-    if (!r.ok) return;
-    GSM_MY = r.links; GSM.owned = r.count;
-    document.getElementById("gsmOwned").textContent = r.count;
-    box.innerHTML = r.links.map((l, i) => `
-      <div class="card" style="padding:10px 12px;margin-bottom:8px">
-        <div style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(l.link)}</div>
-        <div class="info-row" style="margin-top:6px"><span style="font-size:11px">${escapeHtml(l.sold_at || "")}</span>
-          <button class="btn btn-outline btn-xs" onclick="gsmCopyText(GSM_MY[${i}].link)">📋 Copy</button></div>
-      </div>`).join("") || '<div class="empty"><div class="empty-icon">📭</div>Chưa có GSM</div>';
-  } catch(e) {}
-}
-function gsmCopyText(txt) {
-  txt = String(txt || "");
-  if (!txt) { toast("Không có gì để copy", "error"); return; }
-  const n = txt.split("\n").length;
-  const ok = () => toast(n > 1 ? `✅ Đã copy ${n} link` : "✅ Đã copy", "success");
-  const fb = () => {
-    const ta = document.createElement("textarea");
-    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand("copy"); ok(); } catch(e) { toast("Không copy được", "error"); }
-    document.body.removeChild(ta);
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok).catch(fb);
-  else fb();
-}
-function gsmCopyMine() { gsmCopyText(GSM_MY.map(x => x.link).join("\n")); }
-
-// ---- ADMIN GSM ----
-let GSM_ADMIN_OWNERS = [];
-async function renderAdminGsm(box) {
-  const r = await api("/api/admin/gsm");
-  if (!r.ok) { box.innerHTML = ""; return; }
-  GSM_ADMIN_OWNERS = r.owners;
-  box.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card green"><div class="stat-val">${r.stock}</div><div class="stat-label">Còn trong kho</div></div>
-      <div class="stat-card pink"><div class="stat-val">${r.sold}</div><div class="stat-label">Đã bán</div></div>
-      <div class="stat-card gold"><div class="stat-val">${fmt(r.revenue)}</div><div class="stat-label">Doanh thu GSM</div></div>
-      <div class="stat-card"><div class="stat-val">${r.owner_count}</div><div class="stat-label">Người sở hữu</div></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="product-name" style="margin-bottom:8px">➕ Nhập link GSM vào kho <span style="color:var(--muted);font-weight:400;font-size:11px">(giá ${fmt(r.price)}/GSM)</span></div>
-      <textarea class="input" id="gsmAddText" placeholder="Mỗi dòng 1 link GSM..."></textarea>
-      <button class="btn btn-success btn-block" onclick="adminAddGsm()">📥 Thêm vào kho</button>
-    </div>
-    <div class="section-title" style="margin-top:14px"><span>👥 Người đang sở hữu GSM</span></div>
-    ${r.owners.map((o, i) => `
-      <div class="card">
-        <div class="product-head">
-          <div class="product-name">${escapeHtml(o.first_name || o.username || "?")} <span style="color:var(--muted);font-weight:400;font-size:12px">(${o.user_id})</span></div>
-          <div class="stock-tag">${o.count} link</div>
-        </div>
-        <details><summary style="cursor:pointer;font-size:12px;color:var(--primary)">Xem danh sách link</summary>
-          <div style="margin-top:8px">
-            ${o.links.map(l => `<div style="font-family:monospace;font-size:11px;word-break:break-all;padding:6px 0;border-top:1px solid var(--border)">${escapeHtml(l.link)}<div style="color:var(--muted);font-size:10px;font-family:inherit">${escapeHtml(l.sold_at || "")}</div></div>`).join("")}
-          </div>
-          <button class="btn btn-outline btn-xs" style="margin-top:8px" onclick="gsmCopyText(GSM_ADMIN_OWNERS[${i}].links.map(x=>x.link).join('\\n'))">📋 Copy link của user này</button>
-        </details>
-      </div>`).join("") || '<div class="empty">Chưa ai mua GSM</div>'}
-    <div class="section-title" style="margin-top:14px"><span>📦 Link còn trong kho (${r.stock})</span></div>
-    ${r.available.map(a => `
-      <div class="card" style="padding:10px 12px;margin-bottom:8px">
-        <div style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(a.link)}</div>
-        <div class="info-row" style="margin-top:6px"><span style="font-size:10px">${escapeHtml(a.added_at || "")}</span>
-          <button class="btn btn-danger btn-xs" onclick="adminDeleteGsm(${a.id})">🗑 Xoá</button></div>
-      </div>`).join("") || '<div class="empty">Kho trống</div>'}
-    ${r.stock > r.available.length ? `<div class="empty" style="padding:10px">... và ${r.stock - r.available.length} link nữa</div>` : ""}
-  `;
-}
-async function adminAddGsm() {
-  const el = document.getElementById("gsmAddText");
-  const links = el.value.trim();
-  if (!links) { toast("Chưa nhập link", "error"); return; }
-  try {
-    const r = await api("/api/admin/gsm/add", {links});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast(r.msg, "success");
-    adminTab("gsm");
-  } catch(e) { toast("Lỗi kết nối", "error"); }
-}
-async function adminDeleteGsm(id) {
-  if (!(await gsmConfirm("Xoá link này khỏi kho?"))) return;
-  try {
-    const r = await api("/api/admin/gsm/delete", {id});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast(r.msg, "success"); adminTab("gsm");
-  } catch(e) { toast("Lỗi kết nối", "error"); }
 }
 
 // ===== PRODUCTS =====
@@ -1389,6 +1244,295 @@ function closeDeposit() {
   closeModal();
 }
 
+// ===== GSM =====
+async function loadGsmInfo() {
+  try {
+    const r = await api("/api/gsm/info");
+    if (!r.ok) return;
+    GSM_PRICE = r.price || 28000;
+    GSM_STOCK = r.stock || 0;
+    const stockEl = document.getElementById("gsmStock");
+    const priceEl = document.getElementById("gsmPrice");
+    if (stockEl) stockEl.textContent = GSM_STOCK;
+    if (priceEl) priceEl.textContent = fmt(GSM_PRICE);
+    updateGsmTotal();
+  } catch(e) {}
+}
+
+function updateGsmTotal() {
+  const qty = GSM_QTY || 1;
+  const total = GSM_PRICE * qty;
+  const qtyEl = document.getElementById("gsmQty");
+  const totalEl = document.getElementById("gsmTotal");
+  const balEl = document.getElementById("gsmBalance");
+  if (qtyEl) qtyEl.textContent = qty;
+  if (totalEl) totalEl.textContent = fmt(total);
+  if (balEl) balEl.textContent = USER ? fmt(USER.balance) : "--";
+}
+
+function changeGsmQty(d) {
+  GSM_QTY = Math.max(1, (GSM_QTY || 1) + d);
+  if (GSM_STOCK > 0 && GSM_QTY > GSM_STOCK) GSM_QTY = GSM_STOCK;
+  if (GSM_QTY > 1000) GSM_QTY = 1000;
+  updateGsmTotal();
+}
+
+function setGsmQty(n) {
+  GSM_QTY = Math.max(1, parseInt(n) || 1);
+  if (GSM_STOCK > 0 && GSM_QTY > GSM_STOCK) GSM_QTY = GSM_STOCK;
+  if (GSM_QTY > 1000) GSM_QTY = 1000;
+  updateGsmTotal();
+}
+
+// BƯỚC 1: Hiện modal thông báo quy định
+function buyGsm() {
+  const qty = GSM_QTY || 1;
+  if (qty < 1) { toast("Số lượng không hợp lệ", "error"); return; }
+  if (GSM_STOCK < qty) { toast(`Kho chỉ còn ${GSM_STOCK} GSM`, "error"); return; }
+  const total = GSM_PRICE * qty;
+  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+
+  openModal(`
+    <div class="modal-title">📋 QUY ĐỊNH SỬ DỤNG GSM<button class="close-x" onclick="closeModal()">✕</button></div>
+
+    <div class="info-row"><span>Số lượng mua</span><span style="color:var(--gold);font-weight:700">${qty} GSM</span></div>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700">${fmt(total)}</span></div>
+
+    <div class="rules-box" style="margin-top:14px">
+      <h4>⚠️ VUI LÒNG ĐỌC KỸ TRƯỚC KHI MUA</h4>
+
+      <div class="rule">
+        <span class="rule-icon">✅</span>
+        <span class="rule-text">Được soạn tối đa <b>15 tin</b></span>
+      </div>
+
+      <div class="rule">
+        <span class="rule-icon">✅</span>
+        <span class="rule-text">Được lấy OTP làm game thoải mái nhưng <b>KHÔNG ĐƯỢC</b> phát sinh làm các dịch vụ khác</span>
+      </div>
+
+      <div class="rule">
+        <span class="rule-icon">🔄</span>
+        <span class="rule-text">Nếu số trùng lỗi báo shop kiểm tra; sẽ được <b>đổi số</b> nếu số đó <b>chưa phát sinh gì</b></span>
+      </div>
+
+      <div class="rule">
+        <span class="rule-icon">🚫</span>
+        <span class="rule-text">Số <b>đã phát sinh gửi SMS</b>, sẽ <b>KHÔNG được đổi hoàn</b></span>
+      </div>
+
+      <div class="rule">
+        <span class="rule-icon">❌</span>
+        <span class="rule-text">Trong quá trình thuê số nếu soạn tin làm <b>khoá sim</b>, shop <b>KHÔNG hỗ trợ</b></span>
+      </div>
+
+      <div class="rules-note">
+        ⚠️ Bằng việc bấm "Tôi đã đọc và đồng ý", bạn đã hiểu rõ và chấp nhận tất cả các quy định trên.
+      </div>
+    </div>
+
+    <button class="btn btn-success btn-block" style="margin-bottom:8px" onclick="confirmBuyGsm(${qty})">✅ Tôi đã đọc và đồng ý</button>
+    <button class="btn btn-outline btn-block" onclick="closeModal()">❌ Huỷ</button>
+  `);
+}
+
+// BƯỚC 2: Thực hiện mua thật
+async function confirmBuyGsm(qty) {
+  const total = GSM_PRICE * qty;
+  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+
+  const btns = document.querySelectorAll("#modalContent .btn");
+  btns.forEach(b => b.disabled = true);
+
+  try {
+    const r = await api("/api/gsm/buy", {amount: qty});
+    if (!r.ok) {
+      toast(r.error || "Lỗi", "error");
+      btns.forEach(b => b.disabled = false);
+      return;
+    }
+    USER.balance = r.balance;
+    GSM_STOCK = r.stock;
+    document.getElementById("hdrBal").textContent = fmt(r.balance);
+    const stockEl = document.getElementById("gsmStock");
+    if (stockEl) stockEl.textContent = GSM_STOCK;
+    toast(`✅ Mua ${qty} GSM thành công!`, "success");
+
+    const linksHtml = r.links.map(l =>
+      `<div class="proxy-item"><span>${escapeHtml(l)}</span><button onclick='copyText(${JSON.stringify(l)})'>📋</button></div>`
+    ).join("");
+
+    openModal(`
+      <div class="modal-title">🎉 Mua GSM thành công<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
+      <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
+        <span>📱 Danh sách GSM (${r.links.length})</span>
+        <button class="btn btn-xs" onclick="copyAllGsm()">📋 Copy tất cả</button>
+      </div>
+      ${linksHtml}
+      <button class="btn btn-block" style="margin-top:14px" onclick="closeModal()">Đóng</button>
+    `);
+    window._gsmLinks = r.links;
+    GSM_QTY = 1; updateGsmTotal();
+    loadGsmOrders();
+  } catch(e) {
+    toast("Lỗi kết nối", "error");
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+function copyAllGsm() {
+  const links = window._gsmLinks || [];
+  if (!links.length) { toast("Không có link", "error"); return; }
+  copyText(links.join("\n"));
+}
+
+async function loadGsmOrders() {
+  const list = document.getElementById("gsmOrdersList");
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/gsm/my-orders");
+    if (!r.ok || !r.orders.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📱</div>Chưa có GSM nào</div>';
+      return;
+    }
+    list.innerHTML = r.orders.map(o => {
+      const linksHtml = o.links.map(l =>
+        `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:6px"><span style="flex:1;word-break:break-all">${escapeHtml(l)}</span><button onclick='copyText(${JSON.stringify(l)})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button></div>`
+      ).join("");
+      return `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">📱 ${o.amount} GSM</div>
+            <div class="stock-tag">${fmt(o.price)}</div>
+          </div>
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
+          <div style="margin-top:10px">${linksHtml}</div>
+        </div>
+      `;
+    }).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+// Admin GSM functions
+async function adminAddGsm() {
+  const raw = document.getElementById("gsmAddInput").value.trim();
+  if (!raw) { toast("Nhập link GSM", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
+  try {
+    const r = await api("/api/admin/gsm/add", {links: raw});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm vào kho"; return; }
+    toast(`✅ Đã thêm ${r.added} GSM${r.dup ? ` (trùng ${r.dup})` : ""}`, "success");
+    document.getElementById("gsmAddInput").value = "";
+    adminTab("gsm");
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm vào kho"; }
+}
+
+async function loadAdminGsmList(status = 'all') {
+  const el = document.getElementById("gsmAdminList");
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/admin/gsm/list", {status});
+    if (!r.ok) { el.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    if (!r.items.length) { el.innerHTML = '<div class="empty">Không có GSM</div>'; return; }
+    el.innerHTML = r.items.map(item => `
+      <div class="card">
+        <div class="product-head">
+          <div class="product-name" style="font-family:monospace;font-size:12px;word-break:break-all">${escapeHtml(item.link)}</div>
+          <div class="stock-tag" style="background:${item.is_sold?'rgba(255,71,87,.15)':'rgba(37,211,102,.15)'};color:${item.is_sold?'var(--danger)':'var(--success)'}">${item.is_sold?'Đã bán':'Trong kho'}</div>
+        </div>
+        ${item.is_sold ? `<div class="info-row"><span>Người mua</span><span>${escapeHtml(item.owner_name)} (${item.sold_to})</span></div>
+        <div class="info-row"><span>Ngày bán</span><span>${escapeHtml(item.sold_at||'')}</span></div>` : ''}
+        <div class="user-actions">
+          <button class="btn btn-outline btn-xs" onclick='copyText(${JSON.stringify(item.link)})'>📋 Copy</button>
+          ${!item.is_sold ? `<button class="btn btn-danger btn-xs" onclick="adminDelGsm(${item.id})">🗑 Xóa</button>` : ''}
+          ${item.is_sold && item.sold_to ? `<button class="btn btn-purple btn-xs" onclick="viewUserGsm(${item.sold_to})">👁 Xem user</button>` : ''}
+          ${item.is_sold ? `<button class="btn btn-danger btn-xs" onclick="adminDelSoldGsm(${item.id}, '${escapeHtml(item.owner_name)}', ${item.sold_to})">🗑 Thu hồi</button>` : ''}
+        </div>
+      </div>
+    `).join("");
+  } catch(e) { el.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+function filterGsmList(status, el) {
+  document.querySelectorAll("#gsmFilterTabs .tab").forEach(t => t.classList.remove("active"));
+  if (el) el.classList.add("active");
+  loadAdminGsmList(status);
+}
+
+async function adminDelGsm(id) {
+  if (!confirm("Xóa GSM này?")) return;
+  try {
+    const r = await api("/api/admin/gsm/delete", {id});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã xóa", "success");
+    adminTab("gsm");
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+async function adminDelSoldGsm(gsmId, ownerName, soldTo) {
+  const choice = prompt(
+    `Thu hồi GSM của "${ownerName}" (${soldTo})?\n\n` +
+    `Nhập "1" = Có hoàn tiền (28,000đ)\n` +
+    `Nhập "2" = Không hoàn tiền\n` +
+    `Nhập "0" hoặc bỏ trống = Huỷ`,
+    "1"
+  );
+  if (choice === null || choice === "0" || choice === "") return;
+  const doRefund = choice === "1";
+  try {
+    const r = await api("/api/admin/gsm/delete", {id: gsmId, refund: doRefund, notify: true});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast(`✅ Đã thu hồi${r.refund ? ` + hoàn ${fmt(r.refund)}` : ""}`, "success");
+    adminTab("gsm");
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+async function adminDelSoldGsmFromUser(gsmId, userId) {
+  const choice = prompt(
+    `Thu hồi GSM này của user ${userId}?\n\n` +
+    `Nhập "1" = Có hoàn tiền (28,000đ)\n` +
+    `Nhập "2" = Không hoàn tiền\n` +
+    `Nhập "0" hoặc bỏ trống = Huỷ`,
+    "1"
+  );
+  if (choice === null || choice === "0" || choice === "") return;
+  const doRefund = choice === "1";
+  try {
+    const r = await api("/api/admin/gsm/delete", {id: gsmId, refund: doRefund, notify: true});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast(`✅ Đã thu hồi${r.refund ? ` + hoàn ${fmt(r.refund)}` : ""}`, "success");
+    setTimeout(() => viewUserGsm(userId), 300);
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+async function viewUserGsm(userId) {
+  openModal(`<div class="modal-title">📱 GSM của user<button class="close-x" onclick="closeModal()">✕</button></div><div class="loading"><div class="spinner"></div>Đang tải...</div>`);
+  try {
+    const r = await api("/api/admin/gsm/user-links", {user_id: userId});
+    if (!r.ok) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Không tải được</div>`); return; }
+    const linksHtml = r.links.length
+      ? r.links.map(l => `
+          <div class="proxy-item">
+            <span style="flex:1;word-break:break-all">${escapeHtml(l.link)}</span>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <button onclick='copyText(${JSON.stringify(l.link)})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">📋</button>
+              <button onclick="adminDelSoldGsmFromUser(${l.id}, ${userId})" style="background:transparent;border:1px solid var(--danger);color:var(--danger);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>
+            </div>
+          </div>
+        `).join("")
+      : '<div class="empty">Không có GSM</div>';
+    openModal(`
+      <div class="modal-title">📱 GSM của user ${userId}<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>Tổng</span><span>${r.links.length} GSM</span></div>
+      <div style="margin-top:10px">${linksHtml}</div>
+    `);
+  } catch(e) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`); }
+}
+
 // ===== ADMIN =====
 async function loadAdmin() {
   try {
@@ -1409,6 +1553,9 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
       <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
       <div class="stat-card green"><div class="stat-val">${s.total_extends}</div><div class="stat-label">Lượt gia hạn</div></div>
+      <div class="stat-card gold"><div class="stat-val">${s.gsm_available||0}</div><div class="stat-label">GSM trong kho</div></div>
+      <div class="stat-card pink"><div class="stat-val">${s.gsm_sold||0}</div><div class="stat-label">GSM đã bán</div></div>
+      <div class="stat-card green"><div class="stat-val">${fmt(s.gsm_revenue)}</div><div class="stat-label">DT GSM</div></div>
     `;
     loadProxyStats(); adminTab("users");
   } catch(e) {}
@@ -1454,6 +1601,7 @@ async function adminTab(tab, el) {
             <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "sub")'>➖ Trừ</button>
             <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance})'>✏️ Đặt</button>
             <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>🎁 Tặng key</button>
+            <button class="btn btn-gold btn-xs" onclick='viewUserGsm(${u.id})'>📱 GSM</button>
             <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>💬</button>
           </div>
         </div>
@@ -1573,12 +1721,44 @@ async function adminTab(tab, el) {
         </div>
       `).join("") || '<div class="empty">Chưa có key</div>';
     } else if (tab === "gsm") {
-      await renderAdminGsm(box);
+      const r = await api("/api/admin/gsm/stats");
+      if (!r.ok) { box.innerHTML = ""; return; }
+      const addForm = `
+        <div class="card">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px">➕ Thêm GSM vào kho</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM, hoặc cách nhau bởi dấu phẩy</div>
+          <textarea class="input" id="gsmAddInput" placeholder="https://...&#10;https://...&#10;https://..." style="min-height:120px"></textarea>
+          <button class="btn btn-success btn-block" onclick="adminAddGsm()">➕ Thêm vào kho</button>
+        </div>
+      `;
+      const summary = `
+        <div class="card" style="background:rgba(74,158,255,.1);border-color:var(--primary)">
+          <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px">📊 Tổng quan GSM (Giá bán: ${fmt(r.price)})</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div>Tổng: <b>${r.total}</b></div>
+            <div>Trong kho: <b style="color:var(--success)">${r.available}</b></div>
+            <div>Đã bán: <b style="color:var(--danger)">${r.sold}</b></div>
+            <div>Số đơn: <b>${r.total_orders}</b></div>
+            <div style="grid-column:1/-1">Doanh thu: <b style="color:var(--gold)">${fmt(r.revenue)}</b></div>
+          </div>
+        </div>
+      `;
+      const filterTabs = `
+        <div class="tabs" style="margin:10px 0" id="gsmFilterTabs">
+          <div class="tab active" onclick="filterGsmList('all',this)">Tất cả</div>
+          <div class="tab" onclick="filterGsmList('available',this)">🟢 Trong kho</div>
+          <div class="tab" onclick="filterGsmList('sold',this)">🔴 Đã bán</div>
+        </div>
+        <div id="gsmAdminList"></div>
+      `;
+      box.innerHTML = addForm + summary + filterTabs;
+      loadAdminGsmList('all');
     } else {
       const r = await api("/api/admin/logs");
       if (!r.ok) { box.innerHTML = ""; return; }
       const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢 Broadcast", message:"💬 Tin",
-                          key_transfer:"🔀 Chuyển key", key_gift:"🎁 Tặng key", key_revoke:"🗑 Thu hồi", gsm_add:"📱 Nhập kho GSM", gsm_delete:"🗑 Xoá GSM"};
+                          key_transfer:"🔀 Chuyển key", key_gift:"🎁 Tặng key", key_revoke:"🗑 Thu hồi",
+                          gsm_delete:"🗑 Xoá GSM"};
       box.innerHTML = r.logs.map(l => `
         <div class="card">
           <div class="product-head">
