@@ -295,9 +295,48 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <div class="page" id="page-kmtt">
   <div class="section-title">
     <span>🎯 Kho Acc Tân Thủ (KMTT)</span>
-    <button class="btn btn-outline btn-xs" onclick="loadKmttTab()">🔄</button>
+    <button class="btn btn-outline btn-xs" onclick="loadKmttUser()">🔄</button>
   </div>
-  <div id="kmttBox"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(74,158,255,.1));border-color:#a855f7">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi acc</div>
+        <div style="font-size:20px;font-weight:700;color:#a855f7" id="kmttPrice">15.000đ</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kho còn</div>
+        <div style="font-size:20px;font-weight:700;color:var(--success)" id="kmttStock">--</div>
+      </div>
+    </div>
+    <div id="kmttMyCount" style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);font-size:12px;color:var(--muted)">
+      Bạn đang sở hữu: <b id="kmttOwned" style="color:#a855f7">0</b> acc
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔢 Số lượng acc muốn mua</div>
+    <div class="qty-row">
+      <button class="qty-btn" onclick="changeKmttQty(-1)">−</button>
+      <div class="qty-val" id="kmttQty">1</div>
+      <button class="qty-btn" onclick="changeKmttQty(1)">+</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-outline btn-xs" onclick="setKmttQty(1)">1</button>
+      <button class="btn btn-outline btn-xs" onclick="setKmttQty(3)">3</button>
+      <button class="btn btn-outline btn-xs" onclick="setKmttQty(5)">5</button>
+      <button class="btn btn-outline btn-xs" onclick="setKmttQty(10)">10</button>
+      <button class="btn btn-outline btn-xs" onclick="setKmttQty(20)">20</button>
+    </div>
+    <div class="info-row"><span>Số dư</span><span id="kmttBalance">--</span></div>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:#a855f7;font-weight:700" id="kmttTotal">15.000đ</span></div>
+    <button class="btn btn-block" style="margin-top:14px;background:linear-gradient(135deg,#a855f7,#7c3aed)" onclick="buyKmtt()">🎯 Xác nhận mua</button>
+  </div>
+
+  <div class="section-title" style="margin-top:16px"><span>📦 Acc đã mua</span></div>
+  <div id="kmttOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+
+  <div id="kmttAdminBox" style="display:none;margin-top:20px"></div>
 </div>
 
 <!-- ADMIN -->
@@ -329,9 +368,9 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
   <div class="nav-item" data-page="extend" onclick="nav('extend')"><span class="nav-icon">📅</span>Gia hạn</div>
   <div class="nav-item" data-page="gsm" onclick="nav('gsm')"><span class="nav-icon">📱</span>GSM</div>
+  <div class="nav-item" data-page="kmtt" onclick="nav('kmtt')"><span class="nav-icon">🎯</span>KMTT</div>
   <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
-  <div class="nav-item" data-page="kmtt" onclick="nav('kmtt')" style="display:none"><span class="nav-icon">🎯</span>KMTT</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
 
@@ -356,6 +395,9 @@ let REF_DATA = null;
 let GSM_PRICE = 26000;
 let GSM_STOCK = 0;
 let GSM_QTY = 1;
+let KMTT_PRICE = 15000;
+let KMTT_STOCK = 0;
+let KMTT_QTY = 1;
 let KMTT_FILTER = "all";
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
@@ -465,17 +507,11 @@ async function init() {
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
 
+    // Tất cả user thấy KMTT (để mua)
+    // Phó admin & user thường: full nav user + KMTT
+    // Chỉ admin chính: có thêm Admin panel
     if (USER.is_admin) {
       document.getElementById("navAdmin").style.display = "block";
-      document.querySelector('.nav-item[data-page="kmtt"]').style.display = "block";
-    } else if (USER.is_sub_admin) {
-      document.querySelector('.nav-item[data-page="kmtt"]').style.display = "block";
-      document.querySelectorAll('.nav-item').forEach(n => {
-        const p = n.getAttribute("data-page");
-        if (p && p !== "kmtt" && p !== "shop") n.style.display = "none";
-      });
-    } else {
-      document.querySelector('.nav-item[data-page="kmtt"]').style.display = "none";
     }
 
     loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
@@ -520,7 +556,7 @@ function nav(page) {
   if (page === "extend") loadExtendOrders();
   if (page === "referral") loadReferrals();
   if (page === "gsm") { loadGsmInfo(); loadGsmOrders(); }
-  if (page === "kmtt") loadKmttTab();
+  if (page === "kmtt") loadKmttUser();
   if (page === "admin") loadAdmin();
 }
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
@@ -729,7 +765,6 @@ async function loadGsmInfo() {
     if (stockEl) stockEl.textContent = GSM_STOCK;
     if (priceEl) priceEl.textContent = fmt(GSM_PRICE);
 
-    // ===== Countdown luôn hiện - 3 trường hợp =====
     const cdBox = document.getElementById("gsmMyCountdown");
     const cdVal = document.getElementById("gsmMyCountdownVal");
     const cdLabel = document.getElementById("gsmCountdownLabel");
@@ -739,19 +774,16 @@ async function loadGsmInfo() {
       let titleText = "";
 
       if (r.my_count > 0 && r.my_nearest_expire) {
-        // Trường hợp 1: User có GSM → hiện hạn GSM của user
         expireToShow = r.my_nearest_expire;
         labelText = "⏰ GSM của bạn hết hạn sau";
         titleText = `Hạn: ${r.my_nearest_expire} (${r.my_count} GSM của bạn)`;
       } else if (r.stock_nearest_expire) {
-        // Trường hợp 2: User chưa có GSM nhưng kho có link → hiện hạn link sắp hết
         expireToShow = r.stock_nearest_expire;
         labelText = "⏰ Link trong kho sắp hết sau";
         titleText = `Link mua sẽ hết hạn: ${r.stock_nearest_expire}`;
       }
 
       if (expireToShow) {
-        // Trường hợp 1 & 2: Hiện
         cdBox.style.display = "flex";
         cdLabel.textContent = labelText;
         cdVal.setAttribute("data-expire", expireToShow);
@@ -760,7 +792,6 @@ async function loadGsmInfo() {
         cdVal.style.color = cd.expired ? "var(--danger)" : "var(--success)";
         cdBox.title = titleText;
       } else {
-        // Trường hợp 3: Không có gì → ẩn
         cdBox.style.display = "none";
       }
     }
@@ -898,40 +929,192 @@ async function loadGsmOrders() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ===== KMTT =====
-async function loadKmttTab() {
-  const box = document.getElementById("kmttBox");
-  if (!box) return;
-  box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+// ===== KMTT (user mua + admin quản lý) =====
+async function loadKmttUser() {
+  await loadKmttInfo();
+  loadKmttOrders();
+
+  const adminBox = document.getElementById("kmttAdminBox");
+  if (adminBox) {
+    if (USER && (USER.is_admin || USER.is_sub_admin)) {
+      adminBox.style.display = "block";
+      await renderAdminKmtt(adminBox);
+    } else {
+      adminBox.style.display = "none";
+    }
+  }
+}
+
+async function loadKmttInfo() {
   try {
-    const stats = await api("/api/admin/kmtt/stats");
-    if (!stats.ok) { box.innerHTML = '<div class="empty">' + (stats.error || "Lỗi") + '</div>'; return; }
-    const addForm = `
-      <div class="card">
-        <div style="font-weight:700;font-size:14px;margin-bottom:10px">➕ Thêm acc KMTT</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 acc định dạng <b>user:pass:proxy</b></div>
-        <textarea class="input" id="kmttAddInput" placeholder="user1:pass1:proxy1&#10;user2:pass2:proxy2" style="min-height:140px"></textarea>
-        <button class="btn btn-success btn-block" onclick="adminAddKmtt()">➕ Thêm vào kho</button>
-      </div>`;
-    const summary = `
-      <div class="card" style="background:rgba(74,158,255,.1);border-color:var(--primary)">
-        <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px">📊 Tổng quan KMTT</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">
-          <div>Tổng: <b>${stats.total}</b></div>
-          <div>Trong kho: <b style="color:var(--success)">${stats.available}</b></div>
-          <div>Đã bán: <b style="color:var(--danger)">${stats.sold}</b></div>
+    const r = await api("/api/kmtt/info");
+    if (!r.ok) return;
+    KMTT_PRICE = r.price || 15000;
+    KMTT_STOCK = r.stock || 0;
+    const stockEl = document.getElementById("kmttStock");
+    const priceEl = document.getElementById("kmttPrice");
+    const ownedEl = document.getElementById("kmttOwned");
+    if (stockEl) stockEl.textContent = KMTT_STOCK;
+    if (priceEl) priceEl.textContent = fmt(KMTT_PRICE);
+    if (ownedEl) ownedEl.textContent = r.my_count || 0;
+    updateKmttTotal();
+  } catch(e) {}
+}
+
+function updateKmttTotal() {
+  const total = KMTT_PRICE * (KMTT_QTY || 1);
+  const qtyEl = document.getElementById("kmttQty");
+  const totalEl = document.getElementById("kmttTotal");
+  const balEl = document.getElementById("kmttBalance");
+  if (qtyEl) qtyEl.textContent = KMTT_QTY || 1;
+  if (totalEl) totalEl.textContent = fmt(total);
+  if (balEl) balEl.textContent = USER ? fmt(USER.balance) : "--";
+}
+
+function changeKmttQty(d) {
+  KMTT_QTY = Math.max(1, (KMTT_QTY || 1) + d);
+  if (KMTT_STOCK > 0 && KMTT_QTY > KMTT_STOCK) KMTT_QTY = KMTT_STOCK;
+  if (KMTT_QTY > 500) KMTT_QTY = 500;
+  updateKmttTotal();
+}
+function setKmttQty(n) {
+  KMTT_QTY = Math.max(1, parseInt(n) || 1);
+  if (KMTT_STOCK > 0 && KMTT_QTY > KMTT_STOCK) KMTT_QTY = KMTT_STOCK;
+  if (KMTT_QTY > 500) KMTT_QTY = 500;
+  updateKmttTotal();
+}
+
+function buyKmtt() {
+  const qty = KMTT_QTY || 1;
+  if (qty < 1) { toast("Số lượng không hợp lệ", "error"); return; }
+  if (KMTT_STOCK < qty) { toast(`Kho chỉ còn ${KMTT_STOCK} acc`, "error"); return; }
+  const total = KMTT_PRICE * qty;
+  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+
+  openModal(`
+    <div class="modal-title">🎯 Xác nhận mua KMTT<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Số lượng</span><span style="color:#a855f7;font-weight:700">${qty} acc</span></div>
+    <div class="info-row"><span>Đơn giá</span><span>${fmt(KMTT_PRICE)}</span></div>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:#a855f7;font-weight:700">${fmt(total)}</span></div>
+    <div style="background:rgba(168,85,247,.1);border:1px solid #a855f7;border-radius:12px;padding:12px;margin:14px 0;font-size:12px;line-height:1.6">
+      💡 Acc tân thủ định dạng <b>user:pass:proxy</b> — sử dụng để chơi game, lấy OTP, không phát sinh dịch vụ khác.
+    </div>
+    <button class="btn btn-block" style="background:linear-gradient(135deg,#a855f7,#7c3aed);margin-bottom:8px" onclick="confirmBuyKmtt(${qty})">✅ Xác nhận mua</button>
+    <button class="btn btn-outline btn-block" onclick="closeModal()">❌ Huỷ</button>
+  `);
+}
+
+async function confirmBuyKmtt(qty) {
+  const total = KMTT_PRICE * qty;
+  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+  const btns = document.querySelectorAll("#modalContent .btn");
+  btns.forEach(b => b.disabled = true);
+  try {
+    const r = await api("/api/kmtt/buy", {amount: qty});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btns.forEach(b => b.disabled = false); return; }
+    USER.balance = r.balance;
+    KMTT_STOCK = r.stock;
+    document.getElementById("hdrBal").textContent = fmt(r.balance);
+    const stockEl = document.getElementById("kmttStock");
+    if (stockEl) stockEl.textContent = KMTT_STOCK;
+    toast(`✅ Mua ${qty} acc KMTT thành công!`, "success");
+
+    const accsHtml = r.accounts.map(a =>
+      `<div style="background:#000;padding:10px;border-radius:8px;margin-bottom:6px">
+        <div style="font-family:monospace;font-size:12px;color:#a855f7;word-break:break-all;display:flex;gap:6px;align-items:flex-start">
+          <span style="flex:1;word-break:break-all">${escapeHtml(a)}</span>
+          <button onclick='copyText(${JSON.stringify(a)})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>
         </div>
-      </div>`;
-    const filterTabs = `
-      <div class="tabs" style="margin:10px 0" id="kmttFilterTabs">
-        <div class="tab ${KMTT_FILTER==='all'?'active':''}" onclick="filterKmttList('all',this)">Tất cả</div>
-        <div class="tab ${KMTT_FILTER==='available'?'active':''}" onclick="filterKmttList('available',this)">🟢 Trong kho</div>
-        <div class="tab ${KMTT_FILTER==='sold'?'active':''}" onclick="filterKmttList('sold',this)">🔴 Đã bán</div>
+      </div>`).join("");
+
+    openModal(`
+      <div class="modal-title">🎉 Mua KMTT thành công<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
+      <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
+      <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
+        <span>🎯 Danh sách acc (${r.accounts.length})</span>
+        <button class="btn btn-xs" onclick="copyAllKmtt()">📋 Copy tất cả</button>
       </div>
-      <div id="kmttInnerList"></div>`;
-    box.innerHTML = addForm + summary + filterTabs;
-    loadKmttInnerList(KMTT_FILTER);
-  } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
+      ${accsHtml}
+      <button class="btn btn-block" style="margin-top:14px" onclick="closeModal()">Đóng</button>
+    `);
+    window._kmttAccs = r.accounts;
+    KMTT_QTY = 1; updateKmttTotal();
+    loadKmttOrders(); loadKmttInfo();
+  } catch(e) { toast("Lỗi kết nối", "error"); btns.forEach(b => b.disabled = false); }
+}
+
+function copyAllKmtt() {
+  const accs = window._kmttAccs || [];
+  if (!accs.length) { toast("Không có acc", "error"); return; }
+  copyText(accs.join("\n"));
+}
+
+async function loadKmttOrders() {
+  const list = document.getElementById("kmttOrdersList");
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/kmtt/my-orders");
+    if (!r.ok || !r.orders.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🎯</div>Chưa có acc nào</div>';
+      return;
+    }
+    list.innerHTML = r.orders.map(o => {
+      const accsHtml = o.accounts.map(a =>
+        `<div style="background:#000;padding:8px 10px;border-radius:6px;margin-bottom:4px">
+          <div style="color:#a855f7;font-family:monospace;font-size:11px;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <span style="flex:1;word-break:break-all">${escapeHtml(a)}</span>
+            <button onclick='copyText(${JSON.stringify(a)})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>
+          </div>
+        </div>`).join("");
+      return `
+        <div class="card">
+          <div class="product-head">
+            <div class="product-name">🎯 ${o.amount} acc KMTT</div>
+            <div class="stock-tag" style="background:rgba(168,85,247,.15);color:#a855f7">${fmt(o.price)}</div>
+          </div>
+          <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.created_at)}</span></div>
+          <div style="margin-top:10px">${accsHtml}</div>
+        </div>
+      `;
+    }).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+// ---- ADMIN/SUB: Quản lý kho KMTT ----
+async function renderAdminKmtt(box) {
+  const stats = await api("/api/admin/kmtt/stats");
+  if (!stats.ok) { box.innerHTML = '<div class="empty">' + (stats.error || "Lỗi") + '</div>'; return; }
+  const addForm = `
+    <div class="card">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px">➕ Thêm acc KMTT vào kho</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 acc định dạng <b>user:pass:proxy</b></div>
+      <textarea class="input" id="kmttAddInput" placeholder="user1:pass1:proxy1&#10;user2:pass2:proxy2" style="min-height:140px"></textarea>
+      <button class="btn btn-success btn-block" onclick="adminAddKmtt()">➕ Thêm vào kho</button>
+    </div>`;
+  const summary = `
+    <div class="card" style="background:rgba(168,85,247,.1);border-color:#a855f7">
+      <div style="font-size:12px;color:#a855f7;font-weight:600;margin-bottom:8px">📊 Tổng quan KMTT (Giá: ${fmt(stats.price)}, Vốn: ${fmt(stats.kmtt_cost||10000)})</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div>Tổng: <b>${stats.total}</b></div>
+        <div>Kho: <b style="color:var(--success)">${stats.available}</b></div>
+        <div>Đã bán: <b style="color:var(--danger)">${stats.sold}</b></div>
+        <div>Đơn: <b>${stats.total_orders||0}</b></div>
+        <div>DT: <b style="color:var(--gold)">${fmt(stats.revenue||0)}</b></div>
+        <div>Vốn: <b>${fmt(stats.cost||0)}</b></div>
+        <div style="grid-column:1/-1">📈 LN: <b style="color:var(--success)">${fmt(stats.profit||0)}</b></div>
+      </div>
+    </div>`;
+  const filterTabs = `
+    <div class="tabs" id="kmttFilterTabs" style="margin:10px 0">
+      <div class="tab active" onclick="filterKmttList('all',this)">Tất cả</div>
+      <div class="tab" onclick="filterKmttList('available',this)">🟢 Trong kho</div>
+      <div class="tab" onclick="filterKmttList('sold',this)">🔴 Đã bán</div>
+    </div>
+    <div id="kmttAdminList"></div>`;
+  box.innerHTML = addForm + summary + filterTabs;
+  loadKmttInnerList('all');
 }
 async function adminAddKmtt() {
   const raw = document.getElementById("kmttAddInput").value.trim();
@@ -941,7 +1124,8 @@ async function adminAddKmtt() {
     const r = await api("/api/admin/kmtt/add", {accounts: raw});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm vào kho"; return; }
     toast(`✅ +${r.added} acc${r.dup ? ` (trùng ${r.dup})` : ""}${r.invalid ? ` (sai ${r.invalid})` : ""}`, "success");
-    loadKmttTab();
+    renderAdminKmtt(document.getElementById("kmttAdminBox"));
+    loadKmttInfo();
   } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm vào kho"; }
 }
 function filterKmttList(status, el) {
@@ -951,7 +1135,7 @@ function filterKmttList(status, el) {
   loadKmttInnerList(status);
 }
 async function loadKmttInnerList(status) {
-  const el = document.getElementById("kmttInnerList");
+  const el = document.getElementById("kmttAdminList");
   if (!el) return;
   el.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
@@ -978,7 +1162,9 @@ async function adminDelKmtt(id) {
   try {
     const r = await api("/api/admin/kmtt/delete", {id});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã xoá", "success"); loadKmttTab();
+    toast("✅ Đã xoá", "success");
+    renderAdminKmtt(document.getElementById("kmttAdminBox"));
+    loadKmttInfo();
   } catch(e) { toast("Lỗi", "error"); }
 }
 
@@ -1443,6 +1629,9 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${s.gsm_available||0}</div><div class="stat-label">GSM kho</div></div>
       <div class="stat-card pink"><div class="stat-val">${s.gsm_sold||0}</div><div class="stat-label">GSM bán</div></div>
       <div class="stat-card green"><div class="stat-val">${fmt(s.gsm_profit)}</div><div class="stat-label">LN GSM</div></div>
+      <div class="stat-card" style="background:rgba(168,85,247,.1)"><div class="stat-val" style="color:#a855f7">${s.kmtt_available||0}</div><div class="stat-label">KMTT kho</div></div>
+      <div class="stat-card" style="background:rgba(168,85,247,.1)"><div class="stat-val" style="color:#a855f7">${s.kmtt_sold||0}</div><div class="stat-label">KMTT bán</div></div>
+      <div class="stat-card green"><div class="stat-val">${fmt(s.kmtt_profit||0)}</div><div class="stat-label">LN KMTT</div></div>
     `;
     loadProxyStats(); adminTab("users");
   } catch(e) {}
