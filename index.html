@@ -263,8 +263,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
         <div style="font-size:20px;font-weight:700;color:var(--success)" id="gsmStock">--</div>
       </div>
     </div>
-    <div id="gsmMyCountdown" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);justify-content:space-between;align-items:center;gap:10px;font-size:12px">
-      <span style="color:var(--muted)">⏰ GSM của bạn hết hạn sau</span>
+    <div id="gsmMyCountdown" style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px">
+      <span style="color:var(--muted)" id="gsmCountdownLabel">⏰ Đang tải...</span>
       <span class="countdown" id="gsmMyCountdownVal" data-expire="">--</span>
     </div>
   </div>
@@ -579,7 +579,6 @@ function renderProducts() {
     </div>
   `).join("");
 }
-
 function openBuy(id) {
   const p = ALL_PRODUCTS.find(x => x.id === id);
   if (!p) return;
@@ -592,7 +591,6 @@ function openBuy(id) {
     <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
     ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
     ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
-    ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
     <div class="qty-row">
       <button class="qty-btn" onclick="changeQty(-1)">−</button>
@@ -731,21 +729,42 @@ async function loadGsmInfo() {
     if (stockEl) stockEl.textContent = GSM_STOCK;
     if (priceEl) priceEl.textContent = fmt(GSM_PRICE);
 
-    // Countdown cạnh giá
+    // ===== Countdown luôn hiện - 3 trường hợp =====
     const cdBox = document.getElementById("gsmMyCountdown");
     const cdVal = document.getElementById("gsmMyCountdownVal");
-    if (cdBox && cdVal) {
+    const cdLabel = document.getElementById("gsmCountdownLabel");
+    if (cdBox && cdVal && cdLabel) {
+      let expireToShow = null;
+      let labelText = "";
+      let titleText = "";
+
       if (r.my_count > 0 && r.my_nearest_expire) {
+        // Trường hợp 1: User có GSM → hiện hạn GSM của user
+        expireToShow = r.my_nearest_expire;
+        labelText = "⏰ GSM của bạn hết hạn sau";
+        titleText = `Hạn: ${r.my_nearest_expire} (${r.my_count} GSM của bạn)`;
+      } else if (r.stock_nearest_expire) {
+        // Trường hợp 2: User chưa có GSM nhưng kho có link → hiện hạn link sắp hết
+        expireToShow = r.stock_nearest_expire;
+        labelText = "⏰ Link trong kho sắp hết sau";
+        titleText = `Link mua sẽ hết hạn: ${r.stock_nearest_expire}`;
+      }
+
+      if (expireToShow) {
+        // Trường hợp 1 & 2: Hiện
         cdBox.style.display = "flex";
-        cdVal.setAttribute("data-expire", r.my_nearest_expire);
-        const cd = fmtCountdown(r.my_nearest_expire);
+        cdLabel.textContent = labelText;
+        cdVal.setAttribute("data-expire", expireToShow);
+        const cd = fmtCountdown(expireToShow);
         cdVal.textContent = cd.text;
         cdVal.style.color = cd.expired ? "var(--danger)" : "var(--success)";
-        cdBox.title = "Hạn: " + r.my_nearest_expire + " (" + r.my_count + " GSM)";
+        cdBox.title = titleText;
       } else {
+        // Trường hợp 3: Không có gì → ẩn
         cdBox.style.display = "none";
       }
     }
+
     updateGsmTotal();
     startCountdowns();
   } catch(e) {}
@@ -1270,7 +1289,6 @@ async function loadReferrals() {
           </div>
           <div class="info-row"><span>Đơn hàng</span><span>${fmt(e.order_amount)}</span></div>
           <div class="info-row"><span>Mức</span><span>${e.rate}%</span></div>
-          <div class="info-row"><span>TG</span><span>${escapeHtml(e.created_at)}</span></div>
         </div>`).join("");
     }
     if (!r.withdrawals || !r.withdrawals.length) {
