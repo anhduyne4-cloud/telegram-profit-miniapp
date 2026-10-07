@@ -145,6 +145,11 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 <!-- SHOP -->
 <div class="page active" id="page-shop">
   <div class="section-title"><span>🛍 Danh sách Proxy</span></div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(37,211,102,.05));border-color:rgba(255,215,0,.4);padding:10px 14px">
+    <div style="font-size:11px;line-height:1.5;color:var(--muted)">
+      💎 <b style="color:var(--gold)">Ví hoa hồng</b> dùng được cho <b>Proxy</b> — không dùng cho GSM/KMTT
+    </div>
+  </div>
   <div class="tabs" id="catTabs">
     <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
   </div>
@@ -202,16 +207,23 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       <div class="wallet-val" id="refMainBalance">0đ</div>
     </div>
   </div>
-  <button class="btn btn-gold btn-block" onclick="openWithdrawModal()" style="margin-bottom:14px">💸 Rút hoa hồng về số dư</button>
+  <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.08));border-color:var(--gold);margin-bottom:14px">
+    <div style="font-size:12px;line-height:1.7;color:var(--text)">
+      💡 <b style="color:var(--gold)">Ví hoa hồng</b> được dùng <b>trực tiếp</b> để mua <b>Proxy</b> khi thanh toán.<br>
+      ⚠️ Không dùng được cho <b>GSM</b> hoặc <b>KMTT</b>.
+    </div>
+  </div>
   <div class="stats-grid">
     <div class="stat-card green"><div class="stat-val" id="refEarned">0đ</div><div class="stat-label">Tổng hoa hồng nhận</div></div>
     <div class="stat-card"><div class="stat-val" id="refCount">0</div><div class="stat-label">Người đã mời</div></div>
   </div>
   <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.1));border-color:var(--gold)">
-    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">💎 Bảng hoa hồng lũy tiến</div>
-    <div class="info-row"><span>Người được mời chi 50,000đ</span><span style="color:var(--success)">15%</span></div>
-    <div class="info-row"><span>Người được mời chi 100,000đ</span><span style="color:var(--success)">25%</span></div>
-    <div class="info-row"><span>Người được mời chi trên 200,000đ</span><span style="color:var(--success)">30%</span></div>
+    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">💎 Chính sách hoa hồng</div>
+    <div class="info-row"><span>Người được mời chi tiêu từ 500,000đ</span><span style="color:var(--success);font-weight:700">13%</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+      💡 Hoa hồng <b style="color:var(--gold)">13%</b> trên <b>tổng chi tiêu</b> của người bạn mời khi họ đạt mốc <b style="color:var(--gold)">500,000đ</b>.<br>
+      ⚠️ Chưa đủ 500,000đ → chưa có hoa hồng.
+    </div>
   </div>
   <div class="card">
     <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔗 Link mời của bạn</div>
@@ -225,8 +237,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div id="referredList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
   <div class="section-title" style="margin-top:16px"><span>💰 Lịch sử hoa hồng</span></div>
   <div id="earningsList"></div>
-  <div class="section-title" style="margin-top:16px"><span>📜 Lịch sử rút</span></div>
-  <div id="withdrawalList"></div>
 </div>
 
 <!-- DEPOSIT -->
@@ -241,6 +251,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       <button class="btn btn-outline btn-sm" onclick="setAmt(50000)">50K</button>
       <button class="btn btn-outline btn-sm" onclick="setAmt(100000)">100K</button>
       <button class="btn btn-outline btn-sm" onclick="setAmt(200000)">200K</button>
+      <button class="btn btn-outline btn-sm" onclick="setAmt(500000)">500K</button>
     </div>
     <button class="btn btn-success btn-block" onclick="createDeposit()">🎯 Tạo QR thanh toán</button>
   </div>
@@ -283,7 +294,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       <button class="btn btn-outline btn-xs" onclick="setGsmQty(50)">50</button>
       <button class="btn btn-outline btn-xs" onclick="setGsmQty(100)">100</button>
     </div>
-    <div class="info-row"><span>Số dư</span><span id="gsmBalance">--</span></div>
+    <div class="info-row"><span>💳 Số dư</span><span id="gsmBalance">--</span></div>
+    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho GSM</div>
     <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsmTotal">26.000đ</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm()">✅ Xác nhận mua</button>
   </div>
@@ -297,7 +309,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <span>🎯 Kho Acc Tân Thủ (KMTT)</span>
     <button class="btn btn-outline btn-xs" onclick="loadKmttUser()">🔄</button>
   </div>
-
   <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(74,158,255,.1));border-color:#a855f7">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div>
@@ -313,7 +324,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       Bạn đang sở hữu: <b id="kmttOwned" style="color:#a855f7">0</b> acc
     </div>
   </div>
-
   <div class="card">
     <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔢 Số lượng acc muốn mua</div>
     <div class="qty-row">
@@ -328,14 +338,13 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       <button class="btn btn-outline btn-xs" onclick="setKmttQty(10)">10</button>
       <button class="btn btn-outline btn-xs" onclick="setKmttQty(20)">20</button>
     </div>
-    <div class="info-row"><span>Số dư</span><span id="kmttBalance">--</span></div>
+    <div class="info-row"><span>💳 Số dư</span><span id="kmttBalance">--</span></div>
+    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho KMTT</div>
     <div class="info-row"><span>Tổng tiền</span><span style="color:#a855f7;font-weight:700" id="kmttTotal">15.000đ</span></div>
     <button class="btn btn-block" style="margin-top:14px;background:linear-gradient(135deg,#a855f7,#7c3aed)" onclick="buyKmtt()">🎯 Xác nhận mua</button>
   </div>
-
   <div class="section-title" style="margin-top:16px"><span>📦 Acc đã mua</span></div>
   <div id="kmttOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
-
   <div id="kmttAdminBox" style="display:none;margin-top:20px"></div>
 </div>
 
@@ -415,7 +424,6 @@ function startClock() {
 }
 startClock();
 
-// ===== Countdown =====
 function fmtCountdown(expireAtStr) {
   if (!expireAtStr) return { text: "—", expired: false };
   const exp = new Date(String(expireAtStr).replace(" ", "T"));
@@ -506,14 +514,7 @@ async function init() {
     if (!r.ok) { toast("Xác thực thất bại", "error"); return; }
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
-
-    // Tất cả user thấy KMTT (để mua)
-    // Phó admin & user thường: full nav user + KMTT
-    // Chỉ admin chính: có thêm Admin panel
-    if (USER.is_admin) {
-      document.getElementById("navAdmin").style.display = "block";
-    }
-
+    if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
     loadGsmInfo(); loadGsmOrders();
     startBalancePolling();
@@ -525,9 +526,10 @@ function startBalancePolling() {
   balancePolling = setInterval(async () => {
     try {
       const r = await api("/api/me/refresh");
-      if (r.ok && r.balance !== USER.balance) {
+      if (r.ok && (r.balance !== USER.balance || r.referral_balance !== USER.referral_balance)) {
         const diff = r.balance - USER.balance;
         USER.balance = r.balance;
+        USER.referral_balance = r.referral_balance;
         document.getElementById("hdrBal").textContent = fmt(r.balance);
         if (diff > 0) toast(`💰 +${fmt(diff)}`, "success");
       }
@@ -539,6 +541,7 @@ async function refreshBalance() {
     const r = await api("/api/me/refresh");
     if (r.ok) {
       USER.balance = r.balance;
+      USER.referral_balance = r.referral_balance;
       document.getElementById("hdrBal").textContent = fmt(r.balance);
       toast("Đã cập nhật!", "success");
     }
@@ -620,13 +623,23 @@ function openBuy(id) {
   if (!p) return;
   currentProduct = p;
   const minBuy = p.min_buy || 1;
+  const totalAvail = (USER.balance || 0) + (USER.referral_balance || 0);
+  const needRef = USER.balance < p.price && USER.referral_balance > 0;
+  const useRefAmt = needRef ? Math.min(USER.referral_balance, p.price - USER.balance) : 0;
   openModal(`
     <div class="modal-title">${escapeHtml(p.name)}<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Giá</span><span>${fmt(p.price)}</span></div>
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
-    <div class="info-row"><span>Số dư</span><span>${fmt(USER.balance)}</span></div>
+    <div class="info-row"><span style="color:var(--success)">✅ Khả dụng</span><span style="color:var(--success);font-weight:700">${fmt(totalAvail)}</span></div>
+    <div class="info-row"><span style="font-size:11px">💳 Số dư</span><span style="font-size:11px">${fmt(USER.balance)}</span></div>
+    <div class="info-row"><span style="font-size:11px">💎 Ví HH (chỉ Proxy)</span><span style="font-size:11px;color:var(--gold)">${fmt(USER.referral_balance)}</span></div>
+    ${needRef ? `
+      <div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:11px;line-height:1.5">
+        💎 Sẽ dùng <b>${fmt(useRefAmt)}</b> từ ví hoa hồng
+      </div>` : ""}
     ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
     ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
+    ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
     <div class="qty-row">
       <button class="qty-btn" onclick="changeQty(-1)">−</button>
@@ -668,7 +681,11 @@ async function doBuy() {
       btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
       return;
     }
-    USER.balance -= r.paid;
+    try {
+      const me = await api("/api/me/refresh");
+      if (me.ok) { USER.balance = me.balance; USER.referral_balance = me.referral_balance; }
+      else { USER.balance -= r.paid; }
+    } catch(e) { USER.balance -= r.paid; }
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     toast("Mua thành công!", "success");
     closeModal();
@@ -690,8 +707,9 @@ function showPurchased(r) {
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(r.product_name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
+    ${r.used_ref > 0 ? `<div class="info-row"><span style="font-size:11px">💰 Dùng ví HH</span><span style="font-size:11px;color:var(--gold)">${fmt(r.used_ref)}</span></div>` : ""}
     ${r.order_code ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px">${escapeHtml(r.order_code)}</span></div>` : ""}
-    ${r.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(r.expire)}</span></div>` : ""}
+    ${r.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(r.expire)}</span></div>` : ""}
     ${r.is_rotate && r.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span><code>${escapeHtml(r.proxy_key)}</code></span></div>` : ""}
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
       <span>🔑 Danh sách</span>
@@ -764,15 +782,11 @@ async function loadGsmInfo() {
     const priceEl = document.getElementById("gsmPrice");
     if (stockEl) stockEl.textContent = GSM_STOCK;
     if (priceEl) priceEl.textContent = fmt(GSM_PRICE);
-
     const cdBox = document.getElementById("gsmMyCountdown");
     const cdVal = document.getElementById("gsmMyCountdownVal");
     const cdLabel = document.getElementById("gsmCountdownLabel");
     if (cdBox && cdVal && cdLabel) {
-      let expireToShow = null;
-      let labelText = "";
-      let titleText = "";
-
+      let expireToShow = null; let labelText = ""; let titleText = "";
       if (r.my_count > 0 && r.my_nearest_expire) {
         expireToShow = r.my_nearest_expire;
         labelText = "⏰ GSM của bạn hết hạn sau";
@@ -782,7 +796,6 @@ async function loadGsmInfo() {
         labelText = "⏰ Link trong kho sắp hết sau";
         titleText = `Link mua sẽ hết hạn: ${r.stock_nearest_expire}`;
       }
-
       if (expireToShow) {
         cdBox.style.display = "flex";
         cdLabel.textContent = labelText;
@@ -791,11 +804,8 @@ async function loadGsmInfo() {
         cdVal.textContent = cd.text;
         cdVal.style.color = cd.expired ? "var(--danger)" : "var(--success)";
         cdBox.title = titleText;
-      } else {
-        cdBox.style.display = "none";
-      }
+      } else { cdBox.style.display = "none"; }
     }
-
     updateGsmTotal();
     startCountdowns();
   } catch(e) {}
@@ -826,7 +836,7 @@ function buyGsm() {
   if (qty < 1) { toast("Số lượng không hợp lệ", "error"); return; }
   if (GSM_STOCK < qty) { toast(`Kho chỉ còn ${GSM_STOCK} GSM`, "error"); return; }
   const total = GSM_PRICE * qty;
-  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+  if (!USER || USER.balance < total) { toast(`Số dư không đủ. Ví HH không dùng cho GSM!`, "error"); return; }
   openModal(`
     <div class="modal-title">📋 QUY ĐỊNH SỬ DỤNG GSM<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Số lượng mua</span><span style="color:var(--gold);font-weight:700">${qty} GSM</span></div>
@@ -846,7 +856,7 @@ function buyGsm() {
 }
 async function confirmBuyGsm(qty) {
   const total = GSM_PRICE * qty;
-  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+  if (!USER || USER.balance < total) { toast("Số dư không đủ. Ví HH không dùng cho GSM", "error"); return; }
   const btns = document.querySelectorAll("#modalContent .btn");
   btns.forEach(b => b.disabled = true);
   try {
@@ -857,7 +867,6 @@ async function confirmBuyGsm(qty) {
     const stockEl = document.getElementById("gsmStock");
     if (stockEl) stockEl.textContent = GSM_STOCK;
     toast(`✅ Mua ${qty} GSM thành công!`, "success");
-
     const linksHtml = r.links.map(l => {
       const link = l.link || l;
       const exp = l.expire_at || "";
@@ -869,7 +878,6 @@ async function confirmBuyGsm(qty) {
         ${exp ? `<div style="font-size:11px;margin-top:6px;color:var(--muted)">⏰ Còn lại: <span data-expire="${escapeHtml(exp)}">--</span></div>` : ""}
       </div>`;
     }).join("");
-
     openModal(`
       <div class="modal-title">🎉 Mua GSM thành công<button class="close-x" onclick="closeModal()">✕</button></div>
       <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
@@ -929,22 +937,18 @@ async function loadGsmOrders() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ===== KMTT (user mua + admin quản lý) =====
+// ===== KMTT =====
 async function loadKmttUser() {
   await loadKmttInfo();
   loadKmttOrders();
-
   const adminBox = document.getElementById("kmttAdminBox");
   if (adminBox) {
     if (USER && (USER.is_admin || USER.is_sub_admin)) {
       adminBox.style.display = "block";
       await renderAdminKmtt(adminBox);
-    } else {
-      adminBox.style.display = "none";
-    }
+    } else { adminBox.style.display = "none"; }
   }
 }
-
 async function loadKmttInfo() {
   try {
     const r = await api("/api/kmtt/info");
@@ -960,7 +964,6 @@ async function loadKmttInfo() {
     updateKmttTotal();
   } catch(e) {}
 }
-
 function updateKmttTotal() {
   const total = KMTT_PRICE * (KMTT_QTY || 1);
   const qtyEl = document.getElementById("kmttQty");
@@ -970,7 +973,6 @@ function updateKmttTotal() {
   if (totalEl) totalEl.textContent = fmt(total);
   if (balEl) balEl.textContent = USER ? fmt(USER.balance) : "--";
 }
-
 function changeKmttQty(d) {
   KMTT_QTY = Math.max(1, (KMTT_QTY || 1) + d);
   if (KMTT_STOCK > 0 && KMTT_QTY > KMTT_STOCK) KMTT_QTY = KMTT_STOCK;
@@ -983,14 +985,12 @@ function setKmttQty(n) {
   if (KMTT_QTY > 500) KMTT_QTY = 500;
   updateKmttTotal();
 }
-
 function buyKmtt() {
   const qty = KMTT_QTY || 1;
   if (qty < 1) { toast("Số lượng không hợp lệ", "error"); return; }
   if (KMTT_STOCK < qty) { toast(`Kho chỉ còn ${KMTT_STOCK} acc`, "error"); return; }
   const total = KMTT_PRICE * qty;
-  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
-
+  if (!USER || USER.balance < total) { toast(`Số dư không đủ. Ví HH không dùng cho KMTT!`, "error"); return; }
   openModal(`
     <div class="modal-title">🎯 Xác nhận mua KMTT<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Số lượng</span><span style="color:#a855f7;font-weight:700">${qty} acc</span></div>
@@ -1003,22 +1003,19 @@ function buyKmtt() {
     <button class="btn btn-outline btn-block" onclick="closeModal()">❌ Huỷ</button>
   `);
 }
-
 async function confirmBuyKmtt(qty) {
   const total = KMTT_PRICE * qty;
-  if (!USER || USER.balance < total) { toast("Số dư không đủ", "error"); return; }
+  if (!USER || USER.balance < total) { toast("Số dư không đủ. Ví HH không dùng cho KMTT", "error"); return; }
   const btns = document.querySelectorAll("#modalContent .btn");
   btns.forEach(b => b.disabled = true);
   try {
     const r = await api("/api/kmtt/buy", {amount: qty});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); btns.forEach(b => b.disabled = false); return; }
-    USER.balance = r.balance;
-    KMTT_STOCK = r.stock;
+    USER.balance = r.balance; KMTT_STOCK = r.stock;
     document.getElementById("hdrBal").textContent = fmt(r.balance);
     const stockEl = document.getElementById("kmttStock");
     if (stockEl) stockEl.textContent = KMTT_STOCK;
     toast(`✅ Mua ${qty} acc KMTT thành công!`, "success");
-
     const accsHtml = r.accounts.map(a =>
       `<div style="background:#000;padding:10px;border-radius:8px;margin-bottom:6px">
         <div style="font-family:monospace;font-size:12px;color:#a855f7;word-break:break-all;display:flex;gap:6px;align-items:flex-start">
@@ -1026,7 +1023,6 @@ async function confirmBuyKmtt(qty) {
           <button onclick='copyText(${JSON.stringify(a)})' style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>
         </div>
       </div>`).join("");
-
     openModal(`
       <div class="modal-title">🎉 Mua KMTT thành công<button class="close-x" onclick="closeModal()">✕</button></div>
       <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
@@ -1043,13 +1039,11 @@ async function confirmBuyKmtt(qty) {
     loadKmttOrders(); loadKmttInfo();
   } catch(e) { toast("Lỗi kết nối", "error"); btns.forEach(b => b.disabled = false); }
 }
-
 function copyAllKmtt() {
   const accs = window._kmttAccs || [];
   if (!accs.length) { toast("Không có acc", "error"); return; }
   copyText(accs.join("\n"));
 }
-
 async function loadKmttOrders() {
   const list = document.getElementById("kmttOrdersList");
   if (!list) return;
@@ -1081,8 +1075,6 @@ async function loadKmttOrders() {
     }).join("");
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
-
-// ---- ADMIN/SUB: Quản lý kho KMTT ----
 async function renderAdminKmtt(box) {
   const stats = await api("/api/admin/kmtt/stats");
   if (!stats.ok) { box.innerHTML = '<div class="empty">' + (stats.error || "Lỗi") + '</div>'; return; }
@@ -1429,10 +1421,9 @@ async function submitExtend(orderCode) {
 async function loadReferrals() {
   const referredBox = document.getElementById("referredList");
   const earningsBox = document.getElementById("earningsList");
-  const wdBox = document.getElementById("withdrawalList");
   if (!referredBox) return;
   referredBox.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
-  earningsBox.innerHTML = ''; wdBox.innerHTML = '';
+  earningsBox.innerHTML = '';
   try {
     const r = await api("/api/my-referrals");
     if (!r.ok) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; return; }
@@ -1450,8 +1441,8 @@ async function loadReferrals() {
       referredBox.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Chưa mời được ai</div>';
     } else {
       referredBox.innerHTML = r.referred.map(p => {
-        const rateCls = p.current_rate >= 30 ? "r30" : p.current_rate >= 25 ? "r25" : p.current_rate >= 15 ? "r15" : "r0";
-        const rateText = p.current_rate > 0 ? `${p.current_rate}%` : "Chưa đủ mốc";
+        const rateCls = p.current_rate >= 13 ? "r15" : "r0";
+        const rateText = p.current_rate > 0 ? `${p.current_rate}%` : "Chưa đủ 500K";
         return `
           <div class="card">
             <div class="product-head">
@@ -1474,19 +1465,8 @@ async function loadReferrals() {
             <div class="stock-tag" style="background:rgba(37,211,102,.15);color:var(--success)">+${fmt(e.commission)}</div>
           </div>
           <div class="info-row"><span>Đơn hàng</span><span>${fmt(e.order_amount)}</span></div>
+          <div class="info-row"><span>Tổng chi tiêu</span><span>${fmt(e.total_spent)}</span></div>
           <div class="info-row"><span>Mức</span><span>${e.rate}%</span></div>
-        </div>`).join("");
-    }
-    if (!r.withdrawals || !r.withdrawals.length) {
-      wdBox.innerHTML = '<div class="empty" style="padding:20px;font-size:12px">Chưa có lần rút nào</div>';
-    } else {
-      wdBox.innerHTML = r.withdrawals.map(w => `
-        <div class="card" style="border-color:rgba(255,215,0,.3)">
-          <div class="product-head">
-            <div class="product-name" style="font-size:13px">Rút hoa hồng</div>
-            <div class="stock-tag" style="background:rgba(255,215,0,.15);color:var(--gold)">${fmt(w.amount)}</div>
-          </div>
-          <div class="info-row"><span>TG</span><span>${escapeHtml(w.created_at)}</span></div>
         </div>`).join("");
     }
   } catch(e) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; }
@@ -1504,35 +1484,6 @@ function shareRefLink() {
   } else {
     doCopy(`🎁 Tham gia Proxy Shop!\n${link}`);
   }
-}
-function openWithdrawModal() {
-  const refBal = REF_DATA ? (REF_DATA.referral_balance || 0) : 0;
-  if (refBal < 1000) { toast("Số dư HH chưa đủ 1,000đ", "error"); return; }
-  openModal(`
-    <div class="modal-title">💸 Rút hoa hồng<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="info-row"><span>Ví HH</span><span style="color:var(--gold);font-weight:700">${fmt(refBal)}</span></div>
-    <input class="input" id="wdAmount" type="number" placeholder="Nhập số tiền..." inputmode="numeric" value="${refBal}">
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=10000">10K</button>
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=50000">50K</button>
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=100000">100K</button>
-      <button class="btn btn-outline btn-sm" onclick="document.getElementById('wdAmount').value=${refBal}">Tất cả</button>
-    </div>
-    <button class="btn btn-gold btn-block" onclick="submitWithdraw()">💸 Rút về số dư</button>
-  `);
-}
-async function submitWithdraw() {
-  const amount = parseInt(document.getElementById("wdAmount").value || "0");
-  if (amount < 1000) { toast("Rút tối thiểu 1,000đ", "error"); return; }
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang rút...";
-  try {
-    const r = await api("/api/withdraw-referral", {amount});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "💸 Rút về số dư"; return; }
-    toast(`✅ Đã rút ${fmt(amount)} về số dư!`, "success");
-    USER.balance = r.balance;
-    document.getElementById("hdrBal").textContent = fmt(r.balance);
-    closeModal(); setTimeout(() => loadReferrals(), 300);
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "💸 Rút về số dư"; }
 }
 
 // ===== DEPOSIT =====
@@ -1624,7 +1575,7 @@ async function loadAdmin() {
       <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
       <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
       <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
-      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_withdrawn)}</div><div class="stat-label">HH đã rút</div></div>
+      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_referral_balance)}</div><div class="stat-label">Ví HH tồn</div></div>
       <div class="stat-card green"><div class="stat-val">${s.total_extends}</div><div class="stat-label">Lượt GH</div></div>
       <div class="stat-card gold"><div class="stat-val">${s.gsm_available||0}</div><div class="stat-label">GSM kho</div></div>
       <div class="stat-card pink"><div class="stat-val">${s.gsm_sold||0}</div><div class="stat-label">GSM bán</div></div>
@@ -1996,11 +1947,16 @@ async function openReferrerDetail(referrerId) {
     if (!r.ok) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Không tải được</div>`); return; }
     const u = r.user;
     const referredHtml = r.referred.length
-      ? r.referred.map(p => `
+      ? r.referred.map(p => {
+          const spent = p.total_spent || 0;
+          let rate = spent >= 500000 ? 13 : 0;
+          return `
           <div style="background:var(--card2);padding:10px;border-radius:8px;margin-bottom:8px;font-size:12px">
             <div style="font-weight:600;margin-bottom:4px">${escapeHtml(p.first_name || p.username || "User")} (${p.id})</div>
-            <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Đã chi:</span><span style="color:var(--gold)">${fmt(p.total_spent)}</span></div>
-          </div>`).join("")
+            <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>Đã chi:</span><span style="color:var(--gold)">${fmt(spent)}</span></div>
+            <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Mức:</span><span>${rate}%</span></div>
+          </div>`;
+        }).join("")
       : '<div class="empty" style="padding:20px">Chưa mời ai</div>';
     const earningsHtml = r.earnings.length
       ? r.earnings.slice(0, 20).map(e => `
