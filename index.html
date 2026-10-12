@@ -106,8 +106,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .source-tag.admin_transfer{background:rgba(168,85,247,.15);color:#a855f7}
 .rate-badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:6px}
 .rate-badge.r15{background:rgba(37,211,102,.2);color:var(--success)}
-.rate-badge.r25{background:rgba(255,215,0,.2);color:var(--gold)}
-.rate-badge.r30{background:rgba(255,71,87,.2);color:var(--danger)}
 .rate-badge.r0{background:rgba(139,147,168,.2);color:var(--muted)}
 .balance-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .wallet-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;position:relative}
@@ -127,9 +125,24 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .countdown{color:var(--success);font-weight:700;font-variant-numeric:tabular-nums;padding:2px 8px;background:rgba(37,211,102,.1);border-radius:6px;border:1px solid rgba(37,211,102,.2)}
 .gsm-card-15{background:linear-gradient(135deg,rgba(74,158,255,.1),rgba(168,85,247,.1));border-color:var(--primary)}
 .gsm-card-25{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,71,87,.1));border-color:var(--gold)}
+#banScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;padding:40px 20px;text-align:center;flex-direction:column;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
+
+<!-- BAN SCREEN -->
+<div id="banScreen">
+  <div style="font-size:80px;margin-bottom:20px">🚫</div>
+  <div style="font-size:22px;font-weight:700;color:var(--danger);margin-bottom:16px">TÀI KHOẢN ĐÃ BỊ CẤM</div>
+  <div style="background:var(--card);border:1px solid var(--danger);border-radius:14px;padding:16px;max-width:400px;width:100%;margin-bottom:20px">
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Lý do</div>
+    <div id="banReason" style="font-size:14px;color:var(--text);line-height:1.6">Vi phạm chính sách</div>
+  </div>
+  <div style="font-size:12px;color:var(--muted);max-width:400px;line-height:1.6">
+    💬 Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Admin để được xem xét mở lại tài khoản.
+  </div>
+  <button class="btn btn-success" style="margin-top:20px" onclick="contactAdmin()">💬 Liên hệ Admin</button>
+</div>
 
 <script>
   const API_BASE = "https://oppressed-hatchback-bobtail.ngrok-free.dev";
@@ -211,20 +224,19 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
   <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.08));border-color:var(--gold);margin-bottom:14px">
     <div style="font-size:12px;line-height:1.7;color:var(--text)">
-      💡 <b style="color:var(--gold)">Ví hoa hồng</b> được dùng <b>trực tiếp</b> để mua <b>Proxy</b> khi thanh toán.<br>
+      💡 <b style="color:var(--gold)">Ví hoa hồng</b> được dùng <b>trực tiếp</b> để mua <b>Proxy</b>.<br>
       ⚠️ Không dùng được cho <b>GSM</b> hoặc <b>KMTT</b>.
     </div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card green"><div class="stat-val" id="refEarned">0đ</div><div class="stat-label">Tổng hoa hồng nhận</div></div>
+    <div class="stat-card green"><div class="stat-val" id="refEarned">0đ</div><div class="stat-label">Tổng HH nhận</div></div>
     <div class="stat-card"><div class="stat-val" id="refCount">0</div><div class="stat-label">Người đã mời</div></div>
   </div>
   <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.1));border-color:var(--gold)">
     <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">💎 Chính sách hoa hồng</div>
-    <div class="info-row"><span>Người được mời chi tiêu từ 500,000đ</span><span style="color:var(--success);font-weight:700">13%</span></div>
+    <div class="info-row"><span>Người được mời chi từ 500,000đ</span><span style="color:var(--success);font-weight:700">13%</span></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
-      💡 Hoa hồng <b style="color:var(--gold)">13%</b> trên <b>tổng chi tiêu</b> của người bạn mời khi họ đạt mốc <b style="color:var(--gold)">500,000đ</b>.<br>
-      ⚠️ Chưa đủ 500,000đ → chưa có hoa hồng.
+      💡 Hoa hồng <b style="color:var(--gold)">13%</b> trên tổng chi tiêu khi F2 đạt <b style="color:var(--gold)">500,000đ</b>.
     </div>
   </div>
   <div class="card">
@@ -259,14 +271,13 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   </div>
 </div>
 
-<!-- GSM — 2 LOẠI -->
+<!-- GSM -->
 <div class="page" id="page-gsm">
   <div class="section-title">
     <span>📱 Mua GSM</span>
     <button class="btn btn-outline btn-xs" onclick="loadGsmInfo();loadGsmOrders()">🔄</button>
   </div>
 
-  <!-- GSM 15 TIN -->
   <div class="card gsm-card-15">
     <div class="product-head">
       <div class="product-name">📱 GSM 15 tin</div>
@@ -305,7 +316,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm('15')">✅ Mua GSM 15 tin</button>
   </div>
 
-  <!-- GSM 25 TIN -->
   <div class="card gsm-card-25">
     <div class="product-head">
       <div class="product-name">📱 GSM 25 tin</div>
@@ -447,7 +457,6 @@ let SELECTED_KEYS = new Set();
 let currentRotateTab = "rotate";
 let REF_DATA = null;
 
-// GSM state — 2 loại
 let GSM_STATE = {
   "15": { price: 26000, stock: 0, qty: 1, label: "GSM 15 tin" },
   "25": { price: 36000, stock: 0, qty: 1, label: "GSM 25 tin" },
@@ -560,7 +569,15 @@ function contactAdmin() {
 async function init() {
   try {
     const r = await api("/api/auth");
-    if (!r.ok) { toast("Xác thực thất bại", "error"); return; }
+    if (!r.ok) {
+      if (r.banned) {
+        document.getElementById("banReason").textContent = r.reason || "Vi phạm chính sách của shop";
+        document.getElementById("banScreen").style.display = "flex";
+        return;
+      }
+      toast("Xác thực thất bại", "error");
+      return;
+    }
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
@@ -682,10 +699,7 @@ function openBuy(id) {
     <div class="info-row"><span style="color:var(--success)">✅ Khả dụng</span><span style="color:var(--success);font-weight:700">${fmt(totalAvail)}</span></div>
     <div class="info-row"><span style="font-size:11px">💳 Số dư</span><span style="font-size:11px">${fmt(USER.balance)}</span></div>
     <div class="info-row"><span style="font-size:11px">💎 Ví HH (chỉ Proxy)</span><span style="font-size:11px;color:var(--gold)">${fmt(USER.referral_balance)}</span></div>
-    ${needRef ? `
-      <div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:11px;line-height:1.5">
-        💎 Sẽ dùng <b>${fmt(useRefAmt)}</b> từ ví hoa hồng
-      </div>` : ""}
+    ${needRef ? `<div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:11px;line-height:1.5">💎 Sẽ dùng <b>${fmt(useRefAmt)}</b> từ ví hoa hồng</div>` : ""}
     ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
     ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
     ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
@@ -820,7 +834,7 @@ function viewOrder(orderJson) {
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
-// ===== GSM (2 loại) =====
+// ===== GSM =====
 async function loadGsmInfo() {
   try {
     const r = await api("/api/gsm/info");
@@ -831,14 +845,12 @@ async function loadGsmInfo() {
       if (!info) continue;
       GSM_STATE[t].price = info.price || GSM_STATE[t].price;
       GSM_STATE[t].stock = info.stock || 0;
-
       const priceEl = document.getElementById(`gsm${t}Price`);
       const stockEl = document.getElementById(`gsm${t}Stock`);
       const stockTag = document.getElementById(`gsm${t}StockTag`);
       if (priceEl) priceEl.textContent = fmt(GSM_STATE[t].price);
       if (stockEl) stockEl.textContent = GSM_STATE[t].stock;
       if (stockTag) stockTag.textContent = "Kho: " + GSM_STATE[t].stock;
-
       const cdBox = document.getElementById(`gsm${t}Countdown`);
       const cdVal = document.getElementById(`gsm${t}CountdownVal`);
       const cdLabel = document.getElementById(`gsm${t}CountdownLabel`);
@@ -858,9 +870,7 @@ async function loadGsmInfo() {
           const cd = fmtCountdown(expireToShow);
           cdVal.textContent = cd.text;
           cdVal.style.color = cd.expired ? "var(--danger)" : "var(--success)";
-        } else {
-          cdBox.style.display = "none";
-        }
+        } else { cdBox.style.display = "none"; }
       }
     }
     updateGsmTotals();
@@ -1641,6 +1651,7 @@ async function loadAdmin() {
       <div class="stat-card"><div class="stat-val">${s.total_orders}</div><div class="stat-label">Đơn</div></div>
       <div class="stat-card green"><div class="stat-val">${s.total_proxy_sold}</div><div class="stat-label">Proxy</div></div>
       <div class="stat-card"><div class="stat-val">${s.total_users}</div><div class="stat-label">Khách</div></div>
+      <div class="stat-card pink"><div class="stat-val">${s.banned_users||0}</div><div class="stat-label">Bị cấm</div></div>
       <div class="stat-card pink"><div class="stat-val">${s.total_rotations}</div><div class="stat-label">Lượt xoay</div></div>
       <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
       <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
@@ -1682,27 +1693,35 @@ async function adminTab(tab, el) {
     if (tab === "users") {
       const r = await api("/api/admin/users");
       if (!r.ok) { box.innerHTML = ""; return; }
-      box.innerHTML = r.users.map(u => `
-        <div class="card">
+      box.innerHTML = r.users.map(u => {
+        const banned = u.banned;
+        const name = escapeHtml((u.first_name||u.username||"User").replace(/"/g,''));
+        return `
+        <div class="card" style="${banned ? 'border-color:rgba(255,71,87,.5);background:rgba(255,71,87,.05)' : ''}">
           <div class="user-card-head">
             <div style="min-width:0;flex:1">
-              <div class="product-name">${escapeHtml(u.first_name || u.username || "User")}</div>
+              <div class="product-name">${banned ? '🚫 ' : ''}${escapeHtml(u.first_name || u.username || "User")}</div>
               <div style="font-size:11px;color:var(--muted);margin-top:3px">ID: ${u.id}${u.username ? " • @"+escapeHtml(u.username) : ""}</div>
             </div>
-            <div class="stock-tag">💰 ${fmt(u.balance)}</div>
+            <div class="stock-tag" style="${banned ? 'background:rgba(255,71,87,.15);color:var(--danger)' : ''}">${banned ? '🚫 BANNED' : '💰 '+fmt(u.balance)}</div>
           </div>
+          ${banned && u.ban_reason ? `<div class="info-row"><span>Lý do</span><span style="color:var(--danger);font-size:11px">${escapeHtml(u.ban_reason)}</span></div>` : ''}
           <div class="info-row"><span>Đã chi</span><span>${fmt(u.total_spent)}</span></div>
           <div class="info-row"><span>Proxy</span><span>${u.total_proxy}</span></div>
           <div class="user-actions">
-            <button class="btn btn-success btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "add")'>➕</button>
-            <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance}, "sub")'>➖</button>
-            <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}", ${u.balance})'>✏️</button>
+            <button class="btn btn-success btn-xs" onclick='openBalanceModal(${u.id}, "${name}", ${u.balance}, "add")'>➕</button>
+            <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${name}", ${u.balance}, "sub")'>➖</button>
+            <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${name}", ${u.balance})'>✏️</button>
             <button class="btn btn-gold btn-xs" onclick='viewUserGsm(${u.id})'>📱 GSM</button>
-            <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>🎁 Key</button>
-            <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${escapeHtml((u.first_name||u.username||"User").replace(/"/g,''))}")'>💬</button>
+            <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${name}")'>🎁 Key</button>
+            <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${name}")'>💬</button>
+            ${banned
+              ? `<button class="btn btn-success btn-xs" onclick='unbanUser(${u.id}, "${name}")'>✅ Mở lại</button>`
+              : `<button class="btn btn-danger btn-xs" onclick='openBanModal(${u.id}, "${name}")'>🚫 Cấm</button>`}
           </div>
         </div>
-      `).join("") || '<div class="empty">Chưa có user</div>';
+      `;
+      }).join("") || '<div class="empty">Chưa có user</div>';
     } else if (tab === "orders") {
       const r = await api("/api/admin/orders");
       if (!r.ok) { box.innerHTML = ""; return; }
@@ -1773,7 +1792,8 @@ async function adminTab(tab, el) {
       const r = await api("/api/admin/logs");
       if (!r.ok) { box.innerHTML = ""; return; }
       const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢", message:"💬",
-                          key_transfer:"🔀", key_gift:"🎁", key_revoke:"🗑", gsm_delete:"🗑 GSM"};
+                          key_transfer:"🔀", key_gift:"🎁", key_revoke:"🗑", gsm_delete:"🗑 GSM",
+                          ban:"🚫 Ban", unban:"✅ Unban"};
       box.innerHTML = r.logs.map(l => `
         <div class="card">
           <div class="product-head">
@@ -1781,20 +1801,20 @@ async function adminTab(tab, el) {
             ${l.amount ? `<div class="stock-tag">${l.action==="sub"?"-":"+"}${fmt(l.amount)}</div>` : ""}
           </div>
           <div class="info-row"><span>Target</span><span>${l.target_id || "ALL"}</span></div>
+          ${l.reason ? `<div class="info-row"><span>Lý do</span><span style="font-size:11px">${escapeHtml(l.reason)}</span></div>` : ""}
           <div class="info-row"><span>TG</span><span>${escapeHtml(l.created_at)}</span></div>
         </div>`).join("") || '<div class="empty">Chưa có</div>';
     }
   } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-// ===== ADMIN GSM — 2 KHO RIÊNG (15 + 25) =====
+// ===== ADMIN GSM =====
 async function renderAdminGsm(box) {
   const stats = await api("/api/admin/gsm/stats");
   if (!stats.ok) { box.innerHTML = '<div class="empty">' + (stats.error || "Lỗi") + '</div>'; return; }
   const types = stats.types || {};
-  const s15 = types["15"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0,price:26000,cost_per_link:18000,label:"GSM 15 tin"};
-  const s25 = types["25"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0,price:36000,cost_per_link:28000,label:"GSM 25 tin"};
-
+  const s15 = types["15"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
+  const s25 = types["25"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
   const defaultExp = new Date(Date.now() + 30 * 86400 * 1000);
   const defaultExpStr = defaultExp.toISOString().slice(0, 16);
 
@@ -1816,7 +1836,6 @@ async function renderAdminGsm(box) {
         <div>📈 LN: <b style="color:var(--success)">${fmt(s15.profit)}</b></div>
       </div>
     </div>`;
-
   const form25 = `
     <div class="card gsm-card-25">
       <div class="product-head">
@@ -1835,27 +1854,23 @@ async function renderAdminGsm(box) {
         <div>📈 LN: <b style="color:var(--success)">${fmt(s25.profit)}</b></div>
       </div>
     </div>`;
-
   const filterTabs = `
     <div class="tabs" id="gsmFilterTabs" style="margin:10px 0">
-      <div class="tab active" data-gsm-type="15" data-status="all" onclick="filterGsmList('15','all',this)">📱 15 tin tất cả</div>
-      <div class="tab" data-gsm-type="15" data-status="available" onclick="filterGsmList('15','available',this)">🟢 15 trong kho</div>
-      <div class="tab" data-gsm-type="15" data-status="sold" onclick="filterGsmList('15','sold',this)">🔴 15 đã bán</div>
-      <div class="tab" data-gsm-type="25" data-status="all" onclick="filterGsmList('25','all',this)">📱 25 tin tất cả</div>
-      <div class="tab" data-gsm-type="25" data-status="available" onclick="filterGsmList('25','available',this)">🟢 25 trong kho</div>
-      <div class="tab" data-gsm-type="25" data-status="sold" onclick="filterGsmList('25','sold',this)">🔴 25 đã bán</div>
+      <div class="tab active" onclick="filterGsmList('15','all',this)">📱 15 tất cả</div>
+      <div class="tab" onclick="filterGsmList('15','available',this)">🟢 15 kho</div>
+      <div class="tab" onclick="filterGsmList('15','sold',this)">🔴 15 bán</div>
+      <div class="tab" onclick="filterGsmList('25','all',this)">📱 25 tất cả</div>
+      <div class="tab" onclick="filterGsmList('25','available',this)">🟢 25 kho</div>
+      <div class="tab" onclick="filterGsmList('25','sold',this)">🔴 25 bán</div>
     </div>
     <div id="gsmAdminList"></div>`;
-
   box.innerHTML = form15 + form25 + filterTabs;
   loadAdminGsmList('15', 'all');
 }
 async function adminAddGsm(gsm_type) {
-  const inputId = `gsm${gsm_type}AddInput`;
-  const expireId = `gsm${gsm_type}ExpireInput`;
-  const raw = document.getElementById(inputId).value.trim();
+  const raw = document.getElementById(`gsm${gsm_type}AddInput`).value.trim();
   if (!raw) { toast("Nhập link GSM", "error"); return; }
-  const expireInput = document.getElementById(expireId).value;
+  const expireInput = document.getElementById(`gsm${gsm_type}ExpireInput`).value;
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
   try {
     const r = await api("/api/admin/gsm/add", {links: raw, expire_at: expireInput, gsm_type: gsm_type});
@@ -1879,14 +1894,13 @@ async function loadAdminGsmList(gsm_type, status) {
     if (!r.items.length) { el.innerHTML = '<div class="empty">Không có GSM</div>'; return; }
     el.innerHTML = r.items.map(item => {
       const typeColor = (item.gsm_type === "25") ? "var(--gold)" : "var(--success)";
-      const typeBg = (item.gsm_type === "25") ? "rgba(255,215,0,.15)" : "rgba(37,211,102,.15)";
       return `
       <div class="card">
         <div class="product-head">
           <div class="product-name" style="font-family:monospace;font-size:12px;word-break:break-all">${escapeHtml(item.link)}</div>
           <div class="stock-tag" style="background:${item.is_sold?'rgba(255,71,87,.15)':'rgba(37,211,102,.15)'};color:${item.is_sold?'var(--danger)':'var(--success)'}">${item.is_sold?'Đã bán':'Trong kho'}</div>
         </div>
-        <div class="info-row"><span>Loại</span><span style="color:${typeColor};background:${typeBg};padding:2px 8px;border-radius:4px;font-size:11px">GSM ${item.gsm_type} tin</span></div>
+        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">GSM ${item.gsm_type} tin</span></div>
         ${item.expire_at ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="font-size:12px">${escapeHtml(item.expire_at)}<br><span data-expire="${escapeHtml(item.expire_at)}">--</span></span></div>` : ''}
         ${item.is_sold ? `<div class="info-row"><span>Người mua</span><span>${escapeHtml(item.owner_name)} (${item.sold_to})</span></div>` : ''}
         <div class="user-actions">
@@ -1909,13 +1923,7 @@ async function adminDelGsm(id) {
   } catch(e) { toast("Lỗi", "error"); }
 }
 async function adminDelSoldGsm(gsmId, ownerName, soldTo) {
-  const choice = prompt(
-    `Thu hồi GSM của "${ownerName}" (${soldTo})?\n\n` +
-    `Nhập "1" = Có hoàn tiền\n` +
-    `Nhập "2" = Không hoàn tiền\n` +
-    `Nhập "0" hoặc bỏ trống = Huỷ`,
-    "1"
-  );
+  const choice = prompt(`Thu hồi GSM của "${ownerName}" (${soldTo})?\n\n1 = Có hoàn tiền\n2 = Không hoàn tiền\n0 = Huỷ`, "1");
   if (choice === null || choice === "0" || choice === "") return;
   const doRefund = choice === "1";
   try {
@@ -2049,6 +2057,46 @@ async function revokeKey(keyId) {
     toast("✅ Đã thu hồi", "success"); adminTab("keys");
   } catch(e) { toast("Lỗi", "error"); }
 }
+
+// ===== BAN / UNBAN =====
+function openBanModal(userId, name) {
+  openModal(`
+    <div class="modal-title">🚫 Cấm user<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="background:rgba(255,71,87,.1);border:1px solid var(--danger);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6">
+      ⚠️ User sẽ <b>không thể truy cập bot</b> (Shop, GSM, KMTT, Nạp, ...) cho đến khi Admin mở lại.
+    </div>
+    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
+    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Lý do cấm (tùy chọn)</div>
+    <input class="input" id="banReasonInput" placeholder="VD: Spam, gian lận, vi phạm...">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="banNotify" checked style="width:18px;height:18px"><span>Thông báo Telegram cho user</span>
+    </label>
+    <button class="btn btn-danger btn-block" onclick='submitBan(${userId})'>🚫 Xác nhận cấm</button>
+  `);
+}
+async function submitBan(userId) {
+  const reason = document.getElementById("banReasonInput").value.trim();
+  const notify = document.getElementById("banNotify").checked;
+  if (!confirm("Cấm user này khỏi bot?")) return;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang cấm...";
+  try {
+    const r = await api("/api/admin/ban-user", {user_id: userId, reason: reason, notify: notify});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "🚫 Xác nhận cấm"; return; }
+    toast("✅ Đã cấm user", "success");
+    closeModal();
+    setTimeout(() => adminTab("users"), 400);
+  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "🚫 Xác nhận cấm"; }
+}
+async function unbanUser(userId, name) {
+  if (!confirm(`Mở lại tài khoản cho "${name}" (${userId})?`)) return;
+  try {
+    const r = await api("/api/admin/unban-user", {user_id: userId, notify: true});
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã mở lại tài khoản", "success");
+    setTimeout(() => adminTab("users"), 400);
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
 async function openReferrerDetail(referrerId) {
   openModal(`<div class="modal-title">🎁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div><div class="loading"><div class="spinner"></div>Đang tải...</div>`);
   try {
@@ -2093,7 +2141,7 @@ function openBroadcast() {
   openModal(`
     <div class="modal-title">📢 Broadcast<button class="close-x" onclick="closeModal()">✕</button></div>
     <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);padding:10px;border-radius:10px;font-size:12px;color:var(--danger);margin-bottom:12px">
-      ⚠️ Gửi đến TẤT CẢ khách hàng
+      ⚠️ Gửi đến TẤT CẢ khách hàng (trừ user bị ban)
     </div>
     <textarea class="input" id="bcMsg" placeholder="Nội dung..."></textarea>
     <button class="btn btn-purple btn-block" onclick="submitBroadcast()">📢 Gửi</button>
