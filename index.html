@@ -728,6 +728,17 @@ function openBuy(id) {
       <div class="qty-val" id="buyQty">${minBuy}</div>
       <button class="qty-btn" onclick="changeQty(1)">+</button>
     </div>
+    ${p.server === "sts" ? `
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px">Giao thức</div>
+      <select id="stsProtocol" class="form-control" style="width:100%;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
+        <option value="http">HTTP</option>
+        <option value="socks5">SOCKS5</option>
+      </select>
+      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Thời hạn (ngày) <small style="color:var(--muted);font-weight:400">— để trống nếu dùng mặc định</small></div>
+      <input id="stsDuration" type="number" min="1" placeholder="Ví dụ: 30" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
+      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Nhà mạng <small style="color:var(--muted);font-weight:400">— chỉ nhập nếu sản phẩm yêu cầu</small></div>
+      <input id="stsCarrier" type="text" placeholder="Ví dụ: Viettel, VNPT, FPT..." style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
+    ` : ""}
     <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
   `);
@@ -744,7 +755,21 @@ async function doBuy() {
   const btn = event.target;
   btn.disabled = true; btn.textContent = "Đang xử lý...";
   try {
-    const r = await api("/api/buy", {id: currentProduct.id, amount: qty});
+    const buyData = {id: currentProduct.id, amount: qty};
+    if (currentProduct.server === "sts") {
+      const protocolEl = document.getElementById("stsProtocol");
+      const durationEl = document.getElementById("stsDuration");
+      const carrierEl = document.getElementById("stsCarrier");
+      buyData.protocol = protocolEl ? protocolEl.value : "http";
+      if (durationEl && durationEl.value.trim()) {
+        buyData.duration = parseInt(durationEl.value, 10);
+      }
+      if (carrierEl && carrierEl.value.trim()) {
+        buyData.carrier = carrierEl.value.trim();
+        buyData.custom_fields = {carrier: carrierEl.value.trim()};
+      }
+    }
+    const r = await api("/api/buy", buyData);
     if (!r.ok) {
       if (r.contact_admin) {
         closeModal();
