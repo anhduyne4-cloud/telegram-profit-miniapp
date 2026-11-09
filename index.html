@@ -816,6 +816,23 @@ async function doBuy() {
 }
 function showPurchased(r) {
   const proxies = r.proxies || [];
+  if (r.server === "sts") {
+    if (r.pending || !proxies.length) {
+      openModal(`
+        <div class="modal-title">⏳ Đơn hàng đang xử lý<button class="close-x" onclick="closeModal()">✕</button></div>
+        <div class="info-row"><span>Mã đơn</span><code>${escapeHtml(r.order_code || "")}</code></div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng proxy chưa được cấp. Hệ thống chưa nhận được địa chỉ proxy để hiển thị. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
+      `);
+      return;
+    }
+    window._copyData = proxies.join("\n");
+    openModal(`
+      <div class="modal-title">🎉 Proxy của bạn<button class="close-x" onclick="closeModal()">✕</button></div>
+      ${proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")}
+      <button class="btn btn-gold btn-block" style="margin-top:14px" onclick='copyAll()'>📋 Copy tất cả proxy</button>
+    `);
+    return;
+  }
   const raw = r.raw || "";
   const proxiesHtml = proxies.length
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
@@ -834,7 +851,7 @@ function showPurchased(r) {
       <button class="btn btn-xs" onclick="copyAll()">📋 Copy</button>
     </div>
     ${proxiesHtml}
-    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : ""}
+    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : `<div style="margin-top:12px;font-size:12px;color:var(--muted)">ℹ️ Proxy tĩnh không hỗ trợ xoay IP.</div>`}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
@@ -1310,7 +1327,7 @@ async function loadRotations() {
   try {
     const r = await api("/api/my-keys");
     if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
-    ROTATIONS = r.keys || [];
+    ROTATIONS = (r.keys || []).filter(o => o.is_rotate !== false);
     if (!ROTATIONS.length) {
       list.innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><div>Chưa có key nào</div></div>`;
       return;
