@@ -165,6 +165,11 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       💎 <b style="color:var(--gold)">Ví hoa hồng</b> dùng được cho <b>Proxy</b> — không dùng cho GSM/KMTT
     </div>
   </div>
+  <div class="tabs" id="serverTabs">
+    <div class="tab active" data-server="all" onclick="filterServer('all',this)">🌐 Tất cả server</div>
+    <div class="tab" data-server="ola" onclick="filterServer('ola',this)">🟦 Server 1</div>
+    <div class="tab" data-server="sts" onclick="filterServer('sts',this)">🟪 Server 2</div>
+  </div>
   <div class="tabs" id="catTabs">
     <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
   </div>
@@ -450,6 +455,7 @@ let USER = null;
 let ALL_PRODUCTS = [];
 let currentProduct = null;
 let currentCat = "";
+let currentServer = "all";
 let depositPolling = null;
 let balancePolling = null;
 let ROTATIONS = [];
@@ -647,14 +653,26 @@ async function loadProducts() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 function shortCat(name) { return !name ? "Khác" : (name.length > 35 ? name.substring(0,33) + "…" : name); }
+function productsForServer() {
+  return currentServer === "all" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => (p.server || "ola") === currentServer);
+}
+function filterServer(server, el) {
+  currentServer = server;
+  currentCat = "";
+  document.querySelectorAll("#serverTabs .tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  buildCatTabs();
+  renderProducts();
+}
 function buildCatTabs() {
+  const source = productsForServer();
   const cats = []; const seen = new Set();
-  ALL_PRODUCTS.forEach(p => {
+  source.forEach(p => {
     if (p.category_id && !seen.has(p.category_id)) { seen.add(p.category_id); cats.push({id: p.category_id, name: p.category_name}); }
   });
-  const html = `<div class="tab ${currentCat===""?"active":""}" data-cat="" onclick="filterCat('',this)">🛒 Tất cả (${ALL_PRODUCTS.length})</div>` +
+  const html = `<div class="tab ${currentCat===""?"active":""}" data-cat="" onclick="filterCat('',this)">🛒 Tất cả (${source.length})</div>` +
     cats.map(c => {
-      const count = ALL_PRODUCTS.filter(p => p.category_id === c.id).length;
+      const count = source.filter(p => p.category_id === c.id).length;
       return `<div class="tab ${currentCat===c.id?"active":""}" data-cat="${c.id}" onclick="filterCat('${c.id}',this)">${escapeHtml(shortCat(c.name))} (${count})</div>`;
     }).join("");
   document.getElementById("catTabs").innerHTML = html;
@@ -667,13 +685,14 @@ function filterCat(catId, el) {
 }
 function renderProducts() {
   const list = document.getElementById("productsList");
-  const items = currentCat === "" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => p.category_id === currentCat);
+  const source = productsForServer();
+  const items = currentCat === "" ? source : source.filter(p => p.category_id === currentCat);
   if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có SP</div>'; return; }
   list.innerHTML = items.map(p => `
     <div class="card" onclick="openBuy('${p.id}')">
       <div class="product-head">
         <div class="product-name">${escapeHtml(p.name)}</div>
-        <div class="stock-tag">${p.stock} có sẵn</div>
+        <div class="stock-tag">${p.server === "sts" ? "Server 2" : "Server 1"} · ${p.stock} có sẵn</div>
       </div>
       ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
       ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
@@ -802,7 +821,7 @@ async function loadOrders() {
         <div class="card">
           <div class="product-head">
             <div class="product-name">${escapeHtml(o.name)}</div>
-            <div class="stock-tag">SL: ${o.amount}</div>
+            <div class="stock-tag">${o.server === "sts" ? "Server 2" : "Server 1"} · SL: ${o.amount}</div>
           </div>
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
           <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
@@ -1268,6 +1287,7 @@ async function loadRotations() {
         <div class="product-name" style="padding-right:32px;font-family:monospace;font-size:13px">${escapeHtml(o.proxy_key)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">
           <span class="source-tag ${srcCls[o.source]||''}">${srcMap[o.source]||o.source}</span>
+          <span class="source-tag ${o.server === "sts" ? "admin_gift" : "manual"}">${o.server === "sts" ? "Server 2" : "Server 1"}</span>
         </div>
         <div class="rotate-ip-box" id="ip_${i}">
           <span style="min-width:0;flex:1"><span class="ip-label">IP: </span><b id="ipval_${i}">Đang tải...</b></span>
@@ -1278,6 +1298,7 @@ async function loadRotations() {
         </div>
         <div class="rotate-actions">
           <button class="btn btn-gold btn-sm" onclick="rotateOne('${escapeHtml(o.proxy_key)}', ${i})">🔄 Xoay</button>
+          ${o.server === "sts" ? `<button class="btn btn-outline btn-xs" onclick="openWhitelistModal('${escapeHtml(o.proxy_key)}')">🌐 Whitelist IP</button>` : ""}
           <button class="btn btn-danger btn-xs" onclick="deleteKey(${o.id})">🗑 Xoá</button>
         </div>
       </div>
@@ -1323,6 +1344,26 @@ async function rotateOne(key, idx) {
       if (el) { el.textContent = oldIp; el.style.color = "var(--gold)"; }
     }
   } catch(e) { toast("Lỗi", "error"); if(el) el.textContent = oldIp; }
+}
+function openWhitelistModal(key) {
+  openModal(`
+    <div class="modal-title">🌐 Cập nhật IP Whitelist<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Nhập một hoặc nhiều IP, mỗi IP một dòng hoặc phân cách bằng dấu phẩy.</div>
+    <textarea class="input" id="whitelistIps" placeholder="42.118.149.138"></textarea>
+    <button class="btn btn-success btn-block" onclick="submitWhitelist('${escapeHtml(key)}')">💾 Cập nhật whitelist</button>
+  `);
+}
+async function submitWhitelist(key) {
+  const raw = document.getElementById("whitelistIps").value.trim();
+  const ip_whitelist = raw.split(/[\\n,;]+/).map(x => x.trim()).filter(Boolean);
+  if (!ip_whitelist.length) { toast("Nhập ít nhất một IP", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang cập nhật...";
+  try {
+    const r = await api("/api/update-ip-whitelist", {key, ip_whitelist});
+    if (!r.ok) { toast(r.error || "Cập nhật thất bại", "error"); btn.disabled = false; btn.textContent = "💾 Cập nhật whitelist"; return; }
+    toast(r.msg || "Đã cập nhật whitelist", "success");
+    closeModal();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "💾 Cập nhật whitelist"; }
 }
 async function deleteKey(keyId) {
   if (!confirm("Xoá key này?")) return;
@@ -1400,15 +1441,21 @@ function openAddKeyModal() {
   openModal(`
     <div class="modal-title">➕ Nhập key xoay<button class="close-x" onclick="closeModal()">✕</button></div>
     <input class="input" id="newKeyInput" placeholder="Dán key vào đây..." autocomplete="off">
+    <div style="font-size:12px;color:var(--muted);margin:0 0 6px">Key thuộc server</div>
+    <select class="input" id="newKeyServer">
+      <option value="ola">Server 1</option>
+      <option value="sts">Server 2</option>
+    </select>
     <button class="btn btn-success btn-block" onclick="submitAddKey()">➕ Thêm key</button>
   `);
 }
 async function submitAddKey() {
   const key = document.getElementById("newKeyInput").value.trim();
+  const server = document.getElementById("newKeyServer").value;
   if (!key) { toast("Nhập key", "error"); return; }
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
   try {
-    const r = await api("/api/add-key", {key});
+    const r = await api("/api/add-key", {key, server});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; return; }
     toast(r.msg || "Đã thêm!", "success");
     closeModal(); setTimeout(() => loadRotations(), 300);
