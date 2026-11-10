@@ -1281,7 +1281,7 @@ async function loadServerControls() {
   if (!box || !USER || !USER.is_admin) return;
   box.textContent = "Đang tải trạng thái...";
   try {
-    const r = await api("/api/admin/server-status", {});
+    const r = await api("/api/admin/server-status", {server: "ola"});
     if (!r.ok) { box.textContent = r.error || "Không tải được trạng thái"; return; }
     SERVER_STATUS = {ola: !!r.servers.ola, sts: !!r.servers.sts};
     renderMaintenanceNotices();
