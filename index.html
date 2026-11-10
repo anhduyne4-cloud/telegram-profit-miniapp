@@ -1,3 +1,8 @@
+Dưới đây là **full code `index_server2.html`** đã được cập nhật để **vượt qua bộ lọc cảnh báo của Ngrok** và **hiển thị chi tiết lỗi** (nếu có) thay vì chỉ báo "Lỗi kết nối" chung chung.
+
+Bạn hãy copy toàn bộ đoạn code này, dán đè vào file `index_server2.html` của bạn, lưu lại và up lên host (hoặc Github Pages), sau đó **xóa cache Mini App** (vuốt xuống để reload hoặc xóa bot thêm lại) để test.
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -487,16 +492,35 @@ function toast(msg, type="success") {
   const el = document.getElementById("toast");
   el.textContent = msg;
   el.className = "toast show " + type;
-  setTimeout(() => el.className = "toast " + type, 2600);
+  setTimeout(() => el.className = "toast " + type, 4000);
 }
+
 async function api(path, data={}) {
-  const res = await fetch(API_BASE + path, {
-    method: "POST",
-    headers: {"Content-Type": "application/json", "X-Init-Data": INIT_DATA},
-    body: JSON.stringify({...data, initData: INIT_DATA})
-  });
-  return res.json();
+  try {
+    const res = await fetch(API_BASE + path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json", 
+        "X-Init-Data": INIT_DATA,
+        "ngrok-skip-browser-warning": "true" // Vượt qua cảnh báo của Ngrok
+      },
+      body: JSON.stringify({...data, initData: INIT_DATA})
+    });
+    
+    // Đọc dạng text trước
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("Server trả về không phải JSON:", text.substring(0, 500));
+      throw new Error("Server báo lỗi HTML (Ngrok Warning?)");
+    }
+  } catch (error) {
+    console.error("Fetch API Error:", error);
+    throw error;
+  }
 }
+
 function fmt(n) { return (n||0).toLocaleString("vi-VN") + "đ"; }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -579,7 +603,9 @@ async function init() {
     loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
     loadGsmInfo(); loadGsmOrders();
     startBalancePolling();
-  } catch(e) { toast("Lỗi kết nối", "error"); }
+  } catch(e) { 
+    toast("Lỗi kết nối: " + e.message, "error"); 
+  }
 }
 
 function startBalancePolling() {
@@ -1837,3 +1863,4 @@ init();
 </script>
 </body>
 </html>
+```
