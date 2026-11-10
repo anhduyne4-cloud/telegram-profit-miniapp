@@ -250,7 +250,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
 <!-- BAN SCREEN -->
 <div id="banScreen">
   <div style="font-size:80px;margin-bottom:20px">🚫</div>
-  <div style="font-size:22px;font-weight:700;color:var(--danger);margin-bottom:16px">TÀI KHOẢN ĐÃ BỊ CẤM</div>
+  <div style="font-size:22px;font-weight:700;color:var(--danger);margin-bottom:16px">TÀI KHOẢN ĐÃ BỊ KHÓA</div>
   <div style="background:var(--card);border:1px solid var(--danger);border-radius:14px;padding:16px;max-width:400px;width:100%;margin-bottom:20px">
     <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Lý do</div>
     <div id="banReason" style="font-size:14px;color:var(--text);line-height:1.6">Vi phạm chính sách</div>
@@ -306,7 +306,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
 <!-- ROTATE -->
 <div class="page" id="page-rotate">
   <div class="section-title">
-    <span>🔄 Xoay IP</span>
+    <span>🔄 Đổi IP</span>
     <button class="btn btn-primary btn-xs" onclick="openAddKeyModal()">➕ Nhập mã khóa</button>
   </div>
   <div class="tabs">
@@ -316,7 +316,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
   <div id="rotateList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
   <div id="bulkBar" class="bulk-bar" style="display:none">
     <div class="bulk-count">Đã chọn: <b id="bulkCount">0</b></div>
-    <button class="btn btn-gold btn-sm" onclick="bulkRotate()">🔄 Xoay hàng loạt</button>
+    <button class="btn btn-gold btn-sm" onclick="bulkRotate()">🔄 Đổi IP hàng loạt</button>
   </div>
 </div>
 
@@ -355,7 +355,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
     </div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card green"><div class="stat-val" id="refEarned">0đ</div><div class="stat-label">Tổng HH nhận</div></div>
+    <div class="stat-card green"><div class="stat-val" id="refEarned">0đ</div><div class="stat-label">Tổng hoa hồng đã nhận</div></div>
     <div class="stat-card"><div class="stat-val" id="refCount">0</div><div class="stat-label">Người đã mời</div></div>
   </div>
   <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(168,85,247,.1));border-color:var(--gold)">
@@ -393,7 +393,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
       <button class="btn btn-outline btn-sm" onclick="setAmt(200000)">200K</button>
       <button class="btn btn-outline btn-sm" onclick="setAmt(500000)">500K</button>
     </div>
-    <button class="btn btn-success btn-block" onclick="createDeposit()">🎯 Tạo QR thanh toán</button>
+    <button class="btn btn-success btn-block" onclick="createDeposit()">🎯 Tạo mã QR thanh toán</button>
   </div>
   <div class="section-title" style="margin-top:16px">
     <span>📜 Lịch sử nạp tiền</span>
@@ -428,7 +428,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
       <span style="color:var(--muted)" id="gsm15CountdownLabel">⏰ Đang tải...</span>
       <span class="countdown" id="gsm15CountdownVal" data-expire="">--</span>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin:8px 0 4px">Số lượng muốn mua</div>
+    <div style="font-size:11px;color:var(--muted);margin:8px 0 4px">Số lượng cần mua</div>
     <div class="qty-row" style="margin-bottom:8px">
       <button class="qty-btn" onclick="changeGsmQty('15',-1)">−</button>
       <div class="qty-val" id="gsm15Qty">1</div>
@@ -466,7 +466,7 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
       <span style="color:var(--muted)" id="gsm25CountdownLabel">⏰ Đang tải...</span>
       <span class="countdown" id="gsm25CountdownVal" data-expire="">--</span>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin:8px 0 4px">Số lượng muốn mua</div>
+    <div style="font-size:11px;color:var(--muted);margin:8px 0 4px">Số lượng cần mua</div>
     <div class="qty-row" style="margin-bottom:8px">
       <button class="qty-btn" onclick="changeGsmQty('25',-1)">−</button>
       <div class="qty-val" id="gsm25Qty">1</div>
@@ -626,9 +626,62 @@ function startCountdowns() {
 
 function toast(msg, type="success") {
   const el = document.getElementById("toast");
-  el.textContent = msg;
+  el.textContent = dichNoiDung(msg);
   el.className = "toast show " + type;
   setTimeout(() => el.className = "toast " + type, 4000);
+}
+
+// Chuyển các thông báo/mã trạng thái tiếng Anh từ máy chủ sang tiếng Việt.
+function dichNoiDung(value) {
+  if (value === null || value === undefined) return "";
+  const raw = String(value);
+  const exact = {
+    "success":"Thành công", "successful":"Thành công", "paid":"Đã thanh toán",
+    "completed":"Đã hoàn tất", "complete":"Đã hoàn tất", "failed":"Thất bại",
+    "fail":"Thất bại", "error":"Đã xảy ra lỗi", "cancelled":"Đã hủy",
+    "canceled":"Đã hủy", "expired":"Đã hết hạn", "pending":"Đang chờ duyệt",
+    "waiting":"Đang chờ xử lý", "processing":"Đang xử lý", "active":"Đang hoạt động",
+    "inactive":"Không hoạt động", "banned":"Đã khóa", "refunded":"Đã hoàn tiền",
+    "approved":"Đã duyệt", "rejected":"Bị từ chối", "available":"Còn hàng",
+    "unavailable":"Hết hàng", "online":"Đang trực tuyến", "offline":"Ngoại tuyến",
+    "true":"Có", "false":"Không"
+  };
+  const key = raw.trim().toLowerCase();
+  if (exact[key]) return exact[key];
+  const phrases = [
+    [/\bAdmin\b/ig,"quản trị viên"], [/\bData\b/ig,"Dữ liệu"],
+    [/\bUser\b/ig,"Người dùng"], [/\bUsers\b/ig,"Người dùng"],
+    [/\bKEY\b/ig,"mã khóa"], [/\bCopy\b/ig,"Sao chép"],
+    [/\bServer\b/ig,"Máy chủ"], [/\bBalance\b/ig,"Số dư"],
+    [/\bDeposit\b/ig,"Nạp tiền"], [/\bOrder\b/ig,"Đơn hàng"],
+    [/\bHistory\b/ig,"Lịch sử"], [/\bStatus\b/ig,"Trạng thái"],
+    [/\bProfit\b/ig,"Lợi nhuận"], [/\bSold\b/ig,"Đã bán"],
+    [/\bAvailable\b/ig,"Còn trong kho"], [/\bLoading\b/ig,"Đang tải"],
+    [/\bPlease\b/ig,"Vui lòng"], [/\bTry again\b/ig,"Vui lòng thử lại"],
+    [/\bnot enough balance\b/ig,"Số dư không đủ"],
+    [/\binvalid amount\b/ig,"Số tiền không hợp lệ"],
+    [/\binvalid user\b/ig,"Người dùng không hợp lệ"],
+    [/\buser not found\b/ig,"Không tìm thấy người dùng"],
+    [/\border not found\b/ig,"Không tìm thấy đơn hàng"],
+    [/\bpayment successful\b/ig,"Thanh toán thành công"],
+    [/\bpayment failed\b/ig,"Thanh toán thất bại"],
+    [/\bwaiting for approval\b/ig,"Đang chờ duyệt"],
+    [/\bserver error\b/ig,"Lỗi máy chủ"],
+    [/\binternal server error\b/ig,"Lỗi hệ thống máy chủ"],
+    [/\bnetwork error\b/ig,"Lỗi mạng"],
+    [/\bconnection failed\b/ig,"Kết nối thất bại"],
+    [/\bunauthorized\b/ig,"Không có quyền truy cập"],
+    [/\bforbidden\b/ig,"Bạn không được phép thực hiện thao tác này"],
+    [/\bnot found\b/ig,"Không tìm thấy dữ liệu"],
+    [/\bsuccess\b/ig,"Thành công"], [/\bfailed\b/ig,"Thất bại"],
+    [/\bpending\b/ig,"Đang chờ duyệt"], [/\bprocessing\b/ig,"Đang xử lý"],
+    [/\bactive\b/ig,"Đang hoạt động"], [/\binactive\b/ig,"Không hoạt động"],
+    [/\bexpired\b/ig,"Đã hết hạn"], [/\bavailable\b/ig,"Còn hàng"],
+    [/\bunavailable\b/ig,"Hết hàng"]
+  ];
+  let translated = raw;
+  for (const [pattern, replacement] of phrases) translated = translated.replace(pattern, replacement);
+  return translated;
 }
 
 async function api(path, data={}) {
@@ -749,7 +802,7 @@ async function init() {
     startBalancePolling();
   } catch(e) { 
     console.error(e);
-    toast("Lỗi kết nối: " + e.message, "error"); 
+    toast("Lỗi kết nối: " + dichNoiDung(e.message), "error"); 
   }
 }
 
@@ -806,7 +859,7 @@ async function loadProducts() {
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/products");
-    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải</div>'; return; }
+    if (!r.ok) { list.innerHTML = '<div class="empty">Không tải được dữ liệu</div>'; return; }
     if (r.servers) {
       SERVER_STATUS = {ola: !!r.servers.ola?.enabled, sts: !!r.servers.sts?.enabled};
       renderMaintenanceNotices();
@@ -851,17 +904,17 @@ function renderProducts() {
   const list = document.getElementById("productsList");
   const source = productsForServer();
   const items = currentCat === "" ? source : source.filter(p => p.category_id === currentCat);
-  if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có SP</div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có sản phẩm</div>'; return; }
   list.innerHTML = items.map(p => `
     <div class="card" onclick="openBuy('${p.id}')">
       <div class="product-head">
         <div class="product-name">${escapeHtml(p.name)}</div>
         <div class="stock-tag">${p.server === "sts" ? "Máy chủ 2" : "Máy chủ 1"} · ${p.stock} có sẵn</div>
       </div>
-      ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
+      ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ đổi IP</div>` : ""}
       ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
       <div class="product-foot">
-        <div class="price">${fmt(p.price)} <small>/ proxy</small></div>
+        <div class="price">${fmt(p.price)} <small>/ Proxy</small></div>
         <button class="btn btn-sm">Mua ngay</button>
       </div>
     </div>
@@ -883,7 +936,7 @@ function openBuy(id) {
     <div class="info-row"><span style="font-size:11px">💳 Số dư</span><span style="font-size:11px">${fmt(USER.balance)}</span></div>
     <div class="info-row"><span style="font-size:11px">💎 Ví hoa hồng (chỉ dùng mua Proxy)</span><span style="font-size:11px;color:var(--gold)">${fmt(USER.referral_balance)}</span></div>
     ${needRef ? `<div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:11px;line-height:1.5">💎 Sẽ dùng <b>${fmt(useRefAmt)}</b> từ ví hoa hồng</div>` : ""}
-    ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
+    ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Đổi IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
     ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
     ${p.desc ? `<div style="margin:10px 0;font-size:12px;color:var(--muted);line-height:1.5;white-space:pre-line;max-height:150px;overflow-y:auto;background:var(--card2);padding:10px;border-radius:8px">${escapeHtml(p.desc)}</div>` : ""}
     <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Số lượng</div>
@@ -900,7 +953,7 @@ function openBuy(id) {
       </select>
       <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Thời hạn (ngày) <small style="color:var(--muted);font-weight:400">— để trống nếu dùng mặc định</small></div>
       <input id="stsDuration" type="number" min="1" placeholder="Ví dụ: 30" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
-      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Chọn nhà mạng <small style="color:var(--muted);font-weight:400">— chọn nhà mạng của proxy</small></div>
+      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Chọn nhà mạng <small style="color:var(--muted);font-weight:400">— chọn nhà mạng của Proxy</small></div>
       <select id="stsCarrier" required style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
         <option value="">-- Chọn nhà mạng --</option>
         <option value="viettel">Viettel</option>
@@ -958,7 +1011,7 @@ async function doBuy() {
           <div style="background:${r.refunded ? "rgba(37,211,102,.12)" : "rgba(255,165,0,.12)"};border:1px solid ${r.refunded ? "var(--success)" : "#f59e0b"};border-radius:12px;padding:14px;margin-bottom:12px">
             <div style="font-weight:700;color:${r.refunded ? "var(--success)" : "#f59e0b"};margin-bottom:6px">Đơn ${escapeHtml(r.product_name || "proxy")} trên ${r.server === "ola" ? "Máy chủ 1" : "Máy chủ 2"} không thể hoàn tất.</div>
             <div style="font-size:13px;margin-bottom:6px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
-            <div style="font-size:13px">${r.refunded ? `Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.` : `Yêu cầu hoàn <b>${fmt(r.refund_amount || 0)}</b> chưa xác nhận thành công. Vui lòng liên hệ Admin để được kiểm tra.`}</div>
+            <div style="font-size:13px">${r.refunded ? `Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.` : `Yêu cầu hoàn <b>${fmt(r.refund_amount || 0)}</b> chưa xác nhận thành công. Vui lòng liên hệ quản trị viên để được kiểm tra.`}</div>
           </div>
           <div style="font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:12px">Mã đơn: ${escapeHtml(r.order_code || r.external_ref || "—")}</div>
           <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ quản trị viên để được hỗ trợ</button>
@@ -981,7 +1034,7 @@ async function doBuy() {
         `);
         return;
       }
-      toast(r.error || "Đã xảy ra lỗi", "error");
+      toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error");
       btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
       return;
     }
@@ -1020,7 +1073,7 @@ function showPurchased(r) {
     openModal(`
       <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${output.map(p => escapeHtml(p)).join("\n")}</pre>
       <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Sao chép ${rotate ? "Mã khóa" : "proxy"}</button>
-      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 Mã khóa đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình Danh sách IP được phép cho mã khóa trong mục Quản lý mã khóa.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý mã khóa để cấu hình Danh sách IP cho phép</button>` : ""}
+      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 Mã khóa đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình Danh sách IP được phép cho mã khóa trong mục Quản lý mã khóa.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý mã khóa để cấu hình Danh sách IP được phép</button>` : ""}
     `);
     return;
   }
@@ -1042,7 +1095,7 @@ function showPurchased(r) {
       <button class="btn btn-xs" onclick="copyAll()">📋 Sao chép</button>
     </div>
     ${proxiesHtml}
-    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : `<div style="margin-top:12px;font-size:12px;color:var(--muted)">ℹ️ Proxy tĩnh không hỗ trợ xoay IP.</div>`}
+    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Đổi IP ngay</button>` : `<div style="margin-top:12px;font-size:12px;color:var(--muted)">ℹ️ Proxy tĩnh không hỗ trợ đổi IP.</div>`}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
@@ -1091,7 +1144,7 @@ function viewOrder(orderJson) {
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
     <div class="info-row"><span>Thành tiền</span><span>${fmt(o.price)}</span></div>
-    <div style="margin:14px 0 8px;font-weight:700">🔑 Data (${proxies.length})</div>
+    <div style="margin:14px 0 8px;font-weight:700">🔑 Dữ liệu (${proxies.length})</div>
     ${proxiesHtml}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
@@ -1145,13 +1198,13 @@ async function loadRotations() {
             ${note}
             ${wlHtml}
             <div class="rotate-ip-box">
-              <span class="ip-label">IP:</span>
+              <span class="ip-label">Địa chỉ IP:</span>
               <span id="ip-${escapeHtml(k.proxy_key)}" style="flex:1;text-align:right">Đang tải...</span>
               <button onclick="event.stopPropagation(); fetchProxyIp('${k.proxy_key}')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px">🔄</button>
             </div>
             <div class="rotate-actions">
-              <button class="btn btn-primary btn-xs" onclick="event.stopPropagation(); rotateSingle('${k.proxy_key}')">🔄 Xoay IP</button>
-              ${k.server === 'sts' ? `<button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); openWhitelistModal('${k.proxy_key}', ${JSON.stringify(k.ip_whitelist || []).replace(/"/g, '&quot;')})">🌐 Danh sách IP cho phép</button>` : ''}
+              <button class="btn btn-primary btn-xs" onclick="event.stopPropagation(); rotateSingle('${k.proxy_key}')">🔄 Đổi IP</button>
+              ${k.server === 'sts' ? `<button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); openWhitelistModal('${k.proxy_key}', ${JSON.stringify(k.ip_whitelist || []).replace(/"/g, '&quot;')})">🌐 Danh sách IP được phép</button>` : ''}
               <button class="btn btn-danger btn-xs" onclick="event.stopPropagation(); deleteKey(${k.id})">🗑</button>
             </div>
           </div>
@@ -1198,14 +1251,14 @@ function updateBulkBar() {
 async function bulkRotate() {
   const keys = Array.from(SELECTED_KEYS);
   if (!keys.length) return;
-  if (!confirm(`Xoay IP cho ${keys.length} mã khóa đã chọn?`)) return;
+  if (!confirm(`Đổi IP cho ${keys.length} mã khóa đã chọn?`)) return;
   const btn = event.target;
-  btn.disabled = true; btn.textContent = "Đang đổi địa chỉ IP...";
+  btn.disabled = true; btn.textContent = "Đang thay đổi địa chỉ IP...";
   try {
     const r = await api("/api/rotate", { keys });
     if (!r.ok) {
-      toast(r.error || "Lỗi xoay IP", "error");
-      btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
+      toast(r.error || "Lỗi thay đổi IP", "error");
+      btn.disabled = false; btn.textContent = "🔄 Đổi IP hàng loạt";
       return;
     }
     let success = 0, fail = 0, msgs = [];
@@ -1219,22 +1272,22 @@ async function bulkRotate() {
   } catch(e) {
     toast("Không thể kết nối máy chủ", "error");
   } finally {
-    btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
+    btn.disabled = false; btn.textContent = "🔄 Đổi IP hàng loạt";
   }
 }
 
 async function rotateSingle(key) {
   if (!confirm("Đổi địa chỉ IP cho mã khóa này?")) return;
-  toast("Đang đổi địa chỉ IP...", "success");
+  toast("Đang thay đổi địa chỉ IP...", "success");
   try {
     const r = await api("/api/rotate", { keys: [key] });
-    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); return; }
+    if (!r.ok) { toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error"); return; }
     const res = r.results[0];
     if (res.success) {
-      toast("✅ Đã xoay IP thành công", "success");
+      toast("✅ Đã thay đổi IP thành công", "success");
       fetchProxyIp(key);
     } else {
-      toast(`❌ ${res.message || "Lỗi xoay IP"}`, "error");
+      toast(`❌ ${res.message || "Lỗi thay đổi IP"}`, "error");
     }
   } catch(e) { toast("Không thể kết nối máy chủ", "error"); }
 }
@@ -1259,14 +1312,14 @@ async function deleteKey(keyId) {
   if (!confirm("Xóa mã khóa này khỏi danh sách?")) return;
   try {
     const r = await api("/api/delete-key", { key_id: keyId });
-    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); return; }
+    if (!r.ok) { toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error"); return; }
     toast("✅ Đã xóa", "success"); loadRotations();
   } catch(e) { toast("Đã xảy ra lỗi", "error"); }
 }
 
 function openAddKeyModal() {
   openModal(`
-    <div class="modal-title">➕ Nhập KEY<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">➕ Nhập mã khóa<button class="close-x" onclick="closeModal()">✕</button></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Chọn máy chủ tương ứng với mã khóa bạn đang có.</div>
     <select id="addKeyServer" class="input" style="margin-bottom:12px" onchange="toggleWhitelistInput()">
       <option value="ola">Máy chủ 1</option>
@@ -1299,7 +1352,7 @@ async function submitAddKey() {
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang lưu...";
   try {
     const r = await api("/api/add-key", { key, server, ip_whitelist });
-    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btn.disabled = false; btn.textContent = "Lưu mã khóa"; return; }
+    if (!r.ok) { toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error"); btn.disabled = false; btn.textContent = "Lưu mã khóa"; return; }
     toast("✅ Đã lưu mã khóa", "success");
     closeModal();
     if (currentRotateTab === "rotate") loadRotations();
@@ -1343,8 +1396,8 @@ async function submitWhitelist(key) {
   const btn = event.target; btn.disabled = true;
   try {
     const r = await api("/api/update-ip-whitelist", { key, ip_whitelist: ip_list });
-    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btn.disabled = false; return; }
-    toast("✅ Đã cập nhật danh sách IP cho phép", "success");
+    if (!r.ok) { toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error"); btn.disabled = false; return; }
+    toast("✅ Đã cập nhật danh sách IP được phép", "success");
     closeModal();
     loadRotations();
   } catch(e) { toast("Không thể kết nối máy chủ", "error"); btn.disabled = false; }
@@ -1493,7 +1546,7 @@ async function confirmBuyGsm(gsm_type) {
   btns.forEach(b => b.disabled = true);
   try {
     const r = await api("/api/gsm/buy", {amount: qty, gsm_type: gsm_type});
-    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btns.forEach(b => b.disabled = false); return; }
+    if (!r.ok) { toast(dichNoiDung(r.error || "Đã xảy ra lỗi"), "error"); btns.forEach(b => b.disabled = false); return; }
     USER.balance = r.balance; st.stock = r.stock;
     document.getElementById("hdrBal").textContent = fmt(r.balance);
     const stockEl = document.getElementById(`gsm${gsm_type}Stock`);
@@ -1614,18 +1667,18 @@ async function loadReferrals() {
     referredBox.innerHTML = referrals.length ? referrals.map(u => `
       <div class="card">
         <div class="product-head">
-          <div class="product-name">${escapeHtml(u.username || u.first_name || ("User #" + (u.id ?? "")))}</div>
+          <div class="product-name">${escapeHtml(u.username || u.first_name || ("Người dùng #" + (u.id ?? "")))}</div>
           <div class="stock-tag">${Number(u.current_rate || 0)}% HH</div>
         </div>
         ${u.created_at ? `<div class="info-row"><span>Ngày tham gia</span><span>${escapeHtml(u.created_at)}</span></div>` : ""}
-        <div class="info-row"><span>Đã chi tiêu</span><span>${fmt(u.total_spent || 0)}</span></div>
+        <div class="info-row"><span>Tổng tiền đã chi</span><span>${fmt(u.total_spent || 0)}</span></div>
         <div class="info-row"><span>Hoa hồng đã tính</span><span>${fmt(u.referral_paid || 0)}</span></div>
       </div>`).join("") : '<div class="empty"><div class="empty-icon">👥</div>Bạn chưa giới thiệu ai</div>';
 
     if (earningsBox) {
       earningsBox.innerHTML = earnings.length ? earnings.map(x => `
         <div class="card">
-          <div class="info-row"><span>User #${escapeHtml(x.referred_id ?? "")} · ${Number(x.rate || 0)}%</span><span style="color:var(--success)">+${fmt(x.commission || 0)}</span></div>
+          <div class="info-row"><span>Người dùng #${escapeHtml(x.referred_id ?? "")} · ${Number(x.rate || 0)}%</span><span style="color:var(--success)">+${fmt(x.commission || 0)}</span></div>
           <div class="info-row"><span>Đơn hàng</span><span>${fmt(x.order_amount || 0)}</span></div>
           ${x.created_at ? `<div style="font-size:11px;color:var(--muted);text-align:right">${escapeHtml(x.created_at)}</div>` : ""}
         </div>`).join("") : '<div class="empty">Chưa có lịch sử hoa hồng</div>';
@@ -1661,6 +1714,17 @@ function setAmt(amount) {
   const input = document.getElementById("depAmount");
   if (input) input.value = amount;
 }
+function depositStatusInfo(rawStatus) {
+  const status = String(rawStatus || "").trim().toLowerCase();
+  if (["success", "paid", "completed", "complete", "successful", "đã thanh toán", "thành công"].includes(status)) {
+    return { label: "Thành công", color: "var(--success)", background: "rgba(37,211,102,.15)" };
+  }
+  if (["failed", "fail", "cancelled", "canceled", "expired", "error", "rejected", "thất bại", "đã hủy"].includes(status)) {
+    return { label: "Thất bại", color: "var(--danger)", background: "rgba(255,71,87,.15)" };
+  }
+  // Mọi trạng thái chưa hoàn tất đều được hiển thị bằng tiếng Việt.
+  return { label: "Đang chờ duyệt", color: "var(--gold)", background: "rgba(255,215,0,.12)" };
+}
 async function loadDepositHistory() {
   const list = document.getElementById("depositHistoryList");
   if (!list) return;
@@ -1668,7 +1732,7 @@ async function loadDepositHistory() {
   try {
     const r = await api("/api/deposit/history");
     if (!r?.ok) {
-      list.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Chưa tải được lịch sử nạp tiền")}</div>`;
+      list.innerHTML = `<div class="empty">${escapeHtml(dichNoiDung(r?.error || "Chưa tải được lịch sử nạp tiền"))}</div>`;
       return;
     }
     const items = r.deposits || r.history || r.transactions || [];
@@ -1676,15 +1740,18 @@ async function loadDepositHistory() {
       list.innerHTML = '<div class="empty">Chưa có giao dịch nạp tiền</div>';
       return;
     }
-    list.innerHTML = items.map(x => `
+    list.innerHTML = items.map(x => {
+      const statusInfo = depositStatusInfo(x.status || x.status_label);
+      return `
       <div class="card">
         <div class="product-head">
           <div class="product-name">${fmt(x.amount || x.price || 0)}</div>
-          <span class="stock-tag" style="${/success|paid|completed/i.test(x.status || "") ? "" : "background:rgba(255,215,0,.12);color:var(--gold)"}">${escapeHtml(x.status_label || x.status || "Đang xử lý")}</span>
+          <span class="stock-tag" style="background:${statusInfo.background};color:${statusInfo.color}">${statusInfo.label}</span>
         </div>
         ${x.code || x.transfer_code ? `<div class="info-row"><span>Mã giao dịch</span><span>${escapeHtml(x.code || x.transfer_code)}</span></div>` : ""}
         ${x.created_at ? `<div class="info-row"><span>Thời gian</span><span>${escapeHtml(x.created_at)}</span></div>` : ""}
-      </div>`).join("");
+      </div>`;
+    }).join("");
   } catch (e) {
     console.error("loadDepositHistory:", e);
     list.innerHTML = '<div class="empty">Không thể tải lịch sử nạp tiền</div>';
@@ -1698,11 +1765,11 @@ async function createDeposit() {
     return;
   }
   const btn = document.querySelector('#page-deposit button[onclick="createDeposit()"]');
-  if (btn) { btn.disabled = true; btn.textContent = "Đang tạo QR..."; }
+  if (btn) { btn.disabled = true; btn.textContent = "Đang tạo mã QR..."; }
   try {
     // Backend hiện tại định nghĩa POST /api/deposit (không phải /api/deposit/create).
     const r = await api("/api/deposit", { amount });
-    if (!r?.ok) { toast(r?.error || "Không tạo được giao dịch", "error"); return; }
+    if (!r?.ok) { toast(dichNoiDung(r?.error || "Không tạo được giao dịch"), "error"); return; }
     const qr = r.qr || "";
     const transfer = r.content || r.code || "";
     const bank = r.bank || "";
@@ -1715,7 +1782,7 @@ async function createDeposit() {
       ${account ? `<div class="info-row"><span>Số tài khoản</span><span>${escapeHtml(account)}</span></div>` : ""}
       ${accountName ? `<div class="info-row"><span>Chủ tài khoản</span><span>${escapeHtml(accountName)}</span></div>` : ""}
       ${transfer ? `<div class="code-box">${escapeHtml(transfer)}</div><button class="btn btn-outline btn-block" onclick='copyText(${JSON.stringify(transfer)})'>📋 Sao chép nội dung chuyển khoản</button>` : ""}
-      ${qr ? `<div class="qr-box"><img src="${escapeHtml(qr)}" alt="QR thanh toán"></div>` : ""}
+      ${qr ? `<div class="qr-box"><img src="${escapeHtml(qr)}" alt="Mã QR thanh toán"></div>` : ""}
       <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px">Vui lòng chuyển đúng số tiền và nội dung để hệ thống tự động xác nhận. Mã có hiệu lực ${Number(r.expire_seconds || 300)} giây.</p>
     `);
     loadDepositHistory();
@@ -1723,7 +1790,7 @@ async function createDeposit() {
     console.error("createDeposit:", e);
     toast("Không thể kết nối máy chủ để tạo giao dịch", "error");
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "🎯 Tạo QR thanh toán"; }
+    if (btn) { btn.disabled = false; btn.textContent = "🎯 Tạo mã QR thanh toán"; }
   }
 }
 
@@ -1746,12 +1813,27 @@ function renderAdminStats(target, values, labels) {
     target.innerHTML = "";
     return;
   }
+  const fallbackLabel = (key) => {
+    const known = {
+      gsm15_available: "GSM 15 tin còn trong kho",
+      gsm15_profit: "Lợi nhuận GSM 15 tin",
+      gsm15_sold: "GSM 15 tin đã bán",
+      gsm25_available: "GSM 25 tin còn trong kho",
+      gsm25_profit: "Lợi nhuận GSM 25 tin",
+      gsm25_sold: "GSM 25 tin đã bán",
+      total_gsm_sold: "Tổng GSM đã bán", gsm15_available: "GSM 15 tin còn trong kho",
+      gsm15_profit: "Lợi nhuận GSM 15 tin", gsm15_sold: "GSM 15 tin đã bán",
+      gsm25_available: "GSM 25 tin còn trong kho", gsm25_profit: "Lợi nhuận GSM 25 tin",
+      gsm25_sold: "GSM 25 tin đã bán"
+    };
+    return known[key] || labels?.[key] || dichNoiDung(key.replace(/_/g, " "));
+  };
   target.innerHTML = Object.entries(values)
     .filter(([key, value]) => typeof value === "number" && !key.startsWith("_"))
     .map(([key, value]) => `
       <div class="stat-card">
         <div class="stat-val">${escapeHtml(Number(value).toLocaleString("vi-VN"))}</div>
-        <div class="stat-label">${escapeHtml(labels?.[key] || key.replace(/_/g, " "))}</div>
+        <div class="stat-label">${escapeHtml(fallbackLabel(key))}</div>
       </div>`).join("");
 }
 
@@ -1769,13 +1851,19 @@ async function loadAdmin() {
     total_profit: "Tổng lợi nhuận", today_profit: "Lợi nhuận hôm nay",
     total_orders: "Tổng đơn hàng", total_proxy_sold: "Proxy đã bán",
     total_users: "Tổng người dùng", banned_users: "Người bị cấm",
-    total_deposit: "Tổng nạp", total_rotations: "Lượt xoay IP",
+    total_deposit: "Tổng nạp", total_rotations: "Lượt thay đổi IP",
     total_keys: "Tổng số mã khóa", total_commission: "Tổng hoa hồng",
     total_referrals: "Lượt giới thiệu", total_extends: "Lượt gia hạn",
     total_balance: "Số dư người dùng", total_referral_balance: "Số dư hoa hồng",
-    gsm_available: "GSM còn", gsm_sold: "GSM đã bán",
+    gsm_available: "Tổng GSM còn trong kho", gsm_sold: "Tổng GSM đã bán",
     gsm_revenue: "Doanh thu GSM", gsm_profit: "Lợi nhuận GSM",
-    unique_proxies: "Proxy duy nhất", alive_count: "Proxy sống",
+    gsm15_available: "GSM 15 tin còn trong kho",
+    gsm15_profit: "Lợi nhuận GSM 15 tin",
+    gsm15_sold: "GSM 15 tin đã bán",
+    gsm25_available: "GSM 25 tin còn trong kho",
+    gsm25_profit: "Lợi nhuận GSM 25 tin",
+    gsm25_sold: "GSM 25 tin đã bán",
+    unique_proxies: "Proxy duy nhất", alive_count: "Proxy còn hoạt động",
     dead_count: "Proxy lỗi", alive_rate: "Tỷ lệ proxy sống"
   };
   try {
@@ -1817,7 +1905,7 @@ async function adminTab(tab, el) {
   try {
     const r = await api(endpoint);
     if (!r?.ok) {
-      box.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Không tải được dữ liệu")}</div>`;
+      box.innerHTML = `<div class="empty">${escapeHtml(dichNoiDung(r?.error || "Không tải được dữ liệu"))}</div>`;
       return;
     }
     const rows = r.items || r.users || r.orders || r.referrers || r.keys || r.logs || [];
@@ -1842,13 +1930,13 @@ async function adminTab(tab, el) {
           </div>
           <div class="admin-user-grid">
             ${metric('Số dư hiện có', money(x.balance))}
-            ${metric('Đã nạp', money(x.deposit_total))}
-            ${metric('Đã chi tiêu', money(x.total_spent))}
-            ${metric('GSM đang sở hữu', x.gsm_owned_now || 0)}
+            ${metric('Tổng tiền đã nạp', money(x.deposit_total))}
+            ${metric('Tổng tiền đã chi', money(x.total_spent))}
+            ${metric('GSM hiện có', x.gsm_owned_now || 0)}
             ${metric('GSM đã mua', x.gsm_owned_total || 0)}
-            ${metric('Proxy tĩnh đang có', x.static_owned_now || 0)}
+            ${metric('Proxy tĩnh hiện có', x.static_owned_now || 0)}
             ${metric('Proxy tĩnh đã mua', x.static_owned_total || 0)}
-            ${metric('Proxy xoay đang có', x.rotate_owned_now || 0)}
+            ${metric('Proxy xoay hiện có', x.rotate_owned_now || 0)}
             ${metric('Proxy xoay đã mua', x.rotate_owned_total || 0)}
           </div>
           <div class="admin-user-actions">
@@ -1871,12 +1959,22 @@ async function adminTab(tab, el) {
       const heading = x.username || x.first_name || x.name || x.resource_name ||
         x.link || x.proxy_key || x.order_code || x.action || ("#" + (x.id ?? ""));
       const excluded = new Set(["username", "first_name", "name", "resource_name", "link", "proxy_key", "order_code", "id"]);
+      const fieldNames = {
+        status:"Trạng thái", state:"Trạng thái", created_at:"Thời gian tạo", updated_at:"Cập nhật lúc",
+        amount:"Số lượng", price:"Giá tiền", total:"Tổng tiền", profit:"Lợi nhuận", revenue:"Doanh thu",
+        balance:"Số dư", referral_balance:"Số dư hoa hồng", username:"Tên người dùng", first_name:"Tên hiển thị",
+        user_id:"ID người dùng", telegram_id:"ID Telegram", order_code:"Mã đơn hàng", proxy_key:"Mã khóa Proxy",
+        server:"Máy chủ", product_name:"Tên sản phẩm", expire:"Thời hạn", expire_at:"Thời điểm hết hạn",
+        is_alive:"Còn hoạt động", is_active:"Đang hoạt động", is_paid:"Đã thanh toán", action:"Thao tác",
+        message:"Nội dung", ip:"Địa chỉ IP", old_ip:"Địa chỉ IP cũ", new_ip:"Địa chỉ IP mới",
+        gsm_type:"Loại GSM", commission:"Hoa hồng", total_spent:"Tổng tiền đã chi", deposit_total:"Tổng tiền đã nạp"
+      };
       const fields = Object.entries(x)
         .filter(([k, v]) => !excluded.has(k) && ["string", "number", "boolean"].includes(typeof v))
         .slice(0, 10);
       return `<div class="card" style="margin-bottom:8px">
         <div class="product-head"><div class="product-name">${escapeHtml(heading)}</div></div>
-        ${fields.map(([k, v]) => `<div class="info-row"><span>${escapeHtml(k.replace(/_/g, " "))}</span><span>${escapeHtml(v)}</span></div>`).join("")}
+        ${fields.map(([k, v]) => `<div class="info-row"><span>${escapeHtml(fieldNames[k] || dichNoiDung(k.replace(/_/g, " ")) )}</span><span>${escapeHtml(typeof v === "string" ? dichNoiDung(v) : v)}</span></div>`).join("")}
       </div>`;
     }).join("");
   } catch (e) {
@@ -1895,10 +1993,10 @@ async function adminAddToGroup(userId) {
   try {
     const r = await api("/api/admin/add-to-group", { user_id: userId });
     if (!r?.ok) {
-      toast(r?.error || "Không thể thêm người dùng vào nhóm", "error");
+      toast(dichNoiDung(r?.error || "Không thể gửi lời mời vào nhóm"), "error");
       return;
     }
-    toast(r.message || "Đã thêm người dùng vào nhóm VIP", "success");
+    toast(dichNoiDung(r.message || "Đã gửi lời mời tham gia nhóm VIP"), "success");
   } catch (e) {
     console.error("adminAddToGroup:", e);
     toast("Lỗi kết nối khi thêm người dùng vào nhóm", "error");
