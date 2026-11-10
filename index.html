@@ -194,7 +194,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 .gsm-card-15{background:linear-gradient(135deg,rgba(108,140,255,.16),rgba(168,121,255,.12));border-color:rgba(108,140,255,.45)}
 .gsm-card-25{background:linear-gradient(135deg,rgba(255,211,110,.15),rgba(255,100,130,.1));border-color:rgba(255,211,110,.42)}
 #page-shop>.section-title{margin-top:4px}
-#page-shop>.section-title:after{content:"Giao diện quản lý proxy";font-size:10px;font-weight:500;color:#8e9dbb;margin-left:auto}
+#page-shop>.section-title:after{content:"Mua proxy nhanh chóng";font-size:10px;font-weight:500;color:#8e9dbb;margin-left:auto}
 #serverMaintenanceGlobalNotice{border-radius:14px}
 .bulk-bar{background:rgba(17,26,47,.97);backdrop-filter:blur(12px);border:1px solid rgba(148,163,184,.18);border-radius:16px;margin-bottom:8px;box-shadow:var(--shadow)}
 @media(min-width:600px){.page{padding:24px 22px 32px}.nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,760px);border-left:1px solid var(--border);border-right:1px solid var(--border);border-radius:18px 18px 0 0}.modal{border-radius:24px;max-width:520px;margin-bottom:24px}.modal-bg{align-items:center;padding:20px}}
@@ -220,6 +220,29 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 .admin-user-extra[hidden]{display:none}
 @media(max-width:360px){.admin-user-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-user-card{padding:10px!important}}
 
+
+/* Chế độ giao diện sáng/tối do người dùng lựa chọn */
+.theme-toggle{border:1px solid var(--border);background:var(--card2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer}
+html[data-theme="light"]{--bg:#f3f6fc;--card:#ffffff;--card2:#edf2fa;--border:#d8e0ed;--text:#1d2940;--muted:#65738b;--primary:#4169e1;--success:#159b68;--danger:#d9435b;--gold:#a87500;--shadow:0 10px 28px rgba(31,51,86,.09);background:var(--bg)}
+html[data-theme="light"] body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.10),transparent 34%),radial-gradient(ellipse at 100% 24%,rgba(159,88,255,.07),transparent 30%),linear-gradient(180deg,#f8faff 0%,#eef3fb 100%);color:var(--text)}
+html[data-theme="light"] .header{background:rgba(248,250,255,.92);border-color:var(--border);box-shadow:0 6px 22px rgba(31,51,86,.07)}
+html[data-theme="light"] .card,html[data-theme="light"] .stat-card,html[data-theme="light"] .wallet-card,html[data-theme="light"] .admin-tools,html[data-theme="light"] .rotate-card{background:linear-gradient(145deg,#fff,#f6f8fd);border-color:var(--border);box-shadow:var(--shadow)}
+html[data-theme="light"] .tab{background:#edf2fa;border-color:var(--border);color:#52617a}
+html[data-theme="light"] .tab.active{background:linear-gradient(110deg,#5279ec,#8066e9);color:#fff}
+html[data-theme="light"] .btn-outline{background:#fff;border-color:#cbd5e4;color:#263650}
+html[data-theme="light"] .input,html[data-theme="light"] textarea.input,html[data-theme="light"] select.input{background:#fff;border-color:#cbd5e4;color:#1d2940}
+html[data-theme="light"] .modal{background:linear-gradient(155deg,#fff,#f0f4fb);border-color:#d8e0ed}
+html[data-theme="light"] .close-x{background:#e8eef8;color:#52617a}
+html[data-theme="light"] .nav{background:rgba(255,255,255,.96);border-color:var(--border);box-shadow:0 -8px 26px rgba(31,51,86,.09)}
+html[data-theme="light"] .nav-item{color:#71809a}html[data-theme="light"] .nav-item.active{color:#4169e1}
+html[data-theme="light"] .toast{background:#fff;border-color:#d4deeb;color:#1d2940;box-shadow:0 12px 30px rgba(31,51,86,.15)}
+html[data-theme="light"] .code-box,html[data-theme="light"] .proxy-item,html[data-theme="light"] .rotate-ip-box{background:#edf2fa;color:#176c50;border-color:#d5deeb}
+html[data-theme="light"] .admin-user-card{background:linear-gradient(145deg,#fff,#f3f6fc);border-color:#d8e0ed}
+html[data-theme="light"] .user-metric{background:rgba(42,66,105,.06)}html[data-theme="light"] .user-metric b{color:#263650}
+html[data-theme="light"] .admin-user-id{color:#4169b8}html[data-theme="light"] .product-desc,html[data-theme="light"] .wallet-label{color:#65738b}
+html[data-theme="light"] .bulk-bar{background:rgba(255,255,255,.97);border-color:#d8e0ed}
+html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{background:linear-gradient(135deg,#fff,#f1f4fb)}
+
 </style>
 </head>
 <body>
@@ -233,9 +256,9 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     <div id="banReason" style="font-size:14px;color:var(--text);line-height:1.6">Vi phạm chính sách</div>
   </div>
   <div style="font-size:12px;color:var(--muted);max-width:400px;line-height:1.6">
-    💬 Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ Admin để được xem xét mở lại tài khoản.
+    💬 Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên để được xem xét mở lại tài khoản.
   </div>
-  <button class="btn btn-success" style="margin-top:20px" onclick="contactAdmin()">💬 Liên hệ Admin</button>
+  <button class="btn btn-success" style="margin-top:20px" onclick="contactAdmin()">💬 Liên hệ quản trị viên</button>
 </div>
 
 <script>
@@ -248,7 +271,10 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     <div class="logo">⚡ Cửa hàng dịch vụ trực tuyến</div>
     <div class="clock"><span class="dot"></span><span id="clock">--:--:--</span><span id="clockDate"></span></div>
   </div>
-  <div class="balance-badge" onclick="refreshBalance()">💰 <span id="hdrBal">0đ</span></div>
+  <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+    <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Chuyển chế độ sáng hoặc tối">☀️ Sáng</button>
+    <div class="balance-badge" onclick="refreshBalance()">💰 <span id="hdrBal">0đ</span></div>
+  </div>
 </div>
 <div id="serverMaintenanceGlobalNotice" style="display:none;max-width:900px;margin:10px auto;padding:0 12px;box-sizing:border-box"></div>
 
@@ -261,7 +287,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     </div>
   </div>
   <div class="tabs" id="serverTabs">
-    <div class="tab active" data-server="all" onclick="filterServer('all',this)">🌐 Tất cả server</div>
+    <div class="tab active" data-server="all" onclick="filterServer('all',this)">🌐 Tất cả máy chủ</div>
     <div class="tab" data-server="ola" onclick="filterServer('ola',this)">🟦 Máy chủ 1</div>
     <div class="tab" data-server="sts" onclick="filterServer('sts',this)">🟪 Máy chủ 2</div>
   </div>
@@ -281,10 +307,10 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 <div class="page" id="page-rotate">
   <div class="section-title">
     <span>🔄 Xoay IP</span>
-    <button class="btn btn-primary btn-xs" onclick="openAddKeyModal()">➕ Nhập key</button>
+    <button class="btn btn-primary btn-xs" onclick="openAddKeyModal()">➕ Nhập mã khóa</button>
   </div>
   <div class="tabs">
-    <div class="tab active" data-tab="rotate" onclick="rotateTab('rotate',this)">🔑 Key của tôi</div>
+    <div class="tab active" data-tab="rotate" onclick="rotateTab('rotate',this)">🔑 Mã khóa của tôi</div>
     <div class="tab" data-tab="history" onclick="rotateTab('history',this)">📜 Lịch sử</div>
   </div>
   <div id="rotateList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
@@ -340,10 +366,10 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     </div>
   </div>
   <div class="card">
-    <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔗 Link mời của bạn</div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:10px">🔗 Liên kết mời của bạn</div>
     <div class="code-box" style="font-size:11px;max-height:none;color:var(--gold)" id="refLink">Đang tạo...</div>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-success btn-block" onclick="copyRefLink()">📋 Copy</button>
+      <button class="btn btn-success btn-block" onclick="copyRefLink()">📋 Sao chép</button>
       <button class="btn btn-outline" onclick="shareRefLink()">📤 Chia sẻ</button>
     </div>
   </div>
@@ -390,7 +416,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi link</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi liên kết</div>
         <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsm15Price">26.000đ</div>
       </div>
       <div style="text-align:right">
@@ -416,7 +442,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
       <button class="btn btn-outline btn-xs" onclick="setGsmQty('15',50)">50</button>
     </div>
     <div class="info-row"><span>💳 Số dư</span><span id="gsm15Balance">--</span></div>
-    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho GSM</div>
+    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví hoa hồng không dùng cho GSM</div>
     <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsm15Total">26.000đ</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm('15')">✅ Mua GSM 15 tin</button>
   </div>
@@ -428,7 +454,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div>
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi link</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi liên kết</div>
         <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsm25Price">36.000đ</div>
       </div>
       <div style="text-align:right">
@@ -454,7 +480,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
       <button class="btn btn-outline btn-xs" onclick="setGsmQty('25',50)">50</button>
     </div>
     <div class="info-row"><span>💳 Số dư</span><span id="gsm25Balance">--</span></div>
-    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho GSM</div>
+    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví hoa hồng không dùng cho GSM</div>
     <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsm25Total">36.000đ</span></div>
     <button class="btn btn-block" style="margin-top:14px;background:linear-gradient(135deg,#ffd700,#f0a500);color:#000" onclick="buyGsm('25')">✅ Mua GSM 25 tin</button>
   </div>
@@ -481,7 +507,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
   <div class="tabs" style="margin-top:14px">
     <div class="tab active" onclick="adminTab('users',this)">👥 Người dùng</div>
     <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn hàng</div>
-    <div class="tab" onclick="adminTab('proxies',this)">🌐 Máy chủ Proxy</div>
+    <div class="tab" onclick="adminTab('proxies',this)">🌐 Máy chủ proxy</div>
     <div class="tab" onclick="adminTab('referrals',this)">🎁 Giới thiệu</div>
     <div class="tab" onclick="adminTab('keys',this)">🔑 Mã khóa</div>
     <div class="tab" onclick="adminTab('gsm',this)">📱 GSM</div>
@@ -509,6 +535,28 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 
 <script>
 const tg = window.Telegram?.WebApp;
+// Ghi nhớ chế độ sáng/tối trên thiết bị của người dùng.
+function applyTheme(mode) {
+  const selected = mode === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", selected);
+  try { localStorage.setItem("miniapp_theme", selected); } catch (e) {}
+  const button = document.getElementById("themeToggle");
+  if (button) {
+    button.textContent = selected === "light" ? "🌙 Chế độ tối" : "☀️ Chế độ sáng";
+    button.setAttribute("aria-label", selected === "light" ? "Chuyển sang chế độ tối" : "Chuyển sang chế độ sáng");
+  }
+  try {
+    if (tg?.setHeaderColor) tg.setHeaderColor(selected === "light" ? "#f8faff" : "#0b1020");
+    if (tg?.setBackgroundColor) tg.setBackgroundColor(selected === "light" ? "#f3f6fc" : "#090d1a");
+  } catch (e) {}
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  applyTheme(current === "dark" ? "light" : "dark");
+}
+try { applyTheme(localStorage.getItem("miniapp_theme") || "dark"); } catch (e) { applyTheme("dark"); }
+document.addEventListener("DOMContentLoaded", () => applyTheme(document.documentElement.getAttribute("data-theme") || "dark"));
+
 let INIT_DATA = "";
 let USER = null;
 let ALL_PRODUCTS = [];
@@ -600,11 +648,11 @@ async function api(path, data={}) {
     try {
       return JSON.parse(text);
     } catch (e) {
-      console.error("Server trả về không phải JSON:", text.substring(0, 500));
-      throw new Error("Server báo lỗi HTML (Ngrok Warning?)");
+      console.error("Máy chủ trả về dữ liệu không hợp lệ:", text.substring(0, 500));
+      throw new Error("Máy chủ trả về trang cảnh báo thay vì dữ liệu.");
     }
   } catch (error) {
-    console.error("Fetch API Error:", error);
+    console.error("Lỗi gọi giao diện lập trình ứng dụng:", error);
     throw error;
   }
 }
@@ -616,31 +664,31 @@ function copyIP(elementId) {
   const el = document.getElementById(elementId);
   if (!el) { toast("Không tìm thấy IP", "error"); return; }
   const ip = (el.textContent || "").trim();
-  if (!ip || ip === "Đang tải..." || ip === "Không lấy được" || ip === "Lỗi") {
-    toast("Chưa có IP để copy", "error"); return;
+  if (!ip || ip === "Đang tải dữ liệu..." || ip === "Không thể lấy dữ liệu" || ip === "Đã xảy ra lỗi") {
+    toast("Chưa có địa chỉ IP để sao chép", "error"); return;
   }
   doCopy(ip);
 }
 function copyText(txt) {
-  if (!txt || txt === "—") { toast("Không có gì để copy", "error"); return; }
+  if (!txt || txt === "—") { toast("Không có nội dung để sao chép", "error"); return; }
   doCopy(String(txt));
 }
 function doCopy(txt) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(txt).then(() => toast("✅ Đã copy", "success")).catch(() => fallbackCopy(txt));
+    navigator.clipboard.writeText(txt).then(() => toast("✅ Đã sao chép", "success")).catch(() => fallbackCopy(txt));
   } else { fallbackCopy(txt); }
 }
 function fallbackCopy(txt) {
   const ta = document.createElement("textarea");
   ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand("copy"); toast("✅ Đã copy", "success"); }
-  catch(e) { toast("Không copy được", "error"); }
+  try { document.execCommand("copy"); toast("✅ Đã sao chép", "success"); }
+  catch(e) { toast("Không thể sao chép", "error"); }
   document.body.removeChild(ta);
 }
 
 function contactAdmin() {
-  const text = encodeURIComponent("🚨 Em cần admin hỗ trợ. User ID: " + (USER ? USER.id : ""));
+  const text = encodeURIComponent("🚨 Tôi cần quản trị viên hỗ trợ. ID người dùng: " + (USER ? USER.id : ""));
   const tgUrl = `https://t.me/${ADMIN_USERNAME}?text=${text}`;
   if (tg && tg.openTelegramLink) { tg.openTelegramLink(tgUrl); }
   else { window.open(tgUrl, "_blank"); }
@@ -678,7 +726,7 @@ async function init() {
     const r = await api("/api/auth");
     if (!r.ok) {
       if (r.banned) {
-        document.getElementById("banReason").textContent = r.reason || "Vi phạm chính sách của shop";
+        document.getElementById("banReason").textContent = r.reason || "Vi phạm chính sách của cửa hàng";
         document.getElementById("banScreen").style.display = "flex";
         return;
       }
@@ -764,7 +812,7 @@ async function loadProducts() {
       renderMaintenanceNotices();
     }
     ALL_PRODUCTS = r.products || [];
-    if (!ALL_PRODUCTS.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm từ các server đang hoạt động</div>'; buildCatTabs(); return; }
+    if (!ALL_PRODUCTS.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Chưa có sản phẩm từ các máy chủ đang hoạt động</div>'; buildCatTabs(); return; }
     buildCatTabs(); renderProducts();
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
@@ -874,7 +922,7 @@ function changeQty(d) {
 async function doBuy() {
   const qty = window._qty || (currentProduct.min_buy || 1);
   const btn = event.target;
-  btn.disabled = true; btn.textContent = "Đang xử lý...";
+  btn.disabled = true; btn.textContent = "Đang xử lý yêu cầu...";
   try {
     const buyData = {id: currentProduct.id, amount: qty};
     if (currentProduct.server === "sts") {
@@ -913,7 +961,7 @@ async function doBuy() {
             <div style="font-size:13px">${r.refunded ? `Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.` : `Yêu cầu hoàn <b>${fmt(r.refund_amount || 0)}</b> chưa xác nhận thành công. Vui lòng liên hệ Admin để được kiểm tra.`}</div>
           </div>
           <div style="font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:12px">Mã đơn: ${escapeHtml(r.order_code || r.external_ref || "—")}</div>
-          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ Admin để được hỗ trợ</button>
+          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ quản trị viên để được hỗ trợ</button>
           <button class="btn btn-outline btn-block" onclick="closeModal()">Đóng</button>
         `);
         loadOrders();
@@ -928,12 +976,12 @@ async function doBuy() {
             <div style="font-size:13px;margin-bottom:8px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
             <div style="font-size:13px">💡 <b>Số tiền của bạn CHƯA bị trừ</b> — yên tâm.</div>
           </div>
-          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ Admin</button>
+          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ quản trị viên</button>
           <button class="btn btn-outline btn-block" onclick="closeModal()">Đóng</button>
         `);
         return;
       }
-      toast(r.error || "Lỗi", "error");
+      toast(r.error || "Đã xảy ra lỗi", "error");
       btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
       return;
     }
@@ -948,7 +996,7 @@ async function doBuy() {
     setTimeout(() => showPurchased(r), 300);
     loadOrders(); if (r.is_rotate) loadRotations(); loadExtendOrders();
   } catch(e) {
-    toast("Lỗi kết nối", "error");
+    toast("Không thể kết nối máy chủ", "error");
     btn.disabled = false; btn.textContent = "✅ Xác nhận mua";
   }
 }
@@ -962,7 +1010,7 @@ function showPurchased(r) {
       openModal(`
         <div class="modal-title">⏳ Đơn hàng đang xử lý<button class="close-x" onclick="closeModal()">✕</button></div>
         <div class="info-row"><span>Mã đơn</span><code>${escapeHtml(r.order_code || "")}</code></div>
-        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng ${rotate ? "KEY proxy xoay" : "proxy tĩnh"} chưa được cấp. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng ${rotate ? "mã khóa proxy xoay" : "proxy tĩnh"} chưa được cấp. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
       `);
       return;
     }
@@ -971,8 +1019,8 @@ function showPurchased(r) {
     window._copyData = output.join("\n");
     openModal(`
       <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${output.map(p => escapeHtml(p)).join("\n")}</pre>
-      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Copy ${rotate ? "KEY" : "proxy"}</button>
-      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 KEY đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình Danh sách IP được phép cho KEY trong mục Quản lý KEY.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý KEY để cấu hình Whitelist</button>` : ""}
+      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Sao chép ${rotate ? "Mã khóa" : "proxy"}</button>
+      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 Mã khóa đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình Danh sách IP được phép cho mã khóa trong mục Quản lý mã khóa.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý mã khóa để cấu hình Danh sách IP cho phép</button>` : ""}
     `);
     return;
   }
@@ -985,13 +1033,13 @@ function showPurchased(r) {
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(r.product_name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${r.amount}</span></div>
     <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
-    ${r.used_ref > 0 ? `<div class="info-row"><span style="font-size:11px">💰 Dùng ví HH</span><span style="font-size:11px;color:var(--gold)">${fmt(r.used_ref)}</span></div>` : ""}
+    ${r.used_ref > 0 ? `<div class="info-row"><span style="font-size:11px">💰 Dùng ví hoa hồng</span><span style="font-size:11px;color:var(--gold)">${fmt(r.used_ref)}</span></div>` : ""}
     ${r.order_code ? `<div class="info-row"><span>🔢 Mã đơn</span><span style="font-family:monospace;font-size:12px">${escapeHtml(r.order_code)}</span></div>` : ""}
     ${r.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold);font-weight:700">${escapeHtml(r.expire)}</span></div>` : ""}
-    ${r.is_rotate && r.proxy_key ? `<div class="info-row"><span>🔑 Key</span><span><code>${escapeHtml(r.proxy_key)}</code></span></div>` : ""}
+    ${r.is_rotate && r.proxy_key ? `<div class="info-row"><span>🔑 Mã khóa</span><span><code>${escapeHtml(r.proxy_key)}</code></span></div>` : ""}
     <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
       <span>🔑 Danh sách</span>
-      <button class="btn btn-xs" onclick="copyAll()">📋 Copy</button>
+      <button class="btn btn-xs" onclick="copyAll()">📋 Sao chép</button>
     </div>
     ${proxiesHtml}
     ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : `<div style="margin-top:12px;font-size:12px;color:var(--muted)">ℹ️ Proxy tĩnh không hỗ trợ xoay IP.</div>`}
@@ -1012,18 +1060,18 @@ async function loadOrders() {
       const previewHtml = proxyList.length
         ? proxyList.map(p => `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${escapeHtml(p)}</div>`).join("") +
           (more > 0 ? `<div style="font-size:11px;color:var(--muted);text-align:center">+${more} khác...</div>` : "")
-        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Không có data</div>`;
+        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Không có dữ liệu</div>`;
       return `
         <div class="card">
           <div class="product-head">
             <div class="product-name">${escapeHtml(o.name)}</div>
-            <div class="stock-tag">${o.server === "sts" ? "Máy chủ 2" : "Máy chủ 1"} · SL: ${o.amount}</div>
+            <div class="stock-tag">${o.server === "sts" ? "Máy chủ 2" : "Máy chủ 1"} · Số lượng: ${o.amount}</div>
           </div>
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
-          <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
+          <div class="info-row"><span>Thành tiền</span><span>${fmt(o.price)}</span></div>
           ${o.order_code ? `<div class="info-row"><span>🔢 Mã</span><span style="font-family:monospace;font-size:11px">${escapeHtml(o.order_code)}</span></div>` : ""}
           ${o.expire ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
-          <div style="margin:10px 0 6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Data:</div>
+          <div style="margin:10px 0 6px;font-size:12px;color:var(--muted);font-weight:600">🔑 Dữ liệu:</div>
           ${previewHtml}
           <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick='viewOrder(${JSON.stringify(JSON.stringify(o))})'>👁 Xem</button>
         </div>
@@ -1042,7 +1090,7 @@ function viewOrder(orderJson) {
     <div class="modal-title">👁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Sản phẩm</span><span>${escapeHtml(o.name||"")}</span></div>
     <div class="info-row"><span>Số lượng</span><span>${o.amount}</span></div>
-    <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
+    <div class="info-row"><span>Thành tiền</span><span>${fmt(o.price)}</span></div>
     <div style="margin:14px 0 8px;font-weight:700">🔑 Data (${proxies.length})</div>
     ${proxiesHtml}
   `);
@@ -1070,15 +1118,15 @@ async function loadRotations() {
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
     const r = await api("/api/my-keys");
-    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải danh sách key</div>'; return; }
+    if (!r.ok) { list.innerHTML = '<div class="empty">Không thể tải danh sách mã khóa</div>'; return; }
     if (!r.keys || !r.keys.length) {
-      list.innerHTML = '<div class="empty"><div class="empty-icon">🔑</div>Chưa có key nào</div>';
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🔑</div>Chưa có mã khóa nào</div>';
       return;
     }
     list.innerHTML = r.keys.map(k => {
       const isSelected = SELECTED_KEYS.has(k.proxy_key);
       const note = k.note ? `<div class="info-row"><span>Ghi chú</span><span>${escapeHtml(k.note)}</span></div>` : "";
-      const sourceTag = `<span class="source-tag ${k.source}">${k.source === 'purchase' ? 'Mua' : k.source === 'manual' ? 'Nhập tay' : k.source === 'admin_gift' ? 'Admin tặng' : 'Admin chuyển'}</span>`;
+      const sourceTag = `<span class="source-tag ${k.source}">${k.source === 'purchase' ? 'Mua' : k.source === 'manual' ? 'Nhập tay' : k.source === 'admin_gift' ? 'Quản trị viên tặng' : 'Quản trị viên chuyển'}</span>`;
       const serverLabel = k.server === 'sts' ? 'Máy chủ 2' : 'Máy chủ 1';
       const wlHtml = (k.server === 'sts' && !k.whitelist_configured) 
         ? `<div style="color:var(--danger);font-size:11px;margin-top:4px">⚠️ Chưa cấu hình Danh sách IP được phép</div>` 
@@ -1103,7 +1151,7 @@ async function loadRotations() {
             </div>
             <div class="rotate-actions">
               <button class="btn btn-primary btn-xs" onclick="event.stopPropagation(); rotateSingle('${k.proxy_key}')">🔄 Xoay IP</button>
-              ${k.server === 'sts' ? `<button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); openWhitelistModal('${k.proxy_key}', ${JSON.stringify(k.ip_whitelist || []).replace(/"/g, '&quot;')})">🌐 Whitelist</button>` : ''}
+              ${k.server === 'sts' ? `<button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); openWhitelistModal('${k.proxy_key}', ${JSON.stringify(k.ip_whitelist || []).replace(/"/g, '&quot;')})">🌐 Danh sách IP cho phép</button>` : ''}
               <button class="btn btn-danger btn-xs" onclick="event.stopPropagation(); deleteKey(${k.id})">🗑</button>
             </div>
           </div>
@@ -1150,9 +1198,9 @@ function updateBulkBar() {
 async function bulkRotate() {
   const keys = Array.from(SELECTED_KEYS);
   if (!keys.length) return;
-  if (!confirm(`Xoay IP cho ${keys.length} key đã chọn?`)) return;
+  if (!confirm(`Xoay IP cho ${keys.length} mã khóa đã chọn?`)) return;
   const btn = event.target;
-  btn.disabled = true; btn.textContent = "Đang xoay...";
+  btn.disabled = true; btn.textContent = "Đang đổi địa chỉ IP...";
   try {
     const r = await api("/api/rotate", { keys });
     if (!r.ok) {
@@ -1169,18 +1217,18 @@ async function bulkRotate() {
     SELECTED_KEYS.clear();
     loadRotations();
   } catch(e) {
-    toast("Lỗi kết nối", "error");
+    toast("Không thể kết nối máy chủ", "error");
   } finally {
     btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
   }
 }
 
 async function rotateSingle(key) {
-  if (!confirm("Xoay IP cho key này?")) return;
-  toast("Đang xoay...", "success");
+  if (!confirm("Đổi địa chỉ IP cho mã khóa này?")) return;
+  toast("Đang đổi địa chỉ IP...", "success");
   try {
     const r = await api("/api/rotate", { keys: [key] });
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); return; }
     const res = r.results[0];
     if (res.success) {
       toast("✅ Đã xoay IP thành công", "success");
@@ -1188,7 +1236,7 @@ async function rotateSingle(key) {
     } else {
       toast(`❌ ${res.message || "Lỗi xoay IP"}`, "error");
     }
-  } catch(e) { toast("Lỗi kết nối", "error"); }
+  } catch(e) { toast("Không thể kết nối máy chủ", "error"); }
 }
 
 async function fetchProxyIp(key) {
@@ -1199,21 +1247,21 @@ async function fetchProxyIp(key) {
     if (r.ok && r.ip) {
       el.textContent = r.ip;
     } else if (r.whitelist_required) {
-      el.textContent = "Cần Whitelist";
+      el.textContent = "Cần cấu hình danh sách IP được phép";
       el.style.color = "var(--gold)";
     } else {
-      el.textContent = "Không lấy được";
+      el.textContent = "Không thể lấy dữ liệu";
     }
-  } catch(e) { el.textContent = "Lỗi"; }
+  } catch(e) { el.textContent = "Đã xảy ra lỗi"; }
 }
 
 async function deleteKey(keyId) {
-  if (!confirm("Xóa key này khỏi danh sách?")) return;
+  if (!confirm("Xóa mã khóa này khỏi danh sách?")) return;
   try {
     const r = await api("/api/delete-key", { key_id: keyId });
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); return; }
     toast("✅ Đã xóa", "success"); loadRotations();
-  } catch(e) { toast("Lỗi", "error"); }
+  } catch(e) { toast("Đã xảy ra lỗi", "error"); }
 }
 
 function openAddKeyModal() {
@@ -1224,12 +1272,12 @@ function openAddKeyModal() {
       <option value="ola">Máy chủ 1</option>
       <option value="sts">Máy chủ 2</option>
     </select>
-    <input class="input" id="addKeyInput" placeholder="Nhập key..." autocomplete="off">
+    <input class="input" id="addKeyInput" placeholder="Nhập mã khóa..." autocomplete="off">
     <div id="whitelistBox" style="display:none">
       <div style="font-weight:600;font-size:13px;margin:8px 0 4px">Danh sách IP được phép (Máy chủ 2)</div>
       <textarea class="input" id="addKeyWhitelist" placeholder="VD: 1.2.3.4&#10;5.6.7.8" style="min-height:80px"></textarea>
     </div>
-    <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitAddKey()">Lưu KEY</button>
+    <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitAddKey()">Lưu mã khóa</button>
   `);
 }
 
@@ -1241,7 +1289,7 @@ function toggleWhitelistInput() {
 async function submitAddKey() {
   const key = document.getElementById("addKeyInput").value.trim();
   const server = document.getElementById("addKeyServer").value;
-  if (!key) { toast("Vui lòng nhập key", "error"); return; }
+  if (!key) { toast("Vui lòng nhập mã khóa", "error"); return; }
   let ip_whitelist = [];
   if (server === "sts") {
     const raw = document.getElementById("addKeyWhitelist").value;
@@ -1251,11 +1299,11 @@ async function submitAddKey() {
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang lưu...";
   try {
     const r = await api("/api/add-key", { key, server, ip_whitelist });
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Lưu KEY"; return; }
-    toast("✅ Đã lưu key", "success");
+    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btn.disabled = false; btn.textContent = "Lưu mã khóa"; return; }
+    toast("✅ Đã lưu mã khóa", "success");
     closeModal();
     if (currentRotateTab === "rotate") loadRotations();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Lưu KEY"; }
+  } catch(e) { toast("Không thể kết nối máy chủ", "error"); btn.disabled = false; btn.textContent = "Lưu mã khóa"; }
 }
 
 async function loadRotationHistory() {
@@ -1282,7 +1330,7 @@ async function loadRotationHistory() {
 function openWhitelistModal(key, ips) {
   openModal(`
     <div class="modal-title">🌐 Cập nhật Danh sách IP được phép<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="info-row"><span>Key</span><span style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(key)}</span></div>
+    <div class="info-row"><span>Mã khóa</span><span style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(key)}</span></div>
     <textarea class="input" id="wlInput" placeholder="Mỗi dòng 1 IP" style="min-height:100px;margin-top:12px">${ips.join("\n")}</textarea>
     <button class="btn btn-primary btn-block" onclick="submitWhitelist('${key}')">Cập nhật</button>
   `);
@@ -1295,11 +1343,11 @@ async function submitWhitelist(key) {
   const btn = event.target; btn.disabled = true;
   try {
     const r = await api("/api/update-ip-whitelist", { key, ip_whitelist: ip_list });
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
-    toast("✅ Đã cập nhật whitelist", "success");
+    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btn.disabled = false; return; }
+    toast("✅ Đã cập nhật danh sách IP cho phép", "success");
     closeModal();
     loadRotations();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; }
+  } catch(e) { toast("Không thể kết nối máy chủ", "error"); btn.disabled = false; }
 }
 
 // ===== EXTEND (ĐÃ BỔ SUNG ĐẦY ĐỦ) =====
@@ -1338,7 +1386,7 @@ async function extendOrder(order_code) {
     toast(`✅ Gia hạn thêm ${r.extended_days} ngày`, "success");
     loadExtendOrders();
     loadOrders();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Gia hạn"; }
+  } catch(e) { toast("Không thể kết nối máy chủ", "error"); btn.disabled = false; btn.textContent = "Gia hạn"; }
 }
 
 // ===== GSM =====
@@ -1417,7 +1465,7 @@ function buyGsm(gsm_type) {
   if (qty < 1) { toast("Số lượng không hợp lệ", "error"); return; }
   if (st.stock < qty) { toast(`Kho ${gsm_type} tin chỉ còn ${st.stock}`, "error"); return; }
   const total = st.price * qty;
-  if (!USER || USER.balance < total) { toast(`Số dư không đủ. Ví HH không dùng cho GSM!`, "error"); return; }
+  if (!USER || USER.balance < total) { toast(`Số dư không đủ. Ví hoa hồng không dùng cho GSM!`, "error"); return; }
   openModal(`
     <div class="modal-title">📋 QUY ĐỊNH SỬ DỤNG ${st.label.toUpperCase()}<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Loại</span><span style="color:var(--gold);font-weight:700">${st.label}</span></div>
@@ -1440,12 +1488,12 @@ async function confirmBuyGsm(gsm_type) {
   const st = GSM_STATE[gsm_type];
   const qty = st.qty || 1;
   const total = st.price * qty;
-  if (!USER || USER.balance < total) { toast("Số dư không đủ. Ví HH không dùng cho GSM", "error"); return; }
+  if (!USER || USER.balance < total) { toast("Số dư không đủ. Ví hoa hồng không dùng cho GSM", "error"); return; }
   const btns = document.querySelectorAll("#modalContent .btn");
   btns.forEach(b => b.disabled = true);
   try {
     const r = await api("/api/gsm/buy", {amount: qty, gsm_type: gsm_type});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btns.forEach(b => b.disabled = false); return; }
+    if (!r.ok) { toast(r.error || "Đã xảy ra lỗi", "error"); btns.forEach(b => b.disabled = false); return; }
     USER.balance = r.balance; st.stock = r.stock;
     document.getElementById("hdrBal").textContent = fmt(r.balance);
     const stockEl = document.getElementById(`gsm${gsm_type}Stock`);
@@ -1468,7 +1516,7 @@ async function confirmBuyGsm(gsm_type) {
       <div class="info-row"><span>Thanh toán</span><span>${fmt(r.paid)}</span></div>
       <div style="margin:14px 0 8px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center">
         <span>📱 Danh sách (${r.links.length})</span>
-        <button class="btn btn-xs" onclick="copyAllGsm()">📋 Copy tất cả</button>
+        <button class="btn btn-xs" onclick="copyAllGsm()">📋 Sao chép tất cả</button>
       </div>
       ${linksHtml}
       <button class="btn btn-block" style="margin-top:14px" onclick="closeModal()">Đóng</button>
@@ -1477,11 +1525,11 @@ async function confirmBuyGsm(gsm_type) {
     st.qty = 1; updateGsmTotals();
     loadGsmOrders(); loadGsmInfo();
     startCountdowns();
-  } catch(e) { toast("Lỗi kết nối", "error"); btns.forEach(b => b.disabled = false); }
+  } catch(e) { toast("Không thể kết nối máy chủ", "error"); btns.forEach(b => b.disabled = false); }
 }
 function copyAllGsm() {
   const links = window._gsmLinks || [];
-  if (!links.length) { toast("Không có link", "error"); return; }
+  if (!links.length) { toast("Không có liên kết", "error"); return; }
   copyText(links.join("\n"));
 }
 async function loadGsmOrders() {
@@ -1561,7 +1609,7 @@ async function loadReferrals() {
       ? `https://t.me/${botName}?start=ref_${r.user_id}`
       : "";
     const linkEl = document.getElementById("refLink");
-    if (linkEl) linkEl.textContent = link || "Chưa có link giới thiệu";
+    if (linkEl) linkEl.textContent = link || "Chưa có liên kết giới thiệu";
 
     referredBox.innerHTML = referrals.length ? referrals.map(u => `
       <div class="card">
@@ -1591,19 +1639,19 @@ async function loadReferrals() {
 function copyRefLink() {
   const el = document.getElementById("refLink");
   const value = el?.textContent?.trim() || "";
-  if (!value || value === "Đang tạo..." || value === "Chưa có link giới thiệu") {
-    toast("Chưa có link giới thiệu", "error");
+  if (!value || value === "Đang tạo..." || value === "Chưa có liên kết giới thiệu") {
+    toast("Chưa có liên kết giới thiệu", "error");
     return;
   }
   copyText(value);
 }
 function shareRefLink() {
   const value = document.getElementById("refLink")?.textContent?.trim() || "";
-  if (!value || value === "Chưa có link giới thiệu" || value === "Đang tạo...") {
-    toast("Chưa có link giới thiệu", "error");
+  if (!value || value === "Chưa có liên kết giới thiệu" || value === "Đang tạo...") {
+    toast("Chưa có liên kết giới thiệu", "error");
     return;
   }
-  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(value)}&text=${encodeURIComponent("Tham gia Proxy Shop qua link giới thiệu của mình!")}`;
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(value)}&text=${encodeURIComponent("Tham gia cửa hàng proxy qua liên kết giới thiệu của tôi!")}`;
   if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
   else window.open(shareUrl, "_blank", "noopener");
 }
@@ -1666,14 +1714,14 @@ async function createDeposit() {
       ${bank ? `<div class="info-row"><span>Ngân hàng</span><span>${escapeHtml(bank)}</span></div>` : ""}
       ${account ? `<div class="info-row"><span>Số tài khoản</span><span>${escapeHtml(account)}</span></div>` : ""}
       ${accountName ? `<div class="info-row"><span>Chủ tài khoản</span><span>${escapeHtml(accountName)}</span></div>` : ""}
-      ${transfer ? `<div class="code-box">${escapeHtml(transfer)}</div><button class="btn btn-outline btn-block" onclick='copyText(${JSON.stringify(transfer)})'>📋 Copy nội dung chuyển khoản</button>` : ""}
+      ${transfer ? `<div class="code-box">${escapeHtml(transfer)}</div><button class="btn btn-outline btn-block" onclick='copyText(${JSON.stringify(transfer)})'>📋 Sao chép nội dung chuyển khoản</button>` : ""}
       ${qr ? `<div class="qr-box"><img src="${escapeHtml(qr)}" alt="QR thanh toán"></div>` : ""}
       <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px">Vui lòng chuyển đúng số tiền và nội dung để hệ thống tự động xác nhận. Mã có hiệu lực ${Number(r.expire_seconds || 300)} giây.</p>
     `);
     loadDepositHistory();
   } catch (e) {
     console.error("createDeposit:", e);
-    toast("Lỗi kết nối khi tạo giao dịch", "error");
+    toast("Không thể kết nối máy chủ để tạo giao dịch", "error");
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "🎯 Tạo QR thanh toán"; }
   }
@@ -1722,7 +1770,7 @@ async function loadAdmin() {
     total_orders: "Tổng đơn hàng", total_proxy_sold: "Proxy đã bán",
     total_users: "Tổng người dùng", banned_users: "Người bị cấm",
     total_deposit: "Tổng nạp", total_rotations: "Lượt xoay IP",
-    total_keys: "Tổng key", total_commission: "Tổng hoa hồng",
+    total_keys: "Tổng số mã khóa", total_commission: "Tổng hoa hồng",
     total_referrals: "Lượt giới thiệu", total_extends: "Lượt gia hạn",
     total_balance: "Số dư người dùng", total_referral_balance: "Số dư hoa hồng",
     gsm_available: "GSM còn", gsm_sold: "GSM đã bán",
@@ -1749,7 +1797,7 @@ async function loadAdmin() {
       renderAdminStats(proxyStatsBox, vals, statLabels);
     }
   } catch (e) {
-    console.warn("Admin stats unavailable:", e);
+    console.warn("Không thể tải thống kê quản trị:", e);
   }
   await adminTab(currentAdminTab);
 }
@@ -1872,7 +1920,7 @@ async function sendBroadcast() {
     if (!r?.ok) { toast(r?.error || "Không gửi được thông báo", "error"); return; }
     toast(`Đã gửi thông báo tới ${Number(r.total || 0).toLocaleString("vi-VN")} người dùng`, "success");
     closeModal();
-  } catch (e) { toast("Lỗi kết nối", "error"); }
+  } catch (e) { toast("Không thể kết nối máy chủ", "error"); }
 }
 
 // ===== GLOBAL ERROR HANDLING & STARTUP =====
