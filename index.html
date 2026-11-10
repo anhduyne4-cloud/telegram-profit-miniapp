@@ -127,7 +127,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .gsm-card-25{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(255,71,87,.1));border-color:var(--gold)}
 #banScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;padding:40px 20px;text-align:center;flex-direction:column;align-items:center;justify-content:center}
 
-/* ===== MODERN MINI APP THEME (visual-only; keeps existing IDs and handlers) ===== */
+/* ===== MODERN MINI APP THEME ===== */
 :root{
  --bg:#090d1a;--card:rgba(19,27,48,.88);--card2:#17223b;--border:rgba(148,163,184,.17);
  --text:#f3f6ff;--muted:#9aa8c4;--primary:#6c8cff;--success:#36d99a;--danger:#ff6482;--gold:#ffd36e;
@@ -201,8 +201,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 @media(max-width:360px){.page{padding-left:12px;padding-right:12px}.header{padding-left:12px;padding-right:12px}.balance-badge{font-size:12px;padding:7px 9px}.nav-item{min-width:49px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
-
-/* Thẻ người dùng quản trị: gọn, rõ và dễ quét trên điện thoại */
+/* Thẻ người dùng quản trị */
 .admin-user-card{border:1px solid rgba(130,150,255,.20);background:linear-gradient(145deg,rgba(27,35,62,.96),rgba(18,23,42,.98));border-radius:15px}
 .admin-user-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
 .admin-user-name{font-size:14px;font-weight:800;color:var(--text,#fff);line-height:1.35}
@@ -220,8 +219,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 .admin-user-extra[hidden]{display:none}
 @media(max-width:360px){.admin-user-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-user-card{padding:10px!important}}
 
-
-/* Chế độ giao diện sáng/tối do người dùng lựa chọn */
+/* Chế độ sáng/tối */
 .theme-toggle{border:1px solid var(--border);background:var(--card2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer}
 html[data-theme="light"]{--bg:#f3f6fc;--card:#ffffff;--card2:#edf2fa;--border:#d8e0ed;--text:#1d2940;--muted:#65738b;--primary:#4169e1;--success:#159b68;--danger:#d9435b;--gold:#a87500;--shadow:0 10px 28px rgba(31,51,86,.09);background:var(--bg)}
 html[data-theme="light"] body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.10),transparent 34%),radial-gradient(ellipse at 100% 24%,rgba(159,88,255,.07),transparent 30%),linear-gradient(180deg,#f8faff 0%,#eef3fb 100%);color:var(--text)}
@@ -242,12 +240,10 @@ html[data-theme="light"] .user-metric{background:rgba(42,66,105,.06)}html[data-t
 html[data-theme="light"] .admin-user-id{color:#4169b8}html[data-theme="light"] .product-desc,html[data-theme="light"] .wallet-label{color:#65738b}
 html[data-theme="light"] .bulk-bar{background:rgba(255,255,255,.97);border-color:#d8e0ed}
 html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{background:linear-gradient(135deg,#fff,#f1f4fb)}
-
 </style>
 </head>
 <body>
 
-<!-- BAN SCREEN -->
 <div id="banScreen">
   <div style="font-size:80px;margin-bottom:20px">🚫</div>
   <div style="font-size:22px;font-weight:700;color:var(--danger);margin-bottom:16px">TÀI KHOẢN ĐÃ BỊ KHÓA</div>
@@ -489,7 +485,6 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
   <div id="gsmOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </div>
 
-
 <!-- ADMIN -->
 <div class="page" id="page-admin">
   <div class="section-title"><span>👑 Bảng quản trị</span></div>
@@ -535,7 +530,6 @@ html[data-theme="light"] .gsm-card-15,html[data-theme="light"] .gsm-card-25{back
 
 <script>
 const tg = window.Telegram?.WebApp;
-// Ghi nhớ chế độ sáng/tối trên thiết bị của người dùng.
 function applyTheme(mode) {
   const selected = mode === "light" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", selected);
@@ -631,7 +625,6 @@ function toast(msg, type="success") {
   setTimeout(() => el.className = "toast " + type, 4000);
 }
 
-// Chuyển các thông báo/mã trạng thái tiếng Anh từ máy chủ sang tiếng Việt.
 function dichNoiDung(value) {
   if (value === null || value === undefined) return "";
   const raw = String(value);
@@ -691,12 +684,10 @@ async function api(path, data={}) {
       headers: {
         "Content-Type": "application/json", 
         "X-Init-Data": INIT_DATA,
-        "ngrok-skip-browser-warning": "true" // Vượt qua cảnh báo của Ngrok
+        "ngrok-skip-browser-warning": "true"
       },
       body: JSON.stringify({...data, initData: INIT_DATA})
     });
-    
-    // Đọc dạng text trước
     const text = await res.text();
     try {
       return JSON.parse(text);
@@ -705,7 +696,7 @@ async function api(path, data={}) {
       throw new Error("Máy chủ trả về trang cảnh báo thay vì dữ liệu.");
     }
   } catch (error) {
-    console.error("Lỗi gọi giao diện lập trình ứng dụng:", error);
+    console.error("Lỗi gọi API:", error);
     throw error;
   }
 }
@@ -791,7 +782,6 @@ async function init() {
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     refreshServerStatus();
     
-    // Chạy độc lập, không để lỗi 1 hàm làm hỏng toàn bộ
     loadProducts().catch(e=>console.error(e));
     loadOrders().catch(e=>console.error(e));
     loadRotations().catch(e=>console.error(e));
@@ -800,6 +790,7 @@ async function init() {
     loadGsmInfo().catch(e=>console.error(e));
     loadGsmOrders().catch(e=>console.error(e));
     startBalancePolling();
+    startBanCheck();
   } catch(e) { 
     console.error(e);
     toast("Lỗi kết nối: " + dichNoiDung(e.message), "error"); 
@@ -821,6 +812,26 @@ function startBalancePolling() {
     } catch(e) {}
   }, 5000);
 }
+
+// Kiểm tra định kỳ nếu tài khoản đang mở bị Admin chặn giữa phiên
+function startBanCheck() {
+  if (window._banCheckTimer) clearInterval(window._banCheckTimer);
+  window._banCheckTimer = setInterval(async () => {
+    try {
+      const r = await api("/api/auth");
+      if (r && r.ok === false && r.banned === true) {
+        const reasonEl = document.getElementById("banReason");
+        if (reasonEl) reasonEl.textContent = r.reason || "Vi phạm chính sách của cửa hàng";
+        try { closeModal(); } catch(e) {}
+        const banEl = document.getElementById("banScreen");
+        if (banEl) banEl.style.display = "flex";
+        if (window._banCheckTimer) { clearInterval(window._banCheckTimer); window._banCheckTimer = null; }
+        if (balancePolling) { clearInterval(balancePolling); balancePolling = null; }
+      }
+    } catch (e) {}
+  }, 15000);
+}
+
 async function refreshBalance() {
   try {
     const r = await api("/api/me/refresh");
@@ -1067,7 +1078,6 @@ function showPurchased(r) {
       `);
       return;
     }
-    // Máy chủ 2: proxy xoay chỉ trả KEY; proxy tĩnh chỉ trả ip:port:user:pass.
     const output = rotate ? keys : proxies;
     window._copyData = output.join("\n");
     openModal(`
@@ -1150,7 +1160,7 @@ function viewOrder(orderJson) {
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
-// ===== ROTATE (ĐÃ BỔ SUNG ĐẦY ĐỦ) =====
+// ===== ROTATE =====
 function rotateTab(tab, el) {
   currentRotateTab = tab;
   document.querySelectorAll("#page-rotate .tab").forEach(t => t.classList.remove("active"));
@@ -1212,7 +1222,6 @@ async function loadRotations() {
       `;
     }).join("");
     
-    // Tự động lấy IP cho tất cả key
     r.keys.forEach(k => {
       fetchProxyIp(k.proxy_key);
     });
@@ -1403,7 +1412,7 @@ async function submitWhitelist(key) {
   } catch(e) { toast("Không thể kết nối máy chủ", "error"); btn.disabled = false; }
 }
 
-// ===== EXTEND (ĐÃ BỔ SUNG ĐẦY ĐỦ) =====
+// ===== EXTEND =====
 async function loadExtendOrders() {
   const list = document.getElementById("extendOrdersList");
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
@@ -1625,7 +1634,6 @@ async function loadGsmOrders() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 
-
 // ===== REFERRAL =====
 async function loadReferrals() {
   const referredBox = document.getElementById("referredList");
@@ -1643,7 +1651,6 @@ async function loadReferrals() {
     const balance = r.referral_balance ?? 0;
     const mainBalance = r.main_balance ?? USER?.balance ?? 0;
     const earned = r.total_earned ?? 0;
-    // Backend trả mảng người được giới thiệu ở trường "referred".
     const referrals = Array.isArray(r.referred) ? r.referred : [];
     const earnings = Array.isArray(r.earnings) ? r.earnings : [];
 
@@ -1656,7 +1663,6 @@ async function loadReferrals() {
     setText("refEarned", fmt(earned));
     setText("refCount", r.total_referred ?? referrals.length);
 
-    // Backend cung cấp bot_username + user_id, không trả sẵn referral_link.
     const botName = String(r.bot_username || "").replace(/^@/, "");
     const link = botName && r.user_id
       ? `https://t.me/${botName}?start=ref_${r.user_id}`
@@ -1722,7 +1728,6 @@ function depositStatusInfo(rawStatus) {
   if (["failed", "fail", "cancelled", "canceled", "expired", "error", "rejected", "thất bại", "đã hủy"].includes(status)) {
     return { label: "Thất bại", color: "var(--danger)", background: "rgba(255,71,87,.15)" };
   }
-  // Mọi trạng thái chưa hoàn tất đều được hiển thị bằng tiếng Việt.
   return { label: "Đang chờ duyệt", color: "var(--gold)", background: "rgba(255,215,0,.12)" };
 }
 async function loadDepositHistory() {
@@ -1767,7 +1772,6 @@ async function createDeposit() {
   const btn = document.querySelector('#page-deposit button[onclick="createDeposit()"]');
   if (btn) { btn.disabled = true; btn.textContent = "Đang tạo mã QR..."; }
   try {
-    // Backend hiện tại định nghĩa POST /api/deposit (không phải /api/deposit/create).
     const r = await api("/api/deposit", { amount });
     if (!r?.ok) { toast(dichNoiDung(r?.error || "Không tạo được giao dịch"), "error"); return; }
     const qr = r.qr || "";
@@ -1820,10 +1824,6 @@ function renderAdminStats(target, values, labels) {
       gsm15_sold: "GSM 15 tin đã bán",
       gsm25_available: "GSM 25 tin còn trong kho",
       gsm25_profit: "Lợi nhuận GSM 25 tin",
-      gsm25_sold: "GSM 25 tin đã bán",
-      total_gsm_sold: "Tổng GSM đã bán", gsm15_available: "GSM 15 tin còn trong kho",
-      gsm15_profit: "Lợi nhuận GSM 15 tin", gsm15_sold: "GSM 15 tin đã bán",
-      gsm25_available: "GSM 25 tin còn trong kho", gsm25_profit: "Lợi nhuận GSM 25 tin",
       gsm25_sold: "GSM 25 tin đã bán"
     };
     return known[key] || labels?.[key] || dichNoiDung(key.replace(/_/g, " "));
@@ -1843,7 +1843,6 @@ async function loadServerControl() {
   if (!box) return;
   box.innerHTML = '<span style="color:var(--muted)">Đang tải trạng thái...</span>';
   try {
-    // Gọi KHÔNG có field "enabled" -> backend chỉ trả về trạng thái
     const r = await api("/api/admin/server-status", {});
     if (!r.ok) {
       box.innerHTML = `<span style="color:var(--danger)">${escapeHtml(r.error || "Không tải được trạng thái")}</span>`;
@@ -1881,7 +1880,6 @@ async function toggleServer(server, enabled) {
       return;
     }
     toast(r.message || `${label} đã ${enabled ? "bật" : "tắt"}`, "success");
-    // Cập nhật bộ nhớ SERVER_STATUS toàn cục để banner bảo trì hiển thị ngay
     if (r.servers) {
       SERVER_STATUS = { ola: !!r.servers.ola, sts: !!r.servers.sts };
       renderMaintenanceNotices();
@@ -1900,7 +1898,7 @@ async function loadAdmin() {
   }
   if (box) box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
 
-  loadServerControl();   // ✅ THÊM DÒNG NÀY
+  loadServerControl();
 
   const statsBox = document.getElementById("adminStats");
   const proxyStatsBox = document.getElementById("proxyStatsBox");
@@ -1978,6 +1976,7 @@ async function adminTab(tab, el) {
         const money = n => Number(n || 0).toLocaleString("vi-VN") + "đ";
         const metric = (label, value) => `<div class="user-metric"><span>${label}</span><b>${escapeHtml(value)}</b></div>`;
         const safeName = JSON.stringify(x.first_name || x.username || "").replace(/"/g, "&quot;");
+        const safeBanReason = JSON.stringify(x.ban_reason || "").replace(/"/g, "&quot;");
         return `<div class="card admin-user-card" style="margin-bottom:9px;padding:12px">
           <div class="admin-user-top">
             <div class="admin-user-ident">
@@ -2001,6 +2000,9 @@ async function adminTab(tab, el) {
           <div class="admin-user-actions">
             <button class="btn btn-success btn-xs" onclick="openBalanceModal(${Number(x.id)}, 'add', ${safeName})">➕ Cộng tiền</button>
             <button class="btn btn-danger btn-xs" onclick="openBalanceModal(${Number(x.id)}, 'sub', ${safeName})">➖ Trừ tiền</button>
+            ${x.banned
+              ? `<button class="btn btn-success btn-xs" onclick="openBanModal(${Number(x.id)}, ${safeName}, true, ${safeBanReason})">🔓 Mở khóa</button>`
+              : `<button class="btn btn-danger btn-xs" onclick="openBanModal(${Number(x.id)}, ${safeName}, false, '')">🚫 Chặn</button>`}
             <button class="btn btn-outline btn-xs" onclick="adminAddToGroup(${Number(x.id)})">➕ Gửi lời mời nhóm VIP</button>
             <button class="btn btn-outline btn-xs" onclick="adminToggleUserDetails(${Number(x.id)})">Xem thêm</button>
           </div>
@@ -2011,6 +2013,9 @@ async function adminTab(tab, el) {
             <div class="info-row"><span>Ngày tham gia</span><b>${escapeHtml(x.created_at || 'Không rõ')}</b></div>
             <div class="info-row"><span>Hoạt động gần nhất</span><b>${escapeHtml(x.last_seen || 'Không rõ')}</b></div>
             <div class="info-row"><span>Tình trạng</span><b>${x.banned ? 'Đã khóa' : 'Đang hoạt động'}</b></div>
+            ${x.banned ? `<div class="info-row"><span>Lý do khóa</span><b style="color:var(--danger)">${escapeHtml(x.ban_reason || '—')}</b></div>` : ""}
+            ${x.banned && x.banned_at ? `<div class="info-row"><span>Khóa lúc</span><b>${escapeHtml(x.banned_at)}</b></div>` : ""}
+            ${x.banned ? `<div class="info-row"><span>User thấy lý do</span><b>${x.ban_show_reason !== false ? '✅ Có' : '❌ Không'}</b></div>` : ""}
           </div>
         </div>`;
       }).join("");
@@ -2082,7 +2087,6 @@ function openBalanceModal(userId, action, userName) {
     <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal()">Huỷ</button>
   `);
   setTimeout(() => document.getElementById("balAmount")?.focus(), 100);
-  // Tải số dư hiện tại
   api("/api/admin/users", {}).then(r => {
     if (r?.ok) {
       const u = (r.users || []).find(x => x.id === userId);
@@ -2129,18 +2133,127 @@ async function submitBalanceChange(userId, action) {
     }
     toast(`✅ ${isAdd ? "Đã cộng" : "Đã trừ"} ${amount.toLocaleString("vi-VN")}đ — số dư mới: ${Number(r.new_balance || 0).toLocaleString("vi-VN")}đ`, "success");
     closeModal();
-    // Nếu admin tự sửa số dư của chính mình → cập nhật header
     if (userId === USER?.id && typeof r.new_balance === "number") {
       USER.balance = r.new_balance;
       document.getElementById("hdrBal").textContent = fmt(r.new_balance);
     }
-    // Tải lại danh sách user để thấy số dư mới
     if (currentAdminTab === "users") adminTab("users");
   } catch (e) {
     console.error("submitBalanceChange:", e);
     toast("Không thể kết nối máy chủ", "error");
     btn.disabled = false;
     btn.textContent = isAdd ? "➕ Cộng tiền" : "➖ Trừ tiền";
+  }
+}
+
+// ===== CHẶN / MỞ KHÓA NGƯỜI DÙNG (CHỈ ADMIN) =====
+function openBanModal(userId, userName, isBanned, currentReason) {
+  if (!USER?.is_admin) { toast("Bạn không có quyền thực hiện", "error"); return; }
+  const title = isBanned ? "🔓 Mở khóa người dùng" : "🚫 Chặn người dùng";
+  const color = isBanned
+    ? "linear-gradient(115deg,#21c997,#13a879)"
+    : "linear-gradient(115deg,#ff6b83,#e74770)";
+  const desc = isBanned
+    ? "Sau khi mở khóa, người dùng có thể truy cập bot và MiniApp bình thường trở lại."
+    : "Sau khi chặn, người dùng sẽ <b>KHÔNG thể</b> truy cập bot, MiniApp, hoặc thực hiện bất kỳ thao tác nào (mua proxy, nạp tiền, xoay IP, mời bạn bè…). Bot sẽ <b>im lặng</b> với mọi tin nhắn của họ.";
+  openModal(`
+    <div class="modal-title">${title}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Người dùng</span><b>${escapeHtml(userName || ("ID " + userId))}</b></div>
+    <div class="info-row"><span>ID Telegram</span><b>${escapeHtml(String(userId))}</b></div>
+    <div style="background:${isBanned ? "rgba(37,211,102,.1)" : "rgba(255,71,87,.1)"};border:1px solid ${isBanned ? "var(--success)" : "var(--danger)"};border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.55">${desc}</div>
+
+    ${!isBanned ? `
+      <div style="margin:6px 0 6px;font-weight:600;font-size:13px">Lý do chặn (bắt buộc)</div>
+      <textarea class="input" id="banReasonInput" placeholder="VD: Vi phạm chính sách, spam, lừa đảo, sử dụng nhiều tài khoản..." maxlength="200">${escapeHtml(currentReason || "")}</textarea>
+    ` : (currentReason ? `
+      <div class="info-row"><span>Lý do chặn</span><b style="color:var(--danger)">${escapeHtml(currentReason)}</b></div>
+    ` : "")}
+
+    ${!isBanned ? `
+      <div class="info-row" style="margin-top:8px">
+        <span>Hiển thị lý do cho user</span>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px">
+          <input type="checkbox" id="banSendReason" checked style="width:16px;height:16px">
+          Có
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:-2px 0 10px;line-height:1.5">
+        💡 Nếu bỏ tick: user vẫn thấy màn hình khóa với lý do chung <i>"Vi phạm chính sách của cửa hàng"</i>, không thấy lý do chi tiết bạn vừa nhập.
+      </div>
+    ` : ""}
+
+    <div class="info-row" style="margin-top:8px">
+      <span>Gửi thông báo Telegram cho user</span>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px">
+        <input type="checkbox" id="banNotify" checked style="width:16px;height:16px">
+        Có
+      </label>
+    </div>
+
+    <button class="btn btn-block" style="margin-top:12px;background:${color};color:#fff"
+            onclick="${isBanned ? `submitUnban(${userId})` : `submitBan(${userId})`}">${title}</button>
+    <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal()">Huỷ</button>
+  `);
+  setTimeout(() => document.getElementById("banReasonInput")?.focus(), 100);
+}
+
+async function submitBan(userId) {
+  const reasonEl = document.getElementById("banReasonInput");
+  const notifyEl = document.getElementById("banNotify");
+  const sendReasonEl = document.getElementById("banSendReason");
+  const reason = (reasonEl?.value || "").trim();
+  if (!reason) { toast("Vui lòng nhập lý do chặn", "error"); return; }
+  if (reason.length < 3) { toast("Lý do quá ngắn (tối thiểu 3 ký tự)", "error"); return; }
+  if (!confirm(`CHẶN người dùng ${userId}?\n\nHọ sẽ không thể truy cập bot hoặc MiniApp nữa.`)) return;
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Đang chặn...";
+  try {
+    const r = await api("/api/admin/ban-user", {
+      user_id: userId,
+      reason,
+      notify: !!notifyEl?.checked,
+      send_reason: !!sendReasonEl?.checked
+    });
+    if (!r.ok) {
+      toast(dichNoiDung(r.error || "Không thể chặn"), "error");
+      btn.disabled = false; btn.textContent = "🚫 Chặn người dùng";
+      return;
+    }
+    const sent = r.reason_sent ? "kèm lý do" : "không gửi lý do";
+    toast(`🚫 Đã chặn người dùng (${sent})`, "success");
+    closeModal();
+    if (currentAdminTab === "users") adminTab("users");
+  } catch (e) {
+    console.error("submitBan:", e);
+    toast("Không thể kết nối máy chủ", "error");
+    btn.disabled = false; btn.textContent = "🚫 Chặn người dùng";
+  }
+}
+
+async function submitUnban(userId) {
+  const notifyEl = document.getElementById("banNotify");
+  if (!confirm(`MỞ KHÓA người dùng ${userId}?\n\nHọ sẽ có thể truy cập bot và MiniApp bình thường.`)) return;
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Đang mở khóa...";
+  try {
+    const r = await api("/api/admin/unban-user", {
+      user_id: userId,
+      notify: !!notifyEl?.checked
+    });
+    if (!r.ok) {
+      toast(dichNoiDung(r.error || "Không thể mở khóa"), "error");
+      btn.disabled = false; btn.textContent = "🔓 Mở khóa";
+      return;
+    }
+    toast("✅ Đã mở khóa người dùng", "success");
+    closeModal();
+    if (currentAdminTab === "users") adminTab("users");
+  } catch (e) {
+    console.error("submitUnban:", e);
+    toast("Không thể kết nối máy chủ", "error");
+    btn.disabled = false; btn.textContent = "🔓 Mở khóa";
   }
 }
 
@@ -2187,7 +2300,6 @@ window.addEventListener("error", e => console.error("JavaScript error:", e.messa
 window.addEventListener("unhandledrejection", e => console.error("Unhandled promise rejection:", e.reason));
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Không để một API phụ làm hỏng quá trình xác thực hoặc khởi tạo giao diện.
   init();
 });
 </script>
