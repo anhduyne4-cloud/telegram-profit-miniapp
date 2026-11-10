@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Proxy Shop</title>
+<title>Cửa hàng dịch vụ trực tuyến</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -201,6 +201,25 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 @media(max-width:360px){.page{padding-left:12px;padding-right:12px}.header{padding-left:12px;padding-right:12px}.balance-badge{font-size:12px;padding:7px 9px}.nav-item{min-width:49px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
+
+/* Thẻ người dùng quản trị: gọn, rõ và dễ quét trên điện thoại */
+.admin-user-card{border:1px solid rgba(130,150,255,.20);background:linear-gradient(145deg,rgba(27,35,62,.96),rgba(18,23,42,.98));border-radius:15px}
+.admin-user-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.admin-user-name{font-size:14px;font-weight:800;color:var(--text,#fff);line-height:1.35}
+.admin-user-handle{font-size:11px;color:var(--muted);margin-top:2px}
+.admin-user-id{font-size:11px;color:#9fb3ff;margin-top:5px}
+.user-status{font-size:10px;font-weight:700;border-radius:20px;padding:4px 8px;white-space:nowrap}
+.user-status.is-active{background:rgba(34,197,94,.13);color:#4ade80}
+.user-status.is-banned{background:rgba(248,113,113,.13);color:#f87171}
+.admin-user-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.user-metric{min-width:0;padding:7px 8px;border-radius:9px;background:rgba(255,255,255,.045);display:flex;flex-direction:column;gap:3px}
+.user-metric span{font-size:9px;line-height:1.25;color:var(--muted)}
+.user-metric b{font-size:11px;line-height:1.25;color:#e7edff;overflow-wrap:anywhere}
+.admin-user-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.admin-user-extra{margin-top:9px;padding-top:7px;border-top:1px solid var(--border)}
+.admin-user-extra[hidden]{display:none}
+@media(max-width:360px){.admin-user-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-user-card{padding:10px!important}}
+
 </style>
 </head>
 <body>
@@ -226,7 +245,7 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 
 <div class="header">
   <div class="header-left">
-    <div class="logo">⚡ Proxy Shop</div>
+    <div class="logo">⚡ Cửa hàng dịch vụ trực tuyến</div>
     <div class="clock"><span class="dot"></span><span id="clock">--:--:--</span><span id="clockDate"></span></div>
   </div>
   <div class="balance-badge" onclick="refreshBalance()">💰 <span id="hdrBal">0đ</span></div>
@@ -243,8 +262,8 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
   </div>
   <div class="tabs" id="serverTabs">
     <div class="tab active" data-server="all" onclick="filterServer('all',this)">🌐 Tất cả server</div>
-    <div class="tab" data-server="ola" onclick="filterServer('ola',this)">🟦 Server 1</div>
-    <div class="tab" data-server="sts" onclick="filterServer('sts',this)">🟪 Server 2</div>
+    <div class="tab" data-server="ola" onclick="filterServer('ola',this)">🟦 Máy chủ 1</div>
+    <div class="tab" data-server="sts" onclick="filterServer('sts',this)">🟪 Máy chủ 2</div>
   </div>
   <div class="tabs" id="catTabs">
     <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
@@ -447,40 +466,40 @@ body{background:radial-gradient(ellipse at 12% -8%,rgba(76,110,255,.23),transpar
 
 <!-- ADMIN -->
 <div class="page" id="page-admin">
-  <div class="section-title"><span>👑 Admin Panel</span></div>
+  <div class="section-title"><span>👑 Bảng quản trị</span></div>
   <div class="admin-tools" id="serverControlBox">
     <div class="admin-tools-title">🛠 Bật / tắt máy chủ</div>
     <div id="serverControlContent" style="font-size:12px;color:var(--muted)">Đang tải trạng thái...</div>
   </div>
   <div class="admin-tools">
-    <div class="admin-tools-title">📢 Công cụ</div>
-    <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Broadcast</button>
+    <div class="admin-tools-title">📢 Công cụ quản trị</div>
+    <button class="btn btn-purple btn-block" onclick="openBroadcast()">📢 Gửi thông báo</button>
   </div>
   <div class="stats-grid" id="adminStats"></div>
   <div class="section-title" style="margin-top:16px"><span>🌐 Proxy đang hoạt động</span></div>
   <div class="stats-grid" id="proxyStatsBox"></div>
   <div class="tabs" style="margin-top:14px">
-    <div class="tab active" onclick="adminTab('users',this)">👥 Users</div>
-    <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn</div>
-    <div class="tab" onclick="adminTab('proxies',this)">🌐 Proxy</div>
-    <div class="tab" onclick="adminTab('referrals',this)">🎁 Ref</div>
-    <div class="tab" onclick="adminTab('keys',this)">🔑 Keys</div>
+    <div class="tab active" onclick="adminTab('users',this)">👥 Người dùng</div>
+    <div class="tab" onclick="adminTab('orders',this)">🛒 Đơn hàng</div>
+    <div class="tab" onclick="adminTab('proxies',this)">🌐 Máy chủ Proxy</div>
+    <div class="tab" onclick="adminTab('referrals',this)">🎁 Giới thiệu</div>
+    <div class="tab" onclick="adminTab('keys',this)">🔑 Mã khóa</div>
     <div class="tab" onclick="adminTab('gsm',this)">📱 GSM</div>
-    <div class="tab" onclick="adminTab('logs',this)">📜 Log</div>
+    <div class="tab" onclick="adminTab('logs',this)">📜 Nhật ký</div>
   </div>
   <div id="adminList"></div>
 </div>
 
 <!-- NAV -->
 <div class="nav">
-  <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Shop</div>
+  <div class="nav-item active" data-page="shop" onclick="nav('shop')"><span class="nav-icon">🛍</span>Cửa hàng</div>
   <div class="nav-item" data-page="orders" onclick="nav('orders')"><span class="nav-icon">📦</span>Đơn</div>
   <div class="nav-item" data-page="rotate" onclick="nav('rotate')"><span class="nav-icon">🔄</span>Xoay</div>
   <div class="nav-item" data-page="extend" onclick="nav('extend')"><span class="nav-icon">📅</span>Gia hạn</div>
   <div class="nav-item" data-page="gsm" onclick="nav('gsm')"><span class="nav-icon">📱</span>GSM</div>
   <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
-  <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
+  <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Quản trị</div>
 </div>
 
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
@@ -628,7 +647,7 @@ function contactAdmin() {
 }
 
 function maintenanceHtml(server) {
-  const label = server === "sts" ? "Server 2" : "Server 1";
+  const label = server === "sts" ? "Máy chủ 2" : "Máy chủ 1";
   return `<div style="border:1px solid rgba(255,71,87,.35);background:rgba(255,71,87,.08);border-radius:10px;padding:10px 12px;color:var(--danger);font-size:12px;font-weight:700">🚧 ${label} đang bảo trì. Hiện không thể thực hiện thao tác trên máy chủ này.</div>`;
 }
 function renderMaintenanceNotices() {
@@ -789,7 +808,7 @@ function renderProducts() {
     <div class="card" onclick="openBuy('${p.id}')">
       <div class="product-head">
         <div class="product-name">${escapeHtml(p.name)}</div>
-        <div class="stock-tag">${p.server === "sts" ? "Server 2" : "Server 1"} · ${p.stock} có sẵn</div>
+        <div class="stock-tag">${p.server === "sts" ? "Máy chủ 2" : "Máy chủ 1"} · ${p.stock} có sẵn</div>
       </div>
       ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
       ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
@@ -814,7 +833,7 @@ function openBuy(id) {
     <div class="info-row"><span>Tồn kho</span><span>${p.stock}</span></div>
     <div class="info-row"><span style="color:var(--success)">✅ Khả dụng</span><span style="color:var(--success);font-weight:700">${fmt(totalAvail)}</span></div>
     <div class="info-row"><span style="font-size:11px">💳 Số dư</span><span style="font-size:11px">${fmt(USER.balance)}</span></div>
-    <div class="info-row"><span style="font-size:11px">💎 Ví HH (chỉ Proxy)</span><span style="font-size:11px;color:var(--gold)">${fmt(USER.referral_balance)}</span></div>
+    <div class="info-row"><span style="font-size:11px">💎 Ví hoa hồng (chỉ dùng mua Proxy)</span><span style="font-size:11px;color:var(--gold)">${fmt(USER.referral_balance)}</span></div>
     ${needRef ? `<div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:11px;line-height:1.5">💎 Sẽ dùng <b>${fmt(useRefAmt)}</b> từ ví hoa hồng</div>` : ""}
     ${p.is_rotate ? `<div class="info-row"><span style="color:var(--primary)">🔄 Xoay IP</span><span style="color:var(--primary)">Có</span></div>` : ""}
     ${minBuy > 1 ? `<div class="info-row"><span>⚠️ Tối thiểu</span><span style="color:var(--gold)">${minBuy} cái</span></div>` : ""}
@@ -889,7 +908,7 @@ async function doBuy() {
         openModal(`
           <div class="modal-title">${r.refunded ? "↩️ Đã hoàn tiền" : "⚠️ Đang kiểm tra hoàn tiền"}<button class="close-x" onclick="closeModal()">✕</button></div>
           <div style="background:${r.refunded ? "rgba(37,211,102,.12)" : "rgba(255,165,0,.12)"};border:1px solid ${r.refunded ? "var(--success)" : "#f59e0b"};border-radius:12px;padding:14px;margin-bottom:12px">
-            <div style="font-weight:700;color:${r.refunded ? "var(--success)" : "#f59e0b"};margin-bottom:6px">Đơn ${escapeHtml(r.product_name || "proxy")} trên ${r.server === "ola" ? "Server 1" : "Server 2"} không thể hoàn tất.</div>
+            <div style="font-weight:700;color:${r.refunded ? "var(--success)" : "#f59e0b"};margin-bottom:6px">Đơn ${escapeHtml(r.product_name || "proxy")} trên ${r.server === "ola" ? "Máy chủ 1" : "Máy chủ 2"} không thể hoàn tất.</div>
             <div style="font-size:13px;margin-bottom:6px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
             <div style="font-size:13px">${r.refunded ? `Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.` : `Yêu cầu hoàn <b>${fmt(r.refund_amount || 0)}</b> chưa xác nhận thành công. Vui lòng liên hệ Admin để được kiểm tra.`}</div>
           </div>
@@ -905,7 +924,7 @@ async function doBuy() {
         openModal(`
           <div class="modal-title">⚠️ Cần hỗ trợ<button class="close-x" onclick="closeModal()">✕</button></div>
           <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:14px">
-            <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px">🚨 ${escapeHtml(r.product_name || "Sản phẩm")} đang gặp sự cố ${r.server === "ola" ? "(Server 1)" : r.server === "sts" ? "(Server 2)" : ""}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px">🚨 ${escapeHtml(r.product_name || "Sản phẩm")} đang gặp sự cố ${r.server === "ola" ? "(Máy chủ 1)" : r.server === "sts" ? "(Máy chủ 2)" : ""}</div>
             <div style="font-size:13px;margin-bottom:8px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
             <div style="font-size:13px">💡 <b>Số tiền của bạn CHƯA bị trừ</b> — yên tâm.</div>
           </div>
@@ -947,13 +966,13 @@ function showPurchased(r) {
       `);
       return;
     }
-    // Server 2: proxy xoay chỉ trả KEY; proxy tĩnh chỉ trả ip:port:user:pass.
+    // Máy chủ 2: proxy xoay chỉ trả KEY; proxy tĩnh chỉ trả ip:port:user:pass.
     const output = rotate ? keys : proxies;
     window._copyData = output.join("\n");
     openModal(`
       <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${output.map(p => escapeHtml(p)).join("\n")}</pre>
       <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Copy ${rotate ? "KEY" : "proxy"}</button>
-      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 KEY đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình IP Whitelist cho KEY trong mục Quản lý KEY.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý KEY để cấu hình Whitelist</button>` : ""}
+      ${rotate ? `<div style="font-size:12px;color:var(--gold);line-height:1.6;margin-top:10px">🌐 KEY đã được lưu vào tài khoản. Trước khi lấy IP hoặc xoay IP, bạn cần cấu hình Danh sách IP được phép cho KEY trong mục Quản lý KEY.</div><button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal();setTimeout(()=>nav('rotate'),100)">🌐 Mở Quản lý KEY để cấu hình Whitelist</button>` : ""}
     `);
     return;
   }
@@ -998,7 +1017,7 @@ async function loadOrders() {
         <div class="card">
           <div class="product-head">
             <div class="product-name">${escapeHtml(o.name)}</div>
-            <div class="stock-tag">${o.server === "sts" ? "Server 2" : "Server 1"} · SL: ${o.amount}</div>
+            <div class="stock-tag">${o.server === "sts" ? "Máy chủ 2" : "Máy chủ 1"} · SL: ${o.amount}</div>
           </div>
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
           <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
@@ -1060,9 +1079,9 @@ async function loadRotations() {
       const isSelected = SELECTED_KEYS.has(k.proxy_key);
       const note = k.note ? `<div class="info-row"><span>Ghi chú</span><span>${escapeHtml(k.note)}</span></div>` : "";
       const sourceTag = `<span class="source-tag ${k.source}">${k.source === 'purchase' ? 'Mua' : k.source === 'manual' ? 'Nhập tay' : k.source === 'admin_gift' ? 'Admin tặng' : 'Admin chuyển'}</span>`;
-      const serverLabel = k.server === 'sts' ? 'Server 2' : 'Server 1';
+      const serverLabel = k.server === 'sts' ? 'Máy chủ 2' : 'Máy chủ 1';
       const wlHtml = (k.server === 'sts' && !k.whitelist_configured) 
-        ? `<div style="color:var(--danger);font-size:11px;margin-top:4px">⚠️ Chưa cấu hình IP Whitelist</div>` 
+        ? `<div style="color:var(--danger);font-size:11px;margin-top:4px">⚠️ Chưa cấu hình Danh sách IP được phép</div>` 
         : "";
       
       return `
@@ -1200,14 +1219,14 @@ async function deleteKey(keyId) {
 function openAddKeyModal() {
   openModal(`
     <div class="modal-title">➕ Nhập KEY<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Chọn Server tương ứng với KEY bạn có.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Chọn máy chủ tương ứng với mã khóa bạn đang có.</div>
     <select id="addKeyServer" class="input" style="margin-bottom:12px" onchange="toggleWhitelistInput()">
-      <option value="ola">Server 1</option>
-      <option value="sts">Server 2</option>
+      <option value="ola">Máy chủ 1</option>
+      <option value="sts">Máy chủ 2</option>
     </select>
     <input class="input" id="addKeyInput" placeholder="Nhập key..." autocomplete="off">
     <div id="whitelistBox" style="display:none">
-      <div style="font-weight:600;font-size:13px;margin:8px 0 4px">IP Whitelist (Server 2)</div>
+      <div style="font-weight:600;font-size:13px;margin:8px 0 4px">Danh sách IP được phép (Máy chủ 2)</div>
       <textarea class="input" id="addKeyWhitelist" placeholder="VD: 1.2.3.4&#10;5.6.7.8" style="min-height:80px"></textarea>
     </div>
     <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitAddKey()">Lưu KEY</button>
@@ -1227,7 +1246,7 @@ async function submitAddKey() {
   if (server === "sts") {
     const raw = document.getElementById("addKeyWhitelist").value;
     ip_whitelist = raw.split(/[\n,;]+/).map(x => x.trim()).filter(x => x);
-    if (!ip_whitelist.length) { toast("Vui lòng nhập ít nhất 1 IP Whitelist", "error"); return; }
+    if (!ip_whitelist.length) { toast("Vui lòng nhập ít nhất 1 Danh sách IP được phép", "error"); return; }
   }
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang lưu...";
   try {
@@ -1262,7 +1281,7 @@ async function loadRotationHistory() {
 
 function openWhitelistModal(key, ips) {
   openModal(`
-    <div class="modal-title">🌐 Cập nhật IP Whitelist<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-title">🌐 Cập nhật Danh sách IP được phép<button class="close-x" onclick="closeModal()">✕</button></div>
     <div class="info-row"><span>Key</span><span style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(key)}</span></div>
     <textarea class="input" id="wlInput" placeholder="Mỗi dòng 1 IP" style="min-height:100px;margin-top:12px">${ips.join("\n")}</textarea>
     <button class="btn btn-primary btn-block" onclick="submitWhitelist('${key}')">Cập nhật</button>
@@ -1755,7 +1774,49 @@ async function adminTab(tab, el) {
     }
     const rows = r.items || r.users || r.orders || r.referrers || r.keys || r.logs || [];
     if (!rows.length) {
-      box.innerHTML = '<div class="empty">Không có dữ liệu</div>';
+      box.innerHTML = '<div class="empty">Chưa có dữ liệu</div>';
+      return;
+    }
+    if (tab === "users") {
+      box.innerHTML = rows.map(x => {
+        const title = x.first_name || x.username || ("Người dùng " + x.id);
+        const username = x.username ? "@" + x.username : "Chưa có tên người dùng";
+        const money = n => Number(n || 0).toLocaleString("vi-VN") + "đ";
+        const metric = (label, value) => `<div class="user-metric"><span>${label}</span><b>${escapeHtml(value)}</b></div>`;
+        return `<div class="card admin-user-card" style="margin-bottom:9px;padding:12px">
+          <div class="admin-user-top">
+            <div class="admin-user-ident">
+              <div class="admin-user-name">${escapeHtml(title)}</div>
+              <div class="admin-user-handle">${escapeHtml(username)}</div>
+              <div class="admin-user-id">ID Telegram: <b>${escapeHtml(x.id)}</b></div>
+            </div>
+            <span class="user-status ${x.banned ? 'is-banned' : 'is-active'}">${x.banned ? 'Đã khóa' : 'Hoạt động'}</span>
+          </div>
+          <div class="admin-user-grid">
+            ${metric('Số dư hiện có', money(x.balance))}
+            ${metric('Đã nạp', money(x.deposit_total))}
+            ${metric('Đã chi tiêu', money(x.total_spent))}
+            ${metric('GSM đang sở hữu', x.gsm_owned_now || 0)}
+            ${metric('GSM đã mua', x.gsm_owned_total || 0)}
+            ${metric('Proxy tĩnh đang có', x.static_owned_now || 0)}
+            ${metric('Proxy tĩnh đã mua', x.static_owned_total || 0)}
+            ${metric('Proxy xoay đang có', x.rotate_owned_now || 0)}
+            ${metric('Proxy xoay đã mua', x.rotate_owned_total || 0)}
+          </div>
+          <div class="admin-user-actions">
+            <button class="btn btn-outline btn-xs" onclick="adminAddToGroup(${Number(x.id)})">➕ Gửi lời mời nhóm VIP</button>
+            <button class="btn btn-outline btn-xs" onclick="adminToggleUserDetails(${Number(x.id)})">Xem thêm</button>
+          </div>
+          <div id="admin-user-extra-${Number(x.id)}" class="admin-user-extra" hidden>
+            <div class="info-row"><span>Tên hiển thị</span><b>${escapeHtml(x.first_name || 'Chưa cập nhật')}</b></div>
+            <div class="info-row"><span>Tên người dùng</span><b>${escapeHtml(username)}</b></div>
+            <div class="info-row"><span>ID Telegram</span><b>${escapeHtml(x.id)}</b></div>
+            <div class="info-row"><span>Ngày tham gia</span><b>${escapeHtml(x.created_at || 'Không rõ')}</b></div>
+            <div class="info-row"><span>Hoạt động gần nhất</span><b>${escapeHtml(x.last_seen || 'Không rõ')}</b></div>
+            <div class="info-row"><span>Tình trạng</span><b>${x.banned ? 'Đã khóa' : 'Đang hoạt động'}</b></div>
+          </div>
+        </div>`;
+      }).join("");
       return;
     }
     box.innerHTML = rows.map(x => {
@@ -1776,10 +1837,30 @@ async function adminTab(tab, el) {
   }
 }
 
+function adminToggleUserDetails(userId) {
+  const panel = document.getElementById(`admin-user-extra-${userId}`);
+  if (panel) panel.hidden = !panel.hidden;
+}
+
+async function adminAddToGroup(userId) {
+  if (!confirm(`Gửi lời mời tham gia nhóm VIP cho người dùng Telegram ${userId}?`)) return;
+  try {
+    const r = await api("/api/admin/add-to-group", { user_id: userId });
+    if (!r?.ok) {
+      toast(r?.error || "Không thể thêm người dùng vào nhóm", "error");
+      return;
+    }
+    toast(r.message || "Đã thêm người dùng vào nhóm VIP", "success");
+  } catch (e) {
+    console.error("adminAddToGroup:", e);
+    toast("Lỗi kết nối khi thêm người dùng vào nhóm", "error");
+  }
+}
+
 function openBroadcast() {
   openModal(`
     <div class="modal-title">📢 Gửi thông báo<button class="close-x" onclick="closeModal()">✕</button></div>
-    <textarea id="broadcastMessage" class="input" placeholder="Nhập nội dung thông báo"></textarea>
+    <textarea id="broadcastMessage" class="input" placeholder="Nhập nội dung thông báo bằng tiếng Việt"></textarea>
     <button class="btn btn-purple btn-block" onclick="sendBroadcast()">Gửi thông báo</button>
   `);
 }
