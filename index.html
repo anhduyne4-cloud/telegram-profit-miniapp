@@ -1837,6 +1837,61 @@ function renderAdminStats(target, values, labels) {
       </div>`).join("");
 }
 
+// ===== BẬT / TẮT MÁY CHỦ (CHỈ ADMIN) =====
+async function loadServerControl() {
+  const box = document.getElementById("serverControlContent");
+  if (!box) return;
+  box.innerHTML = '<span style="color:var(--muted)">Đang tải trạng thái...</span>';
+  try {
+    // Gọi KHÔNG có field "enabled" -> backend chỉ trả về trạng thái
+    const r = await api("/api/admin/server-status", {});
+    if (!r.ok) {
+      box.innerHTML = `<span style="color:var(--danger)">${escapeHtml(r.error || "Không tải được trạng thái")}</span>`;
+      return;
+    }
+    const servers = r.servers || {};
+    const rows = [
+      { key: "ola", label: "🟦 Máy chủ 1 (Ola)" },
+      { key: "sts", label: "🟪 Máy chủ 2 (STS)" }
+    ].map(s => {
+      const enabled = !!servers[s.key];
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px">
+          <div style="font-weight:600;font-size:13px">${s.label}</div>
+          <button class="btn btn-xs ${enabled ? "btn-success" : "btn-danger"}"
+                  onclick="toggleServer('${s.key}', ${!enabled})">
+            ${enabled ? "🟢 Đang bật" : "🔴 Đang tắt"}
+          </button>
+        </div>`;
+    }).join("");
+    box.innerHTML = rows;
+  } catch (e) {
+    console.error("loadServerControl:", e);
+    box.innerHTML = '<span style="color:var(--danger)">Lỗi kết nối máy chủ</span>';
+  }
+}
+
+async function toggleServer(server, enabled) {
+  const label = server === "sts" ? "Máy chủ 2" : "Máy chủ 1";
+  if (!confirm(`${enabled ? "BẬT" : "TẮT"} ${label}?`)) return;
+  try {
+    const r = await api("/api/admin/server-status", { server, enabled });
+    if (!r.ok) {
+      toast(dichNoiDung(r.error || "Lỗi cập nhật"), "error");
+      return;
+    }
+    toast(r.message || `${label} đã ${enabled ? "bật" : "tắt"}`, "success");
+    // Cập nhật bộ nhớ SERVER_STATUS toàn cục để banner bảo trì hiển thị ngay
+    if (r.servers) {
+      SERVER_STATUS = { ola: !!r.servers.ola, sts: !!r.servers.sts };
+      renderMaintenanceNotices();
+    }
+    loadServerControl();
+  } catch (e) {
+    toast("Không thể kết nối máy chủ", "error");
+  }
+}
+
 async function loadAdmin() {
   const box = document.getElementById("adminList");
   if (!USER?.is_admin) {
@@ -1844,6 +1899,9 @@ async function loadAdmin() {
     return;
   }
   if (box) box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+
+  loadServerControl();   // ✅ THÊM DÒNG NÀY
+
   const statsBox = document.getElementById("adminStats");
   const proxyStatsBox = document.getElementById("proxyStatsBox");
   const statLabels = {
@@ -1852,7 +1910,7 @@ async function loadAdmin() {
     total_orders: "Tổng đơn hàng", total_proxy_sold: "Proxy đã bán",
     total_users: "Tổng người dùng", banned_users: "Người bị cấm",
     total_deposit: "Tổng nạp", total_rotations: "Lượt thay đổi IP",
-    total_keys: "Tổng số KEYS", total_commission: "Tổng hoa hồng",
+    total_keys: "Tổng số mã khóa", total_commission: "Tổng hoa hồng",
     total_referrals: "Lượt giới thiệu", total_extends: "Lượt gia hạn",
     total_balance: "Số dư người dùng", total_referral_balance: "Số dư hoa hồng",
     gsm_available: "Tổng GSM còn trong kho", gsm_sold: "Tổng GSM đã bán",
@@ -1919,6 +1977,7 @@ async function adminTab(tab, el) {
         const username = x.username ? "@" + x.username : "Chưa có tên người dùng";
         const money = n => Number(n || 0).toLocaleString("vi-VN") + "đ";
         const metric = (label, value) => `<div class="user-metric"><span>${label}</span><b>${escapeHtml(value)}</b></div>`;
+        const safeName = JSON.stringify(x.first_name || x.username || "").replace(/"/g, "&quot;");
         return `<div class="card admin-user-card" style="margin-bottom:9px;padding:12px">
           <div class="admin-user-top">
             <div class="admin-user-ident">
@@ -1940,6 +1999,8 @@ async function adminTab(tab, el) {
             ${metric('Proxy xoay đã mua', x.rotate_owned_total || 0)}
           </div>
           <div class="admin-user-actions">
+            <button class="btn btn-success btn-xs" onclick="openBalanceModal(${Number(x.id)}, 'add', ${safeName})">➕ Cộng tiền</button>
+            <button class="btn btn-danger btn-xs" onclick="openBalanceModal(${Number(x.id)}, 'sub', ${safeName})">➖ Trừ tiền</button>
             <button class="btn btn-outline btn-xs" onclick="adminAddToGroup(${Number(x.id)})">➕ Gửi lời mời nhóm VIP</button>
             <button class="btn btn-outline btn-xs" onclick="adminToggleUserDetails(${Number(x.id)})">Xem thêm</button>
           </div>
@@ -1980,6 +2041,106 @@ async function adminTab(tab, el) {
   } catch (e) {
     console.error("adminTab:", e);
     box.innerHTML = '<div class="empty">Không thể tải dữ liệu quản trị</div>';
+  }
+}
+
+// ===== CỘNG / TRỪ TIỀN USER (CHỈ ADMIN) =====
+function openBalanceModal(userId, action, userName) {
+  if (!USER?.is_admin) { toast("Bạn không có quyền thực hiện", "error"); return; }
+  const isAdd = action === "add";
+  const title = isAdd ? "➕ Cộng tiền" : "➖ Trừ tiền";
+  const color = isAdd ? "linear-gradient(115deg,#21c997,#13a879)" : "linear-gradient(115deg,#ff6b83,#e74770)";
+  openModal(`
+    <div class="modal-title">${title}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Người dùng</span><b>${escapeHtml(userName || ("ID " + userId))}</b></div>
+    <div class="info-row"><span>ID Telegram</span><b>${escapeHtml(String(userId))}</b></div>
+    <div class="info-row"><span>Số dư hiện tại</span><b id="balCurrent" style="color:var(--gold)">Đang tải...</b></div>
+
+    <div style="margin:14px 0 6px;font-weight:600;font-size:13px">Số tiền (VNĐ)</div>
+    <input class="input" id="balAmount" type="number" min="1" step="1000" inputmode="numeric" placeholder="VD: 50000">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-outline btn-xs" onclick="document.getElementById('balAmount').value=10000">10K</button>
+      <button class="btn btn-outline btn-xs" onclick="document.getElementById('balAmount').value=50000">50K</button>
+      <button class="btn btn-outline btn-xs" onclick="document.getElementById('balAmount').value=100000">100K</button>
+      <button class="btn btn-outline btn-xs" onclick="document.getElementById('balAmount').value=500000">500K</button>
+      <button class="btn btn-outline btn-xs" onclick="document.getElementById('balAmount').value=1000000">1M</button>
+    </div>
+
+    <div style="margin:6px 0;font-weight:600;font-size:13px">Lý do (tuỳ chọn)</div>
+    <input class="input" id="balReason" placeholder="VD: Hoàn tiền sự cố, thưởng..." maxlength="200">
+
+    <div class="info-row" style="margin-top:8px">
+      <span>Thông báo cho user</span>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px">
+        <input type="checkbox" id="balNotify" checked style="width:16px;height:16px">
+        Có
+      </label>
+    </div>
+
+    <button class="btn btn-block" style="margin-top:12px;background:${color};color:#fff"
+            onclick="submitBalanceChange(${userId}, '${action}')">${title}</button>
+    <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal()">Huỷ</button>
+  `);
+  setTimeout(() => document.getElementById("balAmount")?.focus(), 100);
+  // Tải số dư hiện tại
+  api("/api/admin/users", {}).then(r => {
+    if (r?.ok) {
+      const u = (r.users || []).find(x => x.id === userId);
+      const el = document.getElementById("balCurrent");
+      if (el && u) el.textContent = fmt(u.balance);
+    }
+  }).catch(() => {});
+}
+
+async function submitBalanceChange(userId, action) {
+  const amountEl = document.getElementById("balAmount");
+  const reasonEl = document.getElementById("balReason");
+  const notifyEl = document.getElementById("balNotify");
+  const amount = Number(amountEl?.value || 0);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    toast("Số tiền phải lớn hơn 0", "error");
+    return;
+  }
+  if (amount > 500000000) {
+    toast("Số tiền quá lớn (tối đa 500.000.000đ)", "error");
+    return;
+  }
+  const reason = (reasonEl?.value || "").trim();
+  const notify = !!notifyEl?.checked;
+  const isAdd = action === "add";
+  if (!confirm(`${isAdd ? "CỘNG" : "TRỪ"} ${amount.toLocaleString("vi-VN")}đ ${isAdd ? "vào" : "khỏi"} user ${userId}?`)) return;
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = "Đang xử lý...";
+  try {
+    const r = await api("/api/admin/balance", {
+      user_id: userId,
+      amount,
+      action,
+      reason,
+      notify
+    });
+    if (!r.ok) {
+      toast(dichNoiDung(r.error || "Không thể cập nhật số dư"), "error");
+      btn.disabled = false;
+      btn.textContent = isAdd ? "➕ Cộng tiền" : "➖ Trừ tiền";
+      return;
+    }
+    toast(`✅ ${isAdd ? "Đã cộng" : "Đã trừ"} ${amount.toLocaleString("vi-VN")}đ — số dư mới: ${Number(r.new_balance || 0).toLocaleString("vi-VN")}đ`, "success");
+    closeModal();
+    // Nếu admin tự sửa số dư của chính mình → cập nhật header
+    if (userId === USER?.id && typeof r.new_balance === "number") {
+      USER.balance = r.new_balance;
+      document.getElementById("hdrBal").textContent = fmt(r.new_balance);
+    }
+    // Tải lại danh sách user để thấy số dư mới
+    if (currentAdminTab === "users") adminTab("users");
+  } catch (e) {
+    console.error("submitBalanceChange:", e);
+    toast("Không thể kết nối máy chủ", "error");
+    btn.disabled = false;
+    btn.textContent = isAdd ? "➕ Cộng tiền" : "➖ Trừ tiền";
   }
 }
 
