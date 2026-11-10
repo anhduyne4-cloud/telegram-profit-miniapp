@@ -165,11 +165,6 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
       💎 <b style="color:var(--gold)">Ví hoa hồng</b> dùng được cho <b>Proxy</b> — không dùng cho GSM/KMTT
     </div>
   </div>
-  <div class="tabs" id="serverTabs">
-    <div class="tab active" data-server="all" onclick="filterServer('all',this)">🌐 Tất cả server</div>
-    <div class="tab" data-server="ola" onclick="filterServer('ola',this)">🟦 Server 1</div>
-    <div class="tab" data-server="sts" onclick="filterServer('sts',this)">🟪 Server 2</div>
-  </div>
   <div class="tabs" id="catTabs">
     <div class="tab active" data-cat="" onclick="filterCat('',this)">🛒 Tất cả</div>
   </div>
@@ -455,7 +450,6 @@ let USER = null;
 let ALL_PRODUCTS = [];
 let currentProduct = null;
 let currentCat = "";
-let currentServer = "all";
 let depositPolling = null;
 let balancePolling = null;
 let ROTATIONS = [];
@@ -653,26 +647,14 @@ async function loadProducts() {
   } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
 }
 function shortCat(name) { return !name ? "Khác" : (name.length > 35 ? name.substring(0,33) + "…" : name); }
-function productsForServer() {
-  return currentServer === "all" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => (p.server || "ola") === currentServer);
-}
-function filterServer(server, el) {
-  currentServer = server;
-  currentCat = "";
-  document.querySelectorAll("#serverTabs .tab").forEach(t => t.classList.remove("active"));
-  el.classList.add("active");
-  buildCatTabs();
-  renderProducts();
-}
 function buildCatTabs() {
-  const source = productsForServer();
   const cats = []; const seen = new Set();
-  source.forEach(p => {
+  ALL_PRODUCTS.forEach(p => {
     if (p.category_id && !seen.has(p.category_id)) { seen.add(p.category_id); cats.push({id: p.category_id, name: p.category_name}); }
   });
-  const html = `<div class="tab ${currentCat===""?"active":""}" data-cat="" onclick="filterCat('',this)">🛒 Tất cả (${source.length})</div>` +
+  const html = `<div class="tab ${currentCat===""?"active":""}" data-cat="" onclick="filterCat('',this)">🛒 Tất cả (${ALL_PRODUCTS.length})</div>` +
     cats.map(c => {
-      const count = source.filter(p => p.category_id === c.id).length;
+      const count = ALL_PRODUCTS.filter(p => p.category_id === c.id).length;
       return `<div class="tab ${currentCat===c.id?"active":""}" data-cat="${c.id}" onclick="filterCat('${c.id}',this)">${escapeHtml(shortCat(c.name))} (${count})</div>`;
     }).join("");
   document.getElementById("catTabs").innerHTML = html;
@@ -685,14 +667,13 @@ function filterCat(catId, el) {
 }
 function renderProducts() {
   const list = document.getElementById("productsList");
-  const source = productsForServer();
-  const items = currentCat === "" ? source : source.filter(p => p.category_id === currentCat);
+  const items = currentCat === "" ? ALL_PRODUCTS : ALL_PRODUCTS.filter(p => p.category_id === currentCat);
   if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Không có SP</div>'; return; }
   list.innerHTML = items.map(p => `
     <div class="card" onclick="openBuy('${p.id}')">
       <div class="product-head">
         <div class="product-name">${escapeHtml(p.name)}</div>
-        <div class="stock-tag">${p.server === "sts" ? "Server 2" : "Server 1"} · ${p.stock} có sẵn</div>
+        <div class="stock-tag">${p.stock} có sẵn</div>
       </div>
       ${p.is_rotate ? `<div style="font-size:11px;color:var(--primary);margin-bottom:6px">🔄 Hỗ trợ xoay IP</div>` : ""}
       ${p.min_buy > 1 ? `<div style="font-size:11px;color:var(--gold);margin-bottom:6px">⚠️ Mua tối thiểu ${p.min_buy} cái</div>` : ""}
@@ -728,22 +709,6 @@ function openBuy(id) {
       <div class="qty-val" id="buyQty">${minBuy}</div>
       <button class="qty-btn" onclick="changeQty(1)">+</button>
     </div>
-    ${p.server === "sts" ? `
-      <div style="margin:14px 0 6px;font-weight:600;font-size:13px">Giao thức</div>
-      <select id="stsProtocol" class="form-control" style="width:100%;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
-        <option value="http">HTTP</option>
-        <option value="socks5">SOCKS5</option>
-      </select>
-      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Thời hạn (ngày) <small style="color:var(--muted);font-weight:400">— để trống nếu dùng mặc định</small></div>
-      <input id="stsDuration" type="number" min="1" placeholder="Ví dụ: 30" style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
-      <div style="margin:12px 0 6px;font-weight:600;font-size:13px">Chọn nhà mạng <small style="color:var(--muted);font-weight:400">— chọn nhà mạng của proxy</small></div>
-      <select id="stsCarrier" required style="width:100%;box-sizing:border-box;padding:11px;border-radius:8px;background:var(--card2);color:var(--text);border:1px solid var(--border)">
-        <option value="">-- Chọn nhà mạng --</option>
-        <option value="viettel">Viettel</option>
-        <option value="fpt">FPT</option>
-        <option value="vnpt">VNPT</option>
-      </select>
-    ` : ""}
     <div class="info-row"><span>Tổng tiền</span><span id="buyTotal">${fmt(p.price * minBuy)}</span></div>
     <button class="btn btn-success btn-block" style="margin-top:14px" onclick="doBuy()">✅ Xác nhận mua</button>
   `);
@@ -760,27 +725,7 @@ async function doBuy() {
   const btn = event.target;
   btn.disabled = true; btn.textContent = "Đang xử lý...";
   try {
-    const buyData = {id: currentProduct.id, amount: qty};
-    if (currentProduct.server === "sts") {
-      const protocolEl = document.getElementById("stsProtocol");
-      const durationEl = document.getElementById("stsDuration");
-      const carrierEl = document.getElementById("stsCarrier");
-      if (carrierEl && !carrierEl.value) {
-        alert("Vui lòng chọn nhà mạng (Viettel, FPT hoặc VNPT).");
-        btn.disabled = false;
-        btn.textContent = "✅ Xác nhận mua";
-        return;
-      }
-      buyData.protocol = protocolEl ? protocolEl.value : "http";
-      if (durationEl && durationEl.value.trim()) {
-        buyData.duration = parseInt(durationEl.value, 10);
-      }
-      if (carrierEl && carrierEl.value.trim()) {
-        buyData.carrier = carrierEl.value.trim().toLowerCase();
-        buyData.custom_fields = {isp_code: carrierEl.value.trim().toLowerCase()};
-      }
-    }
-    const r = await api("/api/buy", buyData);
+    const r = await api("/api/buy", {id: currentProduct.id, amount: qty});
     if (!r.ok) {
       if (r.contact_admin) {
         closeModal();
@@ -816,23 +761,6 @@ async function doBuy() {
 }
 function showPurchased(r) {
   const proxies = r.proxies || [];
-  if (r.server === "sts") {
-    if (r.pending || !proxies.length) {
-      openModal(`
-        <div class="modal-title">⏳ Đơn hàng đang xử lý<button class="close-x" onclick="closeModal()">✕</button></div>
-        <div class="info-row"><span>Mã đơn</span><code>${escapeHtml(r.order_code || "")}</code></div>
-        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng proxy chưa được cấp. Hệ thống chưa nhận được địa chỉ proxy để hiển thị. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
-      `);
-      return;
-    }
-    // Server 2: chỉ hiển thị đúng dữ liệu ip:port:user:pass, không kèm JSON hay thông tin đơn.
-    window._copyData = proxies.join("\n");
-    openModal(`
-      <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${proxies.map(p => escapeHtml(p)).join("\n")}</pre>
-      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Copy</button>
-    `);
-    return;
-  }
   const raw = r.raw || "";
   const proxiesHtml = proxies.length
     ? proxies.map(p => `<div class="proxy-item"><span>${escapeHtml(p)}</span><button onclick='copyText(${JSON.stringify(p)})'>📋</button></div>`).join("")
@@ -851,7 +779,7 @@ function showPurchased(r) {
       <button class="btn btn-xs" onclick="copyAll()">📋 Copy</button>
     </div>
     ${proxiesHtml}
-    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : `<div style="margin-top:12px;font-size:12px;color:var(--muted)">ℹ️ Proxy tĩnh không hỗ trợ xoay IP.</div>`}
+    ${r.is_rotate ? `<button class="btn btn-gold btn-block" style="margin-top:14px" onclick="closeModal(); setTimeout(()=>nav('rotate'),100)">🔄 Xoay ngay</button>` : ""}
   `);
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
@@ -874,7 +802,7 @@ async function loadOrders() {
         <div class="card">
           <div class="product-head">
             <div class="product-name">${escapeHtml(o.name)}</div>
-            <div class="stock-tag">${o.server === "sts" ? "Server 2" : "Server 1"} · SL: ${o.amount}</div>
+            <div class="stock-tag">SL: ${o.amount}</div>
           </div>
           <div class="info-row"><span>Thời gian</span><span>${escapeHtml(o.buy_time || o.created_at)}</span></div>
           <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
@@ -1327,7 +1255,7 @@ async function loadRotations() {
   try {
     const r = await api("/api/my-keys");
     if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
-    ROTATIONS = (r.keys || []).filter(o => o.is_rotate !== false);
+    ROTATIONS = r.keys || [];
     if (!ROTATIONS.length) {
       list.innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><div>Chưa có key nào</div></div>`;
       return;
@@ -1340,7 +1268,6 @@ async function loadRotations() {
         <div class="product-name" style="padding-right:32px;font-family:monospace;font-size:13px">${escapeHtml(o.proxy_key)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">
           <span class="source-tag ${srcCls[o.source]||''}">${srcMap[o.source]||o.source}</span>
-          <span class="source-tag ${o.server === "sts" ? "admin_gift" : "manual"}">${o.server === "sts" ? "Server 2" : "Server 1"}</span>
         </div>
         <div class="rotate-ip-box" id="ip_${i}">
           <span style="min-width:0;flex:1"><span class="ip-label">IP: </span><b id="ipval_${i}">Đang tải...</b></span>
@@ -1351,7 +1278,6 @@ async function loadRotations() {
         </div>
         <div class="rotate-actions">
           <button class="btn btn-gold btn-sm" onclick="rotateOne('${escapeHtml(o.proxy_key)}', ${i})">🔄 Xoay</button>
-          ${o.server === "sts" ? `<button class="btn btn-outline btn-xs" onclick="openWhitelistModal('${escapeHtml(o.proxy_key)}')">🌐 Whitelist IP</button>` : ""}
           <button class="btn btn-danger btn-xs" onclick="deleteKey(${o.id})">🗑 Xoá</button>
         </div>
       </div>
@@ -1397,26 +1323,6 @@ async function rotateOne(key, idx) {
       if (el) { el.textContent = oldIp; el.style.color = "var(--gold)"; }
     }
   } catch(e) { toast("Lỗi", "error"); if(el) el.textContent = oldIp; }
-}
-function openWhitelistModal(key) {
-  openModal(`
-    <div class="modal-title">🌐 Cập nhật IP Whitelist<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Nhập một hoặc nhiều IP, mỗi IP một dòng hoặc phân cách bằng dấu phẩy.</div>
-    <textarea class="input" id="whitelistIps" placeholder="42.118.149.138"></textarea>
-    <button class="btn btn-success btn-block" onclick="submitWhitelist('${escapeHtml(key)}')">💾 Cập nhật whitelist</button>
-  `);
-}
-async function submitWhitelist(key) {
-  const raw = document.getElementById("whitelistIps").value.trim();
-  const ip_whitelist = raw.split(/[\\n,;]+/).map(x => x.trim()).filter(Boolean);
-  if (!ip_whitelist.length) { toast("Nhập ít nhất một IP", "error"); return; }
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang cập nhật...";
-  try {
-    const r = await api("/api/update-ip-whitelist", {key, ip_whitelist});
-    if (!r.ok) { toast(r.error || "Cập nhật thất bại", "error"); btn.disabled = false; btn.textContent = "💾 Cập nhật whitelist"; return; }
-    toast(r.msg || "Đã cập nhật whitelist", "success");
-    closeModal();
-  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "💾 Cập nhật whitelist"; }
 }
 async function deleteKey(keyId) {
   if (!confirm("Xoá key này?")) return;
@@ -1494,21 +1400,15 @@ function openAddKeyModal() {
   openModal(`
     <div class="modal-title">➕ Nhập key xoay<button class="close-x" onclick="closeModal()">✕</button></div>
     <input class="input" id="newKeyInput" placeholder="Dán key vào đây..." autocomplete="off">
-    <div style="font-size:12px;color:var(--muted);margin:0 0 6px">Key thuộc server</div>
-    <select class="input" id="newKeyServer">
-      <option value="ola">Server 1</option>
-      <option value="sts">Server 2</option>
-    </select>
     <button class="btn btn-success btn-block" onclick="submitAddKey()">➕ Thêm key</button>
   `);
 }
 async function submitAddKey() {
   const key = document.getElementById("newKeyInput").value.trim();
-  const server = document.getElementById("newKeyServer").value;
   if (!key) { toast("Nhập key", "error"); return; }
   const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
   try {
-    const r = await api("/api/add-key", {key, server});
+    const r = await api("/api/add-key", {key});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm key"; return; }
     toast(r.msg || "Đã thêm!", "success");
     closeModal(); setTimeout(() => loadRotations(), 300);
