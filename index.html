@@ -817,19 +817,23 @@ async function doBuy() {
 function showPurchased(r) {
   const proxies = r.proxies || [];
   if (r.server === "sts") {
-    if (r.pending || !proxies.length) {
+    const keys = (r.keys && r.keys.length) ? r.keys : (r.proxy_key ? [r.proxy_key] : []);
+    const rotate = !!r.is_rotate;
+    const ready = rotate ? keys.length > 0 : proxies.length > 0;
+    if (r.pending || !ready) {
       openModal(`
         <div class="modal-title">⏳ Đơn hàng đang xử lý<button class="close-x" onclick="closeModal()">✕</button></div>
         <div class="info-row"><span>Mã đơn</span><code>${escapeHtml(r.order_code || "")}</code></div>
-        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng proxy chưa được cấp. Hệ thống chưa nhận được địa chỉ proxy để hiển thị. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6">Nhà cung cấp đã nhận đơn nhưng ${rotate ? "KEY proxy xoay" : "proxy tĩnh"} chưa được cấp. Vui lòng kiểm tra lại mục đơn hàng sau ít phút.</p>
       `);
       return;
     }
-    // Server 2: chỉ hiển thị đúng dữ liệu ip:port:user:pass, không kèm JSON hay thông tin đơn.
-    window._copyData = proxies.join("\n");
+    // Server 2: proxy xoay chỉ trả KEY; proxy tĩnh chỉ trả ip:port:user:pass.
+    const output = rotate ? keys : proxies;
+    window._copyData = output.join("\n");
     openModal(`
-      <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${proxies.map(p => escapeHtml(p)).join("\n")}</pre>
-      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Copy</button>
+      <pre style="white-space:pre-wrap;word-break:break-all;font:13px/1.7 monospace;margin:0">${output.map(p => escapeHtml(p)).join("\n")}</pre>
+      <button class="btn btn-gold btn-block" style="margin-top:12px" onclick='copyAll()'>📋 Copy ${rotate ? "KEY" : "proxy"}</button>
     `);
     return;
   }
@@ -1377,7 +1381,19 @@ async function rotateOne(key, idx) {
     const r = await api("/api/rotate", {keys: [key]});
     if (!r.ok) { toast(r.error || "Lỗi", "error"); if(el) el.textContent = oldIp; return; }
     const res = (r.results || [])[0] || {};
-    if (res.success) {
+    if (res.status === "not_rotatable" || res.rotatable === false) {
+      toast("Sản phẩm này tự đổi IP, không hỗ trợ xoay thủ công.", "error");
+      if (el) { el.textContent = res.new_ip || oldIp || "Tự động đổi IP"; el.style.color = "var(--gold)"; }
+      openModal(`
+        <div class="modal-title">ℹ️ Không hỗ trợ xoay thủ công<button class="close-x" onclick="closeModal()">✕</button></div>
+        <p style="font-size:13px;line-height:1.6;color:var(--muted)">${escapeHtml(res.message || "Nhịp đổi IP đã được thiết lập khi mua. Proxy sẽ tự đổi IP theo lịch.")}</p>
+        <div style="font-family:monospace;color:var(--gold);word-break:break-all">${escapeHtml(res.new_ip || "")}</div>
+        <button class="btn btn-block" onclick="closeModal()">Đóng</button>
+      `);
+    } else if (res.status === "cooldown") {
+      toast(`⏳ Còn ${Number(res.second || 0)} giây cooldown; IP chưa đổi.`, "error");
+      if (el) { el.textContent = res.new_ip || oldIp || "Đang cooldown"; el.style.color = "var(--gold)"; }
+    } else if (res.success) {
       toast(`✅ Xoay thành công!`, "success");
       if (el) { el.textContent = res.new_ip || "Đã xoay"; el.style.color = "var(--success)"; }
       openModal(`
@@ -1393,8 +1409,8 @@ async function rotateOne(key, idx) {
         <button class="btn btn-block" onclick="closeModal()">Đóng</button>
       `);
     } else {
-      toast(`❌ Xoay thất bại`, "error");
-      if (el) { el.textContent = oldIp; el.style.color = "var(--gold)"; }
+      toast(res.message || "❌ Xoay thất bại", "error");
+      if (el) { el.textContent = res.new_ip || oldIp; el.style.color = "var(--gold)"; }
     }
   } catch(e) { toast("Lỗi", "error"); if(el) el.textContent = oldIp; }
 }
@@ -1457,6 +1473,7 @@ async function bulkRotate() {
         <div style="font-family:monospace;color:var(--muted);word-break:break-all;margin-bottom:6px">${escapeHtml(res.key)}</div>
         <div style="color:var(--muted);margin-bottom:4px">Cũ: ${escapeHtml(res.old_ip||"—")}</div>
         <div style="color:${res.success?'var(--success)':'var(--danger)'}">→ ${escapeHtml(res.new_ip||"—")}</div>
+        ${res.message ? `<div style="color:var(--muted);margin-top:4px">${escapeHtml(res.message)}</div>` : ""}
       </div>`).join("");
     openModal(`
       <div class="modal-title">🔄 Kết quả<button class="close-x" onclick="closeModal()">✕</button></div>
