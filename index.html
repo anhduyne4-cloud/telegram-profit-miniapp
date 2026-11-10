@@ -775,7 +775,7 @@ async function doBuy() {
     }
     const r = await api("/api/buy", buyData);
     if (!r.ok) {
-      if (r.refunded) {
+      if (r.refunded || r.refund_attempted) {
         try {
           const me = await api("/api/me/refresh");
           if (me.ok) { USER.balance = me.balance; USER.referral_balance = me.referral_balance; }
@@ -783,13 +783,15 @@ async function doBuy() {
         } catch(e) {}
         closeModal();
         openModal(`
-          <div class="modal-title">↩️ Đã hoàn tiền<button class="close-x" onclick="closeModal()">✕</button></div>
-          <div style="background:rgba(37,211,102,.12);border:1px solid var(--success);border-radius:12px;padding:14px;margin-bottom:12px">
-            <div style="font-weight:700;color:var(--success);margin-bottom:6px">Đơn Server 2 chưa được cấp proxy/KEY trong 75 giây.</div>
-            <div style="font-size:13px">Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.</div>
+          <div class="modal-title">${r.refunded ? "↩️ Đã hoàn tiền" : "⚠️ Đang kiểm tra hoàn tiền"}<button class="close-x" onclick="closeModal()">✕</button></div>
+          <div style="background:${r.refunded ? "rgba(37,211,102,.12)" : "rgba(255,165,0,.12)"};border:1px solid ${r.refunded ? "var(--success)" : "#f59e0b"};border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="font-weight:700;color:${r.refunded ? "var(--success)" : "#f59e0b"};margin-bottom:6px">Đơn ${escapeHtml(r.product_name || "proxy")} trên ${r.server === "ola" ? "Server 1" : "Server 2"} không thể hoàn tất.</div>
+            <div style="font-size:13px;margin-bottom:6px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
+            <div style="font-size:13px">${r.refunded ? `Hệ thống đã hoàn <b>${fmt(r.refund_amount || 0)}</b> về số dư của bạn.` : `Yêu cầu hoàn <b>${fmt(r.refund_amount || 0)}</b> chưa xác nhận thành công. Vui lòng liên hệ Admin để được kiểm tra.`}</div>
           </div>
-          <div style="font-size:12px;color:var(--muted);word-break:break-all">Mã đơn: ${escapeHtml(r.order_code || r.external_ref || "—")}</div>
-          <button class="btn btn-success btn-block" onclick="closeModal()">Đã hiểu</button>
+          <div style="font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:12px">Mã đơn: ${escapeHtml(r.order_code || r.external_ref || "—")}</div>
+          <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ Admin để được hỗ trợ</button>
+          <button class="btn btn-outline btn-block" onclick="closeModal()">Đóng</button>
         `);
         loadOrders();
         return;
@@ -799,7 +801,8 @@ async function doBuy() {
         openModal(`
           <div class="modal-title">⚠️ Cần hỗ trợ<button class="close-x" onclick="closeModal()">✕</button></div>
           <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:14px">
-            <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px">🚨 Sản phẩm đang gặp sự cố</div>
+            <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:10px">🚨 ${escapeHtml(r.product_name || "Sản phẩm")} đang gặp sự cố ${r.server === "ola" ? "(Server 1)" : r.server === "sts" ? "(Server 2)" : ""}</div>
+            <div style="font-size:13px;margin-bottom:8px">${escapeHtml(r.error || "Nhà cung cấp không thể xử lý đơn hàng.")}</div>
             <div style="font-size:13px">💡 <b>Số tiền của bạn CHƯA bị trừ</b> — yên tâm.</div>
           </div>
           <button class="btn btn-success btn-block" onclick="contactAdmin()" style="margin-bottom:8px">💬 Liên hệ Admin</button>
