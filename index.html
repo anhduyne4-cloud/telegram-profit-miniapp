@@ -52,7 +52,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;line-height:1.3}
 .close-x{background:var(--card2);border:none;color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;flex-shrink:0}
-.input,textarea.input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px;font-family:inherit;resize:vertical}
+.input,textarea.input,select.input{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px;font-family:inherit;resize:vertical}
 .input:focus{border-color:var(--primary)}
 textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .qty-row{display:flex;gap:10px;align-items:center;margin-bottom:14px}
@@ -434,7 +434,6 @@ let GSM_STATE = {
   "25": { price: 36000, stock: 0, qty: 1, label: "GSM 25 tin" },
 };
 
-
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
 INIT_DATA = tg?.initData || "";
 
@@ -579,6 +578,7 @@ async function refreshServerStatus() {
     }
   } catch(e) {}
 }
+
 async function init() {
   try {
     const r = await api("/api/auth");
@@ -595,10 +595,18 @@ async function init() {
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     refreshServerStatus();
-    loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
-    loadGsmInfo(); loadGsmOrders();
+    
+    // Chạy độc lập, không để lỗi 1 hàm làm hỏng toàn bộ
+    loadProducts().catch(e=>console.error(e));
+    loadOrders().catch(e=>console.error(e));
+    loadRotations().catch(e=>console.error(e));
+    loadExtendOrders().catch(e=>console.error(e));
+    loadReferrals().catch(e=>console.error(e));
+    loadGsmInfo().catch(e=>console.error(e));
+    loadGsmOrders().catch(e=>console.error(e));
     startBalancePolling();
   } catch(e) { 
+    console.error(e);
     toast("Lỗi kết nối: " + e.message, "error"); 
   }
 }
@@ -947,6 +955,298 @@ function viewOrder(orderJson) {
   window._copyData = proxies.length ? proxies.join("\n") : raw;
 }
 
+// ===== ROTATE (ĐÃ BỔ SUNG ĐẦY ĐỦ) =====
+function rotateTab(tab, el) {
+  currentRotateTab = tab;
+  document.querySelectorAll("#page-rotate .tab").forEach(t => t.classList.remove("active"));
+  if (el) el.classList.add("active");
+  if (tab === "rotate") {
+    document.getElementById("rotateList").style.display = "block";
+    document.getElementById("bulkBar").style.display = SELECTED_KEYS.size > 0 ? "flex" : "none";
+    loadRotations();
+  } else {
+    document.getElementById("rotateList").style.display = "block";
+    document.getElementById("bulkBar").style.display = "none";
+    loadRotationHistory();
+  }
+}
+
+async function loadRotations() {
+  const list = document.getElementById("rotateList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/my-keys");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải danh sách key</div>'; return; }
+    if (!r.keys || !r.keys.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">🔑</div>Chưa có key nào</div>';
+      return;
+    }
+    list.innerHTML = r.keys.map(k => {
+      const isSelected = SELECTED_KEYS.has(k.proxy_key);
+      const note = k.note ? `<div class="info-row"><span>Ghi chú</span><span>${escapeHtml(k.note)}</span></div>` : "";
+      const sourceTag = `<span class="source-tag ${k.source}">${k.source === 'purchase' ? 'Mua' : k.source === 'manual' ? 'Nhập tay' : k.source === 'admin_gift' ? 'Admin tặng' : 'Admin chuyển'}</span>`;
+      const serverLabel = k.server === 'sts' ? 'Server 2' : 'Server 1';
+      const wlHtml = (k.server === 'sts' && !k.whitelist_configured) 
+        ? `<div style="color:var(--danger);font-size:11px;margin-top:4px">⚠️ Chưa cấu hình IP Whitelist</div>` 
+        : "";
+      
+      return `
+        <div class="rotate-card ${isSelected ? 'selected' : ''}" onclick="toggleSelectKey('${k.proxy_key}', this)">
+          <input type="checkbox" class="rotate-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectKey('${k.proxy_key}', this.parentElement)">
+          <div style="padding-right:30px">
+            <div style="font-family:monospace;font-size:13px;color:var(--gold);font-weight:600;word-break:break-all;margin-bottom:4px">
+              ${escapeHtml(k.proxy_key)}
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+              ${serverLabel} ${sourceTag}
+            </div>
+            ${note}
+            ${wlHtml}
+            <div class="rotate-ip-box">
+              <span class="ip-label">IP:</span>
+              <span id="ip-${escapeHtml(k.proxy_key)}" style="flex:1;text-align:right">Đang tải...</span>
+              <button onclick="event.stopPropagation(); fetchProxyIp('${k.proxy_key}')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px">🔄</button>
+            </div>
+            <div class="rotate-actions">
+              <button class="btn btn-primary btn-xs" onclick="event.stopPropagation(); rotateSingle('${k.proxy_key}')">🔄 Xoay IP</button>
+              ${k.server === 'sts' ? `<button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); openWhitelistModal('${k.proxy_key}', ${JSON.stringify(k.ip_whitelist || []).replace(/"/g, '&quot;')})">🌐 Whitelist</button>` : ''}
+              <button class="btn btn-danger btn-xs" onclick="event.stopPropagation(); deleteKey(${k.id})">🗑</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+    
+    // Tự động lấy IP cho tất cả key
+    r.keys.forEach(k => {
+      fetchProxyIp(k.proxy_key);
+    });
+    updateBulkBar();
+  } catch(e) {
+    list.innerHTML = '<div class="empty">Lỗi</div>';
+  }
+}
+
+function toggleSelectKey(key, el) {
+  if (SELECTED_KEYS.has(key)) {
+    SELECTED_KEYS.delete(key);
+    el.classList.remove("selected");
+    const cb = el.querySelector('.rotate-checkbox');
+    if (cb) cb.checked = false;
+  } else {
+    SELECTED_KEYS.add(key);
+    el.classList.add("selected");
+    const cb = el.querySelector('.rotate-checkbox');
+    if (cb) cb.checked = true;
+  }
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulkBar");
+  const count = document.getElementById("bulkCount");
+  if (SELECTED_KEYS.size > 0) {
+    bar.style.display = "flex";
+    count.textContent = SELECTED_KEYS.size;
+  } else {
+    bar.style.display = "none";
+  }
+}
+
+async function bulkRotate() {
+  const keys = Array.from(SELECTED_KEYS);
+  if (!keys.length) return;
+  if (!confirm(`Xoay IP cho ${keys.length} key đã chọn?`)) return;
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Đang xoay...";
+  try {
+    const r = await api("/api/rotate", { keys });
+    if (!r.ok) {
+      toast(r.error || "Lỗi xoay IP", "error");
+      btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
+      return;
+    }
+    let success = 0, fail = 0, msgs = [];
+    r.results.forEach(res => {
+      if (res.success) success++; else fail++;
+      if (!res.success && res.message) msgs.push(res.message);
+    });
+    toast(`✅ Thành công: ${success} | ❌ Thất bại: ${fail}`, success > 0 ? "success" : "error");
+    SELECTED_KEYS.clear();
+    loadRotations();
+  } catch(e) {
+    toast("Lỗi kết nối", "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "🔄 Xoay hàng loạt";
+  }
+}
+
+async function rotateSingle(key) {
+  if (!confirm("Xoay IP cho key này?")) return;
+  toast("Đang xoay...", "success");
+  try {
+    const r = await api("/api/rotate", { keys: [key] });
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    const res = r.results[0];
+    if (res.success) {
+      toast("✅ Đã xoay IP thành công", "success");
+      fetchProxyIp(key);
+    } else {
+      toast(`❌ ${res.message || "Lỗi xoay IP"}`, "error");
+    }
+  } catch(e) { toast("Lỗi kết nối", "error"); }
+}
+
+async function fetchProxyIp(key) {
+  const el = document.getElementById(`ip-${key}`);
+  if (!el) return;
+  try {
+    const r = await api("/api/proxy-ip", { key });
+    if (r.ok && r.ip) {
+      el.textContent = r.ip;
+    } else if (r.whitelist_required) {
+      el.textContent = "Cần Whitelist";
+      el.style.color = "var(--gold)";
+    } else {
+      el.textContent = "Không lấy được";
+    }
+  } catch(e) { el.textContent = "Lỗi"; }
+}
+
+async function deleteKey(keyId) {
+  if (!confirm("Xóa key này khỏi danh sách?")) return;
+  try {
+    const r = await api("/api/delete-key", { key_id: keyId });
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
+    toast("✅ Đã xóa", "success"); loadRotations();
+  } catch(e) { toast("Lỗi", "error"); }
+}
+
+function openAddKeyModal() {
+  openModal(`
+    <div class="modal-title">➕ Nhập KEY<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Chọn Server tương ứng với KEY bạn có.</div>
+    <select id="addKeyServer" class="input" style="margin-bottom:12px" onchange="toggleWhitelistInput()">
+      <option value="ola">Server 1</option>
+      <option value="sts">Server 2</option>
+    </select>
+    <input class="input" id="addKeyInput" placeholder="Nhập key..." autocomplete="off">
+    <div id="whitelistBox" style="display:none">
+      <div style="font-weight:600;font-size:13px;margin:8px 0 4px">IP Whitelist (Server 2)</div>
+      <textarea class="input" id="addKeyWhitelist" placeholder="VD: 1.2.3.4&#10;5.6.7.8" style="min-height:80px"></textarea>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitAddKey()">Lưu KEY</button>
+  `);
+}
+
+function toggleWhitelistInput() {
+  const server = document.getElementById("addKeyServer").value;
+  document.getElementById("whitelistBox").style.display = server === "sts" ? "block" : "none";
+}
+
+async function submitAddKey() {
+  const key = document.getElementById("addKeyInput").value.trim();
+  const server = document.getElementById("addKeyServer").value;
+  if (!key) { toast("Vui lòng nhập key", "error"); return; }
+  let ip_whitelist = [];
+  if (server === "sts") {
+    const raw = document.getElementById("addKeyWhitelist").value;
+    ip_whitelist = raw.split(/[\n,;]+/).map(x => x.trim()).filter(x => x);
+    if (!ip_whitelist.length) { toast("Vui lòng nhập ít nhất 1 IP Whitelist", "error"); return; }
+  }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang lưu...";
+  try {
+    const r = await api("/api/add-key", { key, server, ip_whitelist });
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "Lưu KEY"; return; }
+    toast("✅ Đã lưu key", "success");
+    closeModal();
+    if (currentRotateTab === "rotate") loadRotations();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Lưu KEY"; }
+}
+
+async function loadRotationHistory() {
+  const list = document.getElementById("rotateList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/rotation-history");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    if (!r.history.length) { list.innerHTML = '<div class="empty">Chưa có lịch sử</div>'; return; }
+    list.innerHTML = r.history.map(h => `
+      <div class="card" style="margin-bottom:8px;padding:10px">
+        <div class="product-head" style="margin-bottom:4px">
+          <div style="font-family:monospace;font-size:12px;color:var(--gold);word-break:break-all">${escapeHtml(h.proxy_key)}</div>
+          <div class="stock-tag" style="background:${h.status==='success'?'rgba(37,211,102,.15)':'rgba(255,71,87,.15)'};color:${h.status==='success'?'var(--success)':'var(--danger)'}">${h.status==='success'?'Thành công':'Thất bại'}</div>
+        </div>
+        <div class="info-row" style="padding:4px 0"><span>Cũ</span><span>${escapeHtml(h.old_ip)}</span></div>
+        <div class="info-row" style="padding:4px 0"><span>Mới</span><span>${escapeHtml(h.new_ip)}</span></div>
+        <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px">${escapeHtml(h.created_at)}</div>
+      </div>
+    `).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+function openWhitelistModal(key, ips) {
+  openModal(`
+    <div class="modal-title">🌐 Cập nhật IP Whitelist<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>Key</span><span style="font-family:monospace;font-size:11px;word-break:break-all">${escapeHtml(key)}</span></div>
+    <textarea class="input" id="wlInput" placeholder="Mỗi dòng 1 IP" style="min-height:100px;margin-top:12px">${ips.join("\n")}</textarea>
+    <button class="btn btn-primary btn-block" onclick="submitWhitelist('${key}')">Cập nhật</button>
+  `);
+}
+
+async function submitWhitelist(key) {
+  const raw = document.getElementById("wlInput").value;
+  const ip_list = raw.split(/[\n,;]+/).map(x => x.trim()).filter(x => x);
+  if (!ip_list.length) { toast("Nhập ít nhất 1 IP", "error"); return; }
+  const btn = event.target; btn.disabled = true;
+  try {
+    const r = await api("/api/update-ip-whitelist", { key, ip_whitelist: ip_list });
+    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
+    toast("✅ Đã cập nhật whitelist", "success");
+    closeModal();
+    loadRotations();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; }
+}
+
+// ===== EXTEND (ĐÃ BỔ SUNG ĐẦY ĐỦ) =====
+async function loadExtendOrders() {
+  const list = document.getElementById("extendOrdersList");
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/my-extendable-orders");
+    if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    if (!r.orders.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>Không có đơn nào để gia hạn</div>'; return; }
+    list.innerHTML = r.orders.map(o => `
+      <div class="card">
+        <div class="product-head">
+          <div class="product-name">${escapeHtml(o.name)}</div>
+          <div class="stock-tag" style="background:${o.is_alive ? 'rgba(37,211,102,.15)' : 'rgba(255,71,87,.15)'};color:${o.is_alive ? 'var(--success)' : 'var(--danger)'}">${o.is_alive ? 'Còn hạn' : 'Hết hạn'}</div>
+        </div>
+        <div class="info-row"><span>Mã đơn</span><span style="font-family:monospace;font-size:11px">${escapeHtml(o.order_code)}</span></div>
+        ${o.expire ? `<div class="info-row"><span>Hết hạn</span><span style="color:var(--gold)">${escapeHtml(o.expire)}</span></div>` : ""}
+        ${o.remaining ? `<div class="info-row"><span>Còn lại</span><span>${escapeHtml(o.remaining)}</span></div>` : ""}
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <input class="input" style="margin:0;flex:1" type="number" id="extDays_${o.order_code}" value="1" min="1" placeholder="Số ngày">
+          <button class="btn btn-primary btn-sm" onclick="extendOrder('${o.order_code}')">Gia hạn</button>
+        </div>
+      </div>
+    `).join("");
+  } catch(e) { list.innerHTML = '<div class="empty">Lỗi</div>'; }
+}
+
+async function extendOrder(order_code) {
+  const days = parseInt(document.getElementById(`extDays_${order_code}`).value) || 1;
+  if (days < 1) { toast("Số ngày không hợp lệ", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Đang gia hạn...";
+  try {
+    const r = await api("/api/extend-order", { order_code, days });
+    if (!r.ok) { toast(r.error || "Lỗi gia hạn", "error"); btn.disabled = false; btn.textContent = "Gia hạn"; return; }
+    toast(`✅ Gia hạn thêm ${r.extended_days} ngày`, "success");
+    loadExtendOrders();
+    loadOrders();
+  } catch(e) { toast("Lỗi kết nối", "error"); btn.disabled = false; btn.textContent = "Gia hạn"; }
+}
+
 // ===== GSM =====
 async function loadGsmInfo() {
   try {
@@ -1137,725 +1437,217 @@ async function loadReferrals() {
   const earningsBox = document.getElementById("earningsList");
   if (!referredBox) return;
   referredBox.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
-  earningsBox.innerHTML = '';
+  if (earningsBox) earningsBox.innerHTML = "";
   try {
     const r = await api("/api/my-referrals");
-    if (!r.ok) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; return; }
+    if (!r || !r.ok) {
+      referredBox.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Không tải được dữ liệu giới thiệu")}</div>`;
+      return;
+    }
     REF_DATA = r;
-    const botUser = r.bot_username || "PROXY2GAME_bot";
-    const refLink = `https://t.me/${botUser}?start=ref_${USER.id}`;
-    document.getElementById("refLink").textContent = refLink;
-    window._refLink = refLink;
-    document.getElementById("refEarned").textContent = fmt(r.total_earned);
-    document.getElementById("refCount").textContent = r.total_referred;
-    document.getElementById("refBalance").textContent = fmt(r.referral_balance);
-    document.getElementById("refMainBalance").textContent = fmt(r.main_balance);
+    const balance = r.referral_balance ?? r.balance ?? USER?.referral_balance ?? 0;
+    const mainBalance = r.main_balance ?? r.user_balance ?? USER?.balance ?? 0;
+    const earned = r.total_earned ?? r.earned ?? 0;
+    const referrals = r.referrals ?? r.users ?? [];
+    const earnings = r.earnings ?? r.history ?? [];
 
-    if (!r.referred || !r.referred.length) {
-      referredBox.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Chưa mời được ai</div>';
-    } else {
-      referredBox.innerHTML = r.referred.map(p => {
-        const rateCls = p.current_rate >= 13 ? "r15" : "r0";
-        const rateText = p.current_rate > 0 ? `${p.current_rate}%` : "Chưa đủ 500K";
-        return `
-          <div class="card">
-            <div class="product-head">
-              <div class="product-name">${escapeHtml(p.first_name || p.username || "User")}</div>
-              <span class="rate-badge ${rateCls}">${rateText}</span>
-            </div>
-            <div class="info-row"><span>ID</span><span>${p.id}</span></div>
-            <div class="info-row"><span>Đã chi tiêu</span><span style="color:var(--gold)">${fmt(p.total_spent)}</span></div>
-            <div class="info-row"><span>Hoa hồng cho bạn</span><span style="color:var(--success)">${fmt(p.referral_paid)}</span></div>
-          </div>`;
-      }).join("");
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+    setText("refBalance", fmt(balance));
+    setText("refMainBalance", fmt(mainBalance));
+    setText("refEarned", fmt(earned));
+    setText("refCount", r.referral_count ?? r.count ?? referrals.length);
+
+    const link = r.referral_link || r.ref_link || r.invite_link || r.link || "";
+    const linkEl = document.getElementById("refLink");
+    if (linkEl) linkEl.textContent = link || "Chưa có link giới thiệu";
+
+    referredBox.innerHTML = referrals.length ? referrals.map(u => `
+      <div class="card">
+        <div class="product-head">
+          <div class="product-name">${escapeHtml(u.username || u.name || ("User #" + (u.id ?? "")))}</div>
+          <div class="stock-tag">${escapeHtml(u.status || "Đã giới thiệu")}</div>
+        </div>
+        ${u.created_at ? `<div class="info-row"><span>Ngày tham gia</span><span>${escapeHtml(u.created_at)}</span></div>` : ""}
+        ${u.total_spent != null ? `<div class="info-row"><span>Đã chi tiêu</span><span>${fmt(u.total_spent)}</span></div>` : ""}
+      </div>`).join("") : '<div class="empty"><div class="empty-icon">👥</div>Bạn chưa giới thiệu ai</div>';
+
+    if (earningsBox) {
+      earningsBox.innerHTML = earnings.length ? earnings.map(x => `
+        <div class="card">
+          <div class="info-row"><span>${escapeHtml(x.description || x.note || "Hoa hồng giới thiệu")}</span><span style="color:var(--success)">+${fmt(x.amount || x.commission || 0)}</span></div>
+          ${x.created_at ? `<div style="font-size:11px;color:var(--muted);text-align:right">${escapeHtml(x.created_at)}</div>` : ""}
+        </div>`).join("") : '<div class="empty">Chưa có lịch sử hoa hồng</div>';
     }
-    if (!r.earnings || !r.earnings.length) {
-      earningsBox.innerHTML = '<div class="empty" style="padding:20px;font-size:12px">Chưa có hoa hồng</div>';
-    } else {
-      earningsBox.innerHTML = r.earnings.slice(0, 30).map(e => `
-        <div class="card" style="border-color:rgba(37,211,102,.3)">
-          <div class="product-head">
-            <div class="product-name" style="font-size:13px">Từ người mời #${e.referred_id}</div>
-            <div class="stock-tag" style="background:rgba(37,211,102,.15);color:var(--success)">+${fmt(e.commission)}</div>
-          </div>
-          <div class="info-row"><span>Đơn hàng</span><span>${fmt(e.order_amount)}</span></div>
-          <div class="info-row"><span>Tổng chi tiêu</span><span>${fmt(e.total_spent)}</span></div>
-          <div class="info-row"><span>Mức</span><span>${e.rate}%</span></div>
-        </div>`).join("");
-    }
-  } catch(e) { referredBox.innerHTML = '<div class="empty">Lỗi</div>'; }
-}
-function copyRefLink() {
-  const link = window._refLink || "";
-  if (!link) { toast("Chưa có link", "error"); return; }
-  doCopy(link);
-}
-function shareRefLink() {
-  const link = window._refLink || "";
-  if (!link) { toast("Chưa có link", "error"); return; }
-  if (tg && tg.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("🎁 Tham gia Proxy Shop!")}`);
-  } else {
-    doCopy(`🎁 Tham gia Proxy Shop!\n${link}`);
+  } catch (e) {
+    console.error("loadReferrals:", e);
+    referredBox.innerHTML = '<div class="empty">Không thể kết nối để tải dữ liệu giới thiệu</div>';
   }
 }
 
-// ===== DEPOSIT =====
-function setAmt(n) { document.getElementById("depAmount").value = n; }
-async function loadDepositHistory() {
-  const box = document.getElementById("depositHistoryList");
-  if (!box) return;
-  box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải lịch sử...</div>';
-  try {
-    const r = await api("/api/deposit/history", {});
-    if (!r.ok) { box.innerHTML = '<div class="empty">Không tải được lịch sử nạp</div>'; return; }
-    const rows = r.history || [];
-    if (!rows.length) { box.innerHTML = '<div class="empty">Bạn chưa có giao dịch nạp tiền nào</div>'; return; }
-    box.innerHTML = rows.map(item => {
-      const status = item.display_status || (item.status === "paid" ? "success" : item.status === "pending" ? "pending" : "failed");
-      const label = status === "success" ? "Thành công" : status === "pending" ? "Đang chờ" : (item.status === "expired" ? "Thất bại · Hết hạn" : "Thất bại");
-      const color = status === "success" ? "var(--success)" : status === "pending" ? "var(--gold)" : "var(--danger)";
-      return `<div class="card" style="margin-bottom:10px">
-        <div class="product-head"><div class="product-name">💰 ${fmt(item.amount || 0)}</div><span class="stock-tag" style="color:${color};background:rgba(128,128,128,.12)">${label}</span></div>
-        <div class="info-row"><span>Nội dung chuyển khoản</span><span style="font-weight:700;color:var(--gold);word-break:break-all">${escapeHtml(item.content || item.code || "-")}</span></div>
-        <div class="info-row"><span>Thời gian tạo</span><span>${escapeHtml(item.created_at || "-")}</span></div>
-        ${item.paid_at ? `<div class="info-row"><span>Thời gian thành công</span><span>${escapeHtml(item.paid_at)}</span></div>` : ""}
-      </div>`;
-    }).join("");
-  } catch(e) { box.innerHTML = '<div class="empty">Lỗi tải lịch sử nạp</div>'; }
+function copyRefLink() {
+  const el = document.getElementById("refLink");
+  const value = el?.textContent?.trim() || "";
+  if (!value || value === "Đang tạo..." || value === "Chưa có link giới thiệu") {
+    toast("Chưa có link giới thiệu", "error");
+    return;
+  }
+  copyText(value);
+}
+function shareRefLink() {
+  const value = document.getElementById("refLink")?.textContent?.trim() || "";
+  if (!value || value === "Chưa có link giới thiệu" || value === "Đang tạo...") {
+    toast("Chưa có link giới thiệu", "error");
+    return;
+  }
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(value)}&text=${encodeURIComponent("Tham gia Proxy Shop qua link giới thiệu của mình!")}`;
+  if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
+  else window.open(shareUrl, "_blank", "noopener");
 }
 
-async function createDeposit() {
-  const amt = parseInt(document.getElementById("depAmount").value || "0");
-  if (amt < 10000) { toast("Nạp tối thiểu 10,000đ", "error"); return; }
+// ===== DEPOSIT =====
+function setAmt(amount) {
+  const input = document.getElementById("depAmount");
+  if (input) input.value = amount;
+}
+async function loadDepositHistory() {
+  const list = document.getElementById("depositHistoryList");
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải lịch sử...</div>';
   try {
-    const r = await api("/api/deposit", {amount: amt});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); loadDepositHistory(); return; }
-    const totalSec = r.expire_seconds || 300;
-    openModal(`
-      <div class="modal-title">💳 QR nạp tiền<button class="close-x" onclick="closeDeposit()">✕</button></div>
-      <div style="text-align:center;margin-bottom:12px;font-size:13px;font-weight:600">
-        <span style="color:var(--muted)">⏰ </span>
-        <span id="depCountdown" style="color:var(--gold);font-variant-numeric:tabular-nums">05:00</span>
-      </div>
-      <div class="qr-box"><img src="${r.qr}" alt="QR"></div>
-      <div class="info-row"><span>NH</span><span>${r.bank}</span></div>
-      <div class="info-row"><span>STK</span><span>${r.account_no}</span></div>
-      <div class="info-row"><span>Chủ</span><span>${r.account_name}</span></div>
-      <div class="info-row"><span>Tiền</span><span>${fmt(r.amount)}</span></div>
-      <div class="info-row"><span>ND</span><span style="color:var(--gold);font-weight:700">${r.content}</span></div>
-      <div id="depStatusMsg" style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted)">⏳ Đang chờ... Tự động duyệt</div>
-    `);
-    startDepositPoll(r.code, totalSec);
-    loadDepositHistory();
-  } catch(e) { toast("Lỗi", "error"); }
-}
-function startDepositPoll(code, totalSec) {
-  totalSec = totalSec || 300;
-  if (depositPolling) clearInterval(depositPolling);
-  if (window._depCountdownTimer) clearInterval(window._depCountdownTimer);
-  const startTime = Date.now();
-  window._depCountdownTimer = setInterval(() => {
-    const el = document.getElementById("depCountdown");
-    if (!el) { clearInterval(window._depCountdownTimer); return; }
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const remaining = Math.max(0, totalSec - elapsed);
-    const m = String(Math.floor(remaining / 60)).padStart(2, "0");
-    const s = String(remaining % 60).padStart(2, "0");
-    el.textContent = `${m}:${s}`;
-    if (remaining <= 30) el.style.color = "var(--danger)";
-    if (remaining === 0) {
-      clearInterval(window._depCountdownTimer);
-      const st = document.getElementById("depStatusMsg");
-      if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Hết hiệu lực!</span>';
+    const r = await api("/api/deposit/history");
+    if (!r?.ok) {
+      list.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Chưa tải được lịch sử nạp tiền")}</div>`;
+      return;
     }
-  }, 1000);
-  depositPolling = setInterval(async () => {
-    try {
-      const r = await api("/api/deposit/check", {code});
-      if (!r.ok) return;
-      if (r.status === "paid") {
-        clearInterval(depositPolling); depositPolling = null;
-        clearInterval(window._depCountdownTimer);
-        USER.balance = r.balance;
-        document.getElementById("hdrBal").textContent = fmt(r.balance);
-        closeModal(); toast("✅ Nạp thành công!", "success"); loadDepositHistory();
-      } else if (r.status === "expired") {
-        clearInterval(depositPolling); depositPolling = null;
-        clearInterval(window._depCountdownTimer);
-        const st = document.getElementById("depStatusMsg");
-        if (st) st.innerHTML = '<span style="color:var(--danger);font-weight:700">⏰ Mã đã hết hiệu lực</span>';
-        loadDepositHistory();
-      }
-    } catch(e) {}
-  }, 3000);
+    const items = r.deposits || r.history || r.transactions || [];
+    if (!items.length) {
+      list.innerHTML = '<div class="empty">Chưa có giao dịch nạp tiền</div>';
+      return;
+    }
+    list.innerHTML = items.map(x => `
+      <div class="card">
+        <div class="product-head">
+          <div class="product-name">${fmt(x.amount || x.price || 0)}</div>
+          <span class="stock-tag" style="${/success|paid|completed/i.test(x.status || "") ? "" : "background:rgba(255,215,0,.12);color:var(--gold)"}">${escapeHtml(x.status_label || x.status || "Đang xử lý")}</span>
+        </div>
+        ${x.code || x.transfer_code ? `<div class="info-row"><span>Mã giao dịch</span><span>${escapeHtml(x.code || x.transfer_code)}</span></div>` : ""}
+        ${x.created_at ? `<div class="info-row"><span>Thời gian</span><span>${escapeHtml(x.created_at)}</span></div>` : ""}
+      </div>`).join("");
+  } catch (e) {
+    console.error("loadDepositHistory:", e);
+    list.innerHTML = '<div class="empty">Không thể tải lịch sử nạp tiền</div>';
+  }
 }
-function closeDeposit() {
-  if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
-  if (window._depCountdownTimer) { clearInterval(window._depCountdownTimer); window._depCountdownTimer = null; }
-  closeModal();
+async function createDeposit() {
+  const input = document.getElementById("depAmount");
+  const amount = Number(input?.value || 0);
+  if (!Number.isFinite(amount) || amount < 10000) {
+    toast("Số tiền nạp tối thiểu là 10.000đ", "error");
+    return;
+  }
+  const btn = document.querySelector('#page-deposit button[onclick="createDeposit()"]');
+  if (btn) { btn.disabled = true; btn.textContent = "Đang tạo QR..."; }
+  try {
+    const r = await api("/api/deposit/create", { amount });
+    if (!r?.ok) { toast(r?.error || "Không tạo được giao dịch", "error"); return; }
+    const qr = r.qr_url || r.qr_image || r.qr || "";
+    const transfer = r.transfer_content || r.content || r.description || "";
+    const bank = r.bank_name || r.bank || "";
+    const account = r.account_number || r.account || "";
+    openModal(`
+      <div class="modal-title">💳 Thanh toán nạp tiền<button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="info-row"><span>Số tiền</span><span style="color:var(--gold)">${fmt(r.amount || amount)}</span></div>
+      ${bank ? `<div class="info-row"><span>Ngân hàng</span><span>${escapeHtml(bank)}</span></div>` : ""}
+      ${account ? `<div class="info-row"><span>Số tài khoản</span><span>${escapeHtml(account)}</span></div>` : ""}
+      ${transfer ? `<div class="code-box">${escapeHtml(transfer)}</div><button class="btn btn-outline btn-block" onclick='copyText(${JSON.stringify(transfer)})'>📋 Copy nội dung chuyển khoản</button>` : ""}
+      ${qr ? `<div class="qr-box"><img src="${escapeHtml(qr)}" alt="QR thanh toán"></div>` : ""}
+      <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px">Vui lòng chuyển đúng số tiền và nội dung để hệ thống tự động xác nhận.</p>
+    `);
+    loadDepositHistory();
+  } catch (e) {
+    console.error("createDeposit:", e);
+    toast("Lỗi kết nối khi tạo giao dịch", "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🎯 Tạo QR thanh toán"; }
+  }
 }
 
 // ===== ADMIN =====
-async function loadServerControls() {
-  const box = document.getElementById("serverControlContent");
-  if (!box || !USER || !USER.is_admin) return;
-  box.textContent = "Đang tải trạng thái...";
-  try {
-    const r = await api("/api/admin/server-status", {server: "ola"});
-    if (!r.ok) { box.textContent = r.error || "Không tải được trạng thái"; return; }
-    SERVER_STATUS = {ola: !!r.servers.ola, sts: !!r.servers.sts};
-    renderMaintenanceNotices();
-    box.innerHTML = [
-      {key:"ola", label:"Server 1", desc:"OlaProxy"},
-      {key:"sts", label:"Server 2", desc:"SieuthiSeeding"}
-    ].map(item => {
-      const enabled = SERVER_STATUS[item.key];
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div><div style="font-weight:700;color:var(--text)">${item.label} · ${item.desc}</div><div style="font-size:11px;color:${enabled ? "var(--success)" : "var(--danger)"};margin-top:3px">${enabled ? "🟢 Đang hoạt động" : "🔴 Đang bảo trì"}</div></div>
-        <button class="btn ${enabled ? "btn-danger" : "btn-success"} btn-sm" onclick="toggleServer('${item.key}', ${!enabled})">${enabled ? "Tắt server" : "Bật server"}</button>
-      </div>`;
-    }).join("");
-  } catch(e) { box.textContent = "Lỗi kết nối"; }
-}
-async function toggleServer(server, enabled) {
-  if (!USER || !USER.is_admin) { toast("Chỉ admin mới được phép", "error"); return; }
-  const label = server === "sts" ? "Server 2" : "Server 1";
-  const action = enabled ? "bật" : "tắt";
-  if (!confirm(`Bạn chắc chắn muốn ${action} ${label}? ${enabled ? "Server sẽ hoạt động trở lại." : "Khách sẽ không thể mua, lấy IP, xoay IP hoặc cập nhật whitelist trên server này."}`)) return;
-  try {
-    const r = await api("/api/admin/server-status", {server, enabled});
-    if (!r.ok) { toast(r.error || "Không thể cập nhật", "error"); return; }
-    SERVER_STATUS = {ola: !!r.servers.ola, sts: !!r.servers.sts};
-    renderMaintenanceNotices();
-    toast(r.message || "Đã cập nhật trạng thái", "success");
-    await loadServerControls();
-    await loadProducts();
-    if (document.getElementById("page-rotate")?.classList.contains("active")) await loadRotations();
-  } catch(e) { toast("Lỗi kết nối", "error"); }
-}
+// Các màn admin gọi API độc lập; nếu backend chưa bật endpoint tương ứng,
+// giao diện hiển thị thông báo thay vì làm hỏng toàn bộ Mini App.
+let currentAdminTab = "users";
 async function loadAdmin() {
+  const box = document.getElementById("adminList");
+  if (!USER?.is_admin) {
+    if (box) box.innerHTML = '<div class="empty">Bạn không có quyền truy cập</div>';
+    return;
+  }
+  const stats = document.getElementById("adminStats");
+  const proxyStats = document.getElementById("proxyStatsBox");
+  if (box) box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
-    if (USER && USER.is_admin) await loadServerControls();
-    const r = await api("/api/admin/stats");
-    if (!r.ok) return;
-    const s = r.stats;
-    document.getElementById("adminStats").innerHTML = `
-      <div class="stat-card gold"><div class="stat-val">${fmt(s.today_revenue)}</div><div class="stat-label">DT hôm nay</div></div>
-      <div class="stat-card green"><div class="stat-val">${fmt(s.today_profit)}</div><div class="stat-label">LN hôm nay</div></div>
-      <div class="stat-card"><div class="stat-val">${fmt(s.total_revenue)}</div><div class="stat-label">Tổng DT</div></div>
-      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_profit)}</div><div class="stat-label">Tổng LN</div></div>
-      <div class="stat-card"><div class="stat-val">${s.total_orders}</div><div class="stat-label">Đơn</div></div>
-      <div class="stat-card green"><div class="stat-val">${s.total_proxy_sold}</div><div class="stat-label">Proxy</div></div>
-      <div class="stat-card"><div class="stat-val">${s.total_users}</div><div class="stat-label">Khách</div></div>
-      <div class="stat-card pink"><div class="stat-val">${s.banned_users||0}</div><div class="stat-label">Bị cấm</div></div>
-      <div class="stat-card pink"><div class="stat-val">${s.total_rotations}</div><div class="stat-label">Lượt xoay</div></div>
-      <div class="stat-card gold"><div class="stat-val">${s.total_keys}</div><div class="stat-label">Keys</div></div>
-      <div class="stat-card green"><div class="stat-val">${fmt(s.total_deposit)}</div><div class="stat-label">Tổng nạp</div></div>
-      <div class="stat-card gold"><div class="stat-val">${fmt(s.total_commission)}</div><div class="stat-label">HH đã trả</div></div>
-      <div class="stat-card pink"><div class="stat-val">${fmt(s.total_referral_balance)}</div><div class="stat-label">Ví HH tồn</div></div>
-      <div class="stat-card green"><div class="stat-val">${s.total_extends}</div><div class="stat-label">Lượt GH</div></div>
-      <div class="stat-card gold"><div class="stat-val">${s.gsm15_available||0}</div><div class="stat-label">GSM15 kho</div></div>
-      <div class="stat-card pink"><div class="stat-val">${s.gsm15_sold||0}</div><div class="stat-label">GSM15 bán</div></div>
-      <div class="stat-card green"><div class="stat-val">${fmt(s.gsm15_profit||0)}</div><div class="stat-label">LN GSM15</div></div>
-      <div class="stat-card gold"><div class="stat-val">${s.gsm25_available||0}</div><div class="stat-label">GSM25 kho</div></div>
-      <div class="stat-card pink"><div class="stat-val">${s.gsm25_sold||0}</div><div class="stat-label">GSM25 bán</div></div>
-      <div class="stat-card green"><div class="stat-val">${fmt(s.gsm25_profit||0)}</div><div class="stat-label">LN GSM25</div></div>
-    `;
-    loadProxyStats(); adminTab("users");
-  } catch(e) {}
-}
-async function loadProxyStats() {
-  try {
-    const r = await api("/api/admin/proxy-stats");
-    if (!r.ok) return;
-    const box = document.getElementById("proxyStatsBox");
-    if (!box) return;
-    box.innerHTML = `
-      <div class="stat-card gold"><div class="stat-val">${r.total_proxy_sold}</div><div class="stat-label">Tổng proxy</div></div>
-      <div class="stat-card green"><div class="stat-val">${r.total_keys}</div><div class="stat-label">Keys xoay</div></div>
-      <div class="stat-card"><div class="stat-val">${r.total_orders}</div><div class="stat-label">Tổng đơn</div></div>
-      <div class="stat-card"><div class="stat-val">${r.unique_proxies}</div><div class="stat-label">Proxy unique</div></div>
-    `;
-  } catch(e) {}
+    const r = await api("/api/admin/overview");
+    if (r?.ok) {
+      if (stats) stats.innerHTML = (r.stats || []).map(s => `<div class="stat-card"><div class="stat-val">${escapeHtml(s.value ?? s.count ?? 0)}</div><div class="stat-label">${escapeHtml(s.label || s.name || "")}</div></div>`).join("");
+      if (proxyStats) proxyStats.innerHTML = (r.proxy_stats || []).map(s => `<div class="stat-card"><div class="stat-val">${escapeHtml(s.value ?? s.count ?? 0)}</div><div class="stat-label">${escapeHtml(s.label || s.name || "")}</div></div>`).join("");
+    }
+  } catch (e) { console.warn("Admin overview unavailable:", e); }
+  await adminTab(currentAdminTab);
 }
 async function adminTab(tab, el) {
-  if (el) { document.querySelectorAll("#page-admin .tab").forEach(t => t.classList.remove("active")); el.classList.add("active"); }
-  const box = document.getElementById("adminList");
-  box.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  try {
-    if (tab === "users") {
-      const r = await api("/api/admin/users");
-      if (!r.ok) { box.innerHTML = ""; return; }
-      box.innerHTML = r.users.map(u => {
-        const banned = u.banned;
-        const name = escapeHtml((u.first_name||u.username||"User").replace(/"/g,''));
-        return `
-        <div class="card" style="${banned ? 'border-color:rgba(255,71,87,.5);background:rgba(255,71,87,.05)' : ''}">
-          <div class="user-card-head">
-            <div style="min-width:0;flex:1">
-              <div class="product-name">${banned ? '🚫 ' : ''}${escapeHtml(u.first_name || u.username || "User")}</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px">ID: ${u.id}${u.username ? " • @"+escapeHtml(u.username) : ""}</div>
-            </div>
-            <div class="stock-tag" style="${banned ? 'background:rgba(255,71,87,.15);color:var(--danger)' : ''}">${banned ? '🚫 BANNED' : '💰 '+fmt(u.balance)}</div>
-          </div>
-          ${banned && u.ban_reason ? `<div class="info-row"><span>Lý do</span><span style="color:var(--danger);font-size:11px">${escapeHtml(u.ban_reason)}</span></div>` : ''}
-          <div class="info-row"><span>Đã chi</span><span>${fmt(u.total_spent)}</span></div>
-          <div class="info-row"><span>Proxy</span><span>${u.total_proxy}</span></div>
-          <div class="user-actions">
-            <button class="btn btn-success btn-xs" onclick='openBalanceModal(${u.id}, "${name}", ${u.balance}, "add")'>➕</button>
-            <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${name}", ${u.balance}, "sub")'>➖</button>
-            <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${name}", ${u.balance})'>✏️</button>
-            <button class="btn btn-gold btn-xs" onclick='viewUserGsm(${u.id})'>📱 GSM</button>
-            <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${name}")'>🎁 Key</button>
-            <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${name}")'>💬</button>
-            ${banned
-              ? `<button class="btn btn-success btn-xs" onclick='unbanUser(${u.id}, "${name}")'>✅ Mở lại</button>`
-              : `<button class="btn btn-danger btn-xs" onclick='openBanModal(${u.id}, "${name}")'>🚫 Cấm</button>`}
-          </div>
-        </div>
-      `;
-      }).join("") || '<div class="empty">Chưa có user</div>';
-    } else if (tab === "orders") {
-      const r = await api("/api/admin/orders");
-      if (!r.ok) { box.innerHTML = ""; return; }
-      box.innerHTML = r.orders.map(o => `
-        <div class="card">
-          <div class="product-head">
-            <div class="product-name">${escapeHtml(o.name)}</div>
-            <div class="stock-tag">SL: ${o.amount}</div>
-          </div>
-          <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || o.user_id)}</span></div>
-          <div class="info-row"><span>TT</span><span>${fmt(o.price)}</span></div>
-          <div class="info-row"><span>Vốn</span><span>${fmt(o.cost)}</span></div>
-          <div class="info-row"><span>Lãi</span><span style="color:var(--success)">${fmt(o.price - o.cost)}</span></div>
-          <div class="info-row"><span>TG</span><span>${escapeHtml(o.created_at)}</span></div>
-        </div>`).join("") || '<div class="empty">Chưa có</div>';
-    } else if (tab === "proxies") {
-      const r = await api("/api/admin/all-proxies", {limit: 300});
-      if (!r.ok) { box.innerHTML = '<div class="empty">Lỗi</div>'; return; }
-      box.innerHTML = r.orders.map(o => {
-        const proxiesHtml = (o.proxies || []).map(p =>
-          `<div style="background:#000;color:var(--success);padding:6px 10px;border-radius:6px;font-family:monospace;font-size:11px;margin-bottom:4px;word-break:break-all">${escapeHtml(p)}</div>`
-        ).join("") || '<div style="font-size:11px;color:var(--muted)">Không có proxy</div>';
-        return `
-          <div class="card">
-            <div class="product-head">
-              <div class="product-name">${escapeHtml(o.resource_name || "")}</div>
-              <div class="stock-tag">SL: ${o.amount}</div>
-            </div>
-            <div class="info-row"><span>User</span><span>${escapeHtml(o.first_name || o.username || "?")} (${o.user_id})</span></div>
-            <div class="info-row"><span>Mua lúc</span><span>${escapeHtml(o.created_at)}</span></div>
-            <div style="margin-top:10px">${proxiesHtml}</div>
-          </div>`;
-      }).join("") || '<div class="empty">Chưa có</div>';
-    } else if (tab === "referrals") {
-      const r = await api("/api/admin/referrals");
-      if (!r.ok) { box.innerHTML = '<div class="empty">Lỗi</div>'; return; }
-      box.innerHTML = r.referrers.map(ref => `
-        <div class="card">
-          <div class="product-head">
-            <div class="product-name">${escapeHtml(ref.first_name || ref.username || "User")}</div>
-            <div class="stock-tag" style="background:rgba(255,215,0,.15);color:var(--gold)">💰 ${fmt(ref.referral_earned)}</div>
-          </div>
-          <div class="info-row"><span>User ID</span><span>${ref.id}</span></div>
-          <div class="info-row"><span>Đã mời</span><span>${ref.referred_count}</span></div>
-          <div class="info-row"><span>Ví HH</span><span style="color:var(--gold)">${fmt(ref.referral_balance)}</span></div>
-          <div class="user-actions">
-            <button class="btn btn-gold btn-xs" onclick='openReferrerDetail(${ref.id})'>👁 Chi tiết</button>
-          </div>
-        </div>`).join("") || '<div class="empty">Chưa có</div>';
-    } else if (tab === "keys") {
-      const r = await api("/api/admin/keys");
-      if (!r.ok) { box.innerHTML = ""; return; }
-      const srcMap = {"purchase":"Mua","manual":"Nhập","admin_gift":"Tặng","admin_transfer":"Chuyển"};
-      box.innerHTML = r.keys.map(k => `
-        <div class="card">
-          <div class="product-head">
-            <div class="product-name" style="font-family:monospace;font-size:12px">${escapeHtml(k.proxy_key)}</div>
-            <div class="stock-tag">${srcMap[k.source]||k.source}</div>
-          </div>
-          <div class="info-row"><span>Chủ</span><span>${escapeHtml(k.first_name || k.username || "?")} (${k.user_id})</span></div>
-          <div class="user-actions">
-            <button class="btn btn-danger btn-xs" onclick='revokeKey(${k.id})'>🗑 Thu hồi</button>
-          </div>
-        </div>`).join("") || '<div class="empty">Chưa có</div>';
-    } else if (tab === "gsm") {
-      await renderAdminGsm(box);
-    } else {
-      const r = await api("/api/admin/logs");
-      if (!r.ok) { box.innerHTML = ""; return; }
-      const actionText = {add:"➕ Cộng", sub:"➖ Trừ", set:"✏️ Đặt", broadcast:"📢", message:"💬",
-                          key_transfer:"🔀", key_gift:"🎁", key_revoke:"🗑", gsm_delete:"🗑 GSM",
-                          ban:"🚫 Ban", unban:"✅ Unban"};
-      box.innerHTML = r.logs.map(l => `
-        <div class="card">
-          <div class="product-head">
-            <div class="product-name">${actionText[l.action] || l.action}</div>
-            ${l.amount ? `<div class="stock-tag">${l.action==="sub"?"-":"+"}${fmt(l.amount)}</div>` : ""}
-          </div>
-          <div class="info-row"><span>Target</span><span>${l.target_id || "ALL"}</span></div>
-          ${l.reason ? `<div class="info-row"><span>Lý do</span><span style="font-size:11px">${escapeHtml(l.reason)}</span></div>` : ""}
-          <div class="info-row"><span>TG</span><span>${escapeHtml(l.created_at)}</span></div>
-        </div>`).join("") || '<div class="empty">Chưa có</div>';
-    }
-  } catch(e) { box.innerHTML = '<div class="empty">Lỗi</div>'; }
-}
-
-// ===== ADMIN GSM =====
-async function renderAdminGsm(box) {
-  const stats = await api("/api/admin/gsm/stats");
-  if (!stats.ok) { box.innerHTML = '<div class="empty">' + (stats.error || "Lỗi") + '</div>'; return; }
-  const types = stats.types || {};
-  const s15 = types["15"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
-  const s25 = types["25"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
-  const defaultExp = new Date(Date.now() + 30 * 86400 * 1000);
-  const defaultExpStr = defaultExp.toISOString().slice(0, 16);
-
-  const form15 = `
-    <div class="card gsm-card-15">
-      <div class="product-head">
-        <div class="product-name" style="color:var(--primary)">📱 Kho GSM 15 tin</div>
-        <div class="stock-tag">Kho: ${s15.available}</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM</div>
-      <textarea class="input" id="gsm15AddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
-      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
-      <input class="input" id="gsm15ExpireInput" type="datetime-local" value="${defaultExpStr}">
-      <button class="btn btn-success btn-block" onclick="adminAddGsm('15')">➕ Thêm vào kho 15 tin</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
-        <div>Tổng: <b>${s15.total}</b></div>
-        <div>Đã bán: <b style="color:var(--danger)">${s15.sold}</b></div>
-        <div>DT: <b style="color:var(--gold)">${fmt(s15.revenue)}</b></div>
-        <div>📈 LN: <b style="color:var(--success)">${fmt(s15.profit)}</b></div>
-      </div>
-    </div>`;
-  const form25 = `
-    <div class="card gsm-card-25">
-      <div class="product-head">
-        <div class="product-name" style="color:var(--gold)">📱 Kho GSM 25 tin</div>
-        <div class="stock-tag" style="background:rgba(255,215,0,.15);color:var(--gold)">Kho: ${s25.available}</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM</div>
-      <textarea class="input" id="gsm25AddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
-      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
-      <input class="input" id="gsm25ExpireInput" type="datetime-local" value="${defaultExpStr}">
-      <button class="btn btn-block" style="background:linear-gradient(135deg,#ffd700,#f0a500);color:#000" onclick="adminAddGsm('25')">➕ Thêm vào kho 25 tin</button>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
-        <div>Tổng: <b>${s25.total}</b></div>
-        <div>Đã bán: <b style="color:var(--danger)">${s25.sold}</b></div>
-        <div>DT: <b style="color:var(--gold)">${fmt(s25.revenue)}</b></div>
-        <div>📈 LN: <b style="color:var(--success)">${fmt(s25.profit)}</b></div>
-      </div>
-    </div>`;
-  const filterTabs = `
-    <div class="tabs" id="gsmFilterTabs" style="margin:10px 0">
-      <div class="tab active" onclick="filterGsmList('15','all',this)">📱 15 tất cả</div>
-      <div class="tab" onclick="filterGsmList('15','available',this)">🟢 15 kho</div>
-      <div class="tab" onclick="filterGsmList('15','sold',this)">🔴 15 bán</div>
-      <div class="tab" onclick="filterGsmList('25','all',this)">📱 25 tất cả</div>
-      <div class="tab" onclick="filterGsmList('25','available',this)">🟢 25 kho</div>
-      <div class="tab" onclick="filterGsmList('25','sold',this)">🔴 25 bán</div>
-    </div>
-    <div id="gsmAdminList"></div>`;
-  box.innerHTML = form15 + form25 + filterTabs;
-  loadAdminGsmList('15', 'all');
-}
-async function adminAddGsm(gsm_type) {
-  const raw = document.getElementById(`gsm${gsm_type}AddInput`).value.trim();
-  if (!raw) { toast("Nhập link GSM", "error"); return; }
-  const expireInput = document.getElementById(`gsm${gsm_type}ExpireInput`).value;
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang thêm...";
-  try {
-    const r = await api("/api/admin/gsm/add", {links: raw, expire_at: expireInput, gsm_type: gsm_type});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm"; return; }
-    toast(`✅ Đã thêm ${r.added} link GSM ${gsm_type} tin${r.dup ? ` (trùng ${r.dup})` : ""}`, "success");
-    adminTab("gsm");
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "➕ Thêm"; }
-}
-function filterGsmList(gsm_type, status, el) {
-  document.querySelectorAll("#gsmFilterTabs .tab").forEach(t => t.classList.remove("active"));
+  currentAdminTab = tab;
+  document.querySelectorAll("#page-admin .tabs .tab").forEach(t => t.classList.remove("active"));
   if (el) el.classList.add("active");
-  loadAdminGsmList(gsm_type, status);
-}
-async function loadAdminGsmList(gsm_type, status) {
-  const el = document.getElementById("gsmAdminList");
-  if (!el) return;
-  el.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  const box = document.getElementById("adminList");
+  if (!box) return;
+  box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
-    const r = await api("/api/admin/gsm/list", {status: status, gsm_type: gsm_type});
-    if (!r.ok) { el.innerHTML = '<div class="empty">Lỗi</div>'; return; }
-    if (!r.items.length) { el.innerHTML = '<div class="empty">Không có GSM</div>'; return; }
-    el.innerHTML = r.items.map(item => {
-      const typeColor = (item.gsm_type === "25") ? "var(--gold)" : "var(--success)";
-      return `
+    const r = await api("/api/admin/" + encodeURIComponent(tab));
+    if (!r?.ok) {
+      box.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Backend chưa cung cấp dữ liệu mục này")}</div>`;
+      return;
+    }
+    const rows = r.items || r.users || r.orders || r.proxies || r.keys || r.logs || [];
+    if (typeof r.html === "string") { box.innerHTML = r.html; return; }
+    box.innerHTML = rows.length ? rows.map(x => `
       <div class="card">
-        <div class="product-head">
-          <div class="product-name" style="font-family:monospace;font-size:12px;word-break:break-all">${escapeHtml(item.link)}</div>
-          <div class="stock-tag" style="background:${item.is_sold?'rgba(255,71,87,.15)':'rgba(37,211,102,.15)'};color:${item.is_sold?'var(--danger)':'var(--success)'}">${item.is_sold?'Đã bán':'Trong kho'}</div>
-        </div>
-        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">GSM ${item.gsm_type} tin</span></div>
-        ${item.expire_at ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="font-size:12px">${escapeHtml(item.expire_at)}<br><span data-expire="${escapeHtml(item.expire_at)}">--</span></span></div>` : ''}
-        ${item.is_sold ? `<div class="info-row"><span>Người mua</span><span>${escapeHtml(item.owner_name)} (${item.sold_to})</span></div>` : ''}
-        <div class="user-actions">
-          <button class="btn btn-outline btn-xs" onclick='copyText(${JSON.stringify(item.link)})'>📋 Copy</button>
-          ${!item.is_sold ? `<button class="btn btn-danger btn-xs" onclick="adminDelGsm(${item.id})">🗑 Xóa</button>` : ''}
-          ${item.is_sold && item.sold_to ? `<button class="btn btn-purple btn-xs" onclick="viewUserGsm(${item.sold_to})">👁 User</button>` : ''}
-          ${item.is_sold ? `<button class="btn btn-danger btn-xs" onclick="adminDelSoldGsm(${item.id}, '${escapeHtml(item.owner_name)}', ${item.sold_to})">🗑 Thu hồi</button>` : ''}
-        </div>
-      </div>`;
-    }).join("");
-    startCountdowns();
-  } catch(e) { el.innerHTML = '<div class="empty">Lỗi</div>'; }
-}
-async function adminDelGsm(id) {
-  if (!confirm("Xóa GSM này?")) return;
-  try {
-    const r = await api("/api/admin/gsm/delete", {id});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã xóa", "success"); adminTab("gsm");
-  } catch(e) { toast("Lỗi", "error"); }
-}
-async function adminDelSoldGsm(gsmId, ownerName, soldTo) {
-  const choice = prompt(`Thu hồi GSM của "${ownerName}" (${soldTo})?\n\n1 = Có hoàn tiền\n2 = Không hoàn tiền\n0 = Huỷ`, "1");
-  if (choice === null || choice === "0" || choice === "") return;
-  const doRefund = choice === "1";
-  try {
-    const r = await api("/api/admin/gsm/delete", {id: gsmId, refund: doRefund, notify: true});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast(`✅ Đã thu hồi${r.refund ? ` + hoàn ${fmt(r.refund)}` : ""}`, "success");
-    adminTab("gsm");
-  } catch(e) { toast("Lỗi", "error"); }
-}
-async function viewUserGsm(userId) {
-  openModal(`<div class="modal-title">📱 GSM của user<button class="close-x" onclick="closeModal()">✕</button></div><div class="loading"><div class="spinner"></div>Đang tải...</div>`);
-  try {
-    const r = await api("/api/admin/gsm/user-links", {user_id: userId});
-    if (!r.ok) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Không tải được</div>`); return; }
-    const linksHtml = r.links.length
-      ? r.links.map(l => {
-          const typeColor = (l.gsm_type === "25") ? "var(--gold)" : "var(--success)";
-          return `
-          <div class="proxy-item" style="flex-direction:column;align-items:stretch;gap:6px">
-            <div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start">
-              <span style="flex:1;word-break:break-all">${escapeHtml(l.link)}</span>
-              <div style="display:flex;gap:4px;flex-shrink:0">
-                <button onclick='copyText(${JSON.stringify(l.link)})' style="background:transparent;border:1px solid var(--border);color:var(--success);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">📋</button>
-                <button onclick="adminDelSoldGsmFromUser(${l.id}, ${userId})" style="background:transparent;border:1px solid var(--danger);color:var(--danger);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>
-              </div>
-            </div>
-            <div style="font-size:11px;color:${typeColor}">📱 GSM ${l.gsm_type} tin</div>
-            ${l.expire_at ? `<div style="font-size:11px;color:var(--muted)">⏰ <span data-expire="${escapeHtml(l.expire_at)}">--</span></div>` : ""}
-          </div>`;
-        }).join("")
-      : '<div class="empty">Không có GSM</div>';
-    openModal(`
-      <div class="modal-title">📱 GSM của user ${userId}<button class="close-x" onclick="closeModal()">✕</button></div>
-      <div class="info-row"><span>Tổng</span><span>${r.links.length} GSM</span></div>
-      <div style="margin-top:10px">${linksHtml}</div>
-    `);
-    startCountdowns();
-  } catch(e) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`); }
-}
-async function adminDelSoldGsmFromUser(gsmId, userId) {
-  const choice = prompt(`Thu hồi GSM này?\n\n1 = Có hoàn tiền\n2 = Không hoàn tiền\n0 = Huỷ`, "1");
-  if (choice === null || choice === "0" || choice === "") return;
-  const doRefund = choice === "1";
-  try {
-    const r = await api("/api/admin/gsm/delete", {id: gsmId, refund: doRefund, notify: true});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast(`✅ Đã thu hồi${r.refund ? ` + hoàn ${fmt(r.refund)}` : ""}`, "success");
-    setTimeout(() => viewUserGsm(userId), 300);
-  } catch(e) { toast("Lỗi", "error"); }
-}
-
-// ===== ADMIN FUNCTIONS =====
-function openBalanceModal(userId, name, balance, action) {
-  const isAdd = action === "add";
-  openModal(`
-    <div class="modal-title">${isAdd?"➕ Cộng":"➖ Trừ"}<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
-    <div class="info-row"><span>Số dư</span><span>${fmt(balance)}</span></div>
-    <input class="input" id="admAmount" type="number" value="10000" inputmode="numeric">
-    <input class="input" id="admReason" placeholder="Lý do">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px"><span>Thông báo user</span>
-    </label>
-    <button class="btn ${isAdd?"btn-success":"btn-danger"} btn-block" onclick='submitBalance(${userId}, "${action}")'>Xác nhận</button>
-  `);
-}
-function openSetBalanceModal(userId, name, balance) {
-  openModal(`
-    <div class="modal-title">✏️ Đặt số dư<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
-    <input class="input" id="admAmount" type="number" value="${balance}" inputmode="numeric">
-    <input class="input" id="admReason" placeholder="Lý do">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="admNotify" checked style="width:18px;height:18px"><span>Thông báo user</span>
-    </label>
-    <button class="btn btn-block" onclick='submitBalance(${userId}, "set")'>Xác nhận</button>
-  `);
-}
-async function submitBalance(userId, action) {
-  const amount = parseInt(document.getElementById("admAmount").value || "0");
-  const reason = document.getElementById("admReason").value.trim();
-  const notify = document.getElementById("admNotify").checked;
-  if (amount < 0) { toast("Không hợp lệ", "error"); return; }
-  const btn = event.target; btn.disabled = true;
-  try {
-    const r = await api("/api/admin/balance", {user_id: userId, amount, action, reason, notify});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
-    toast(`✅ ${fmt(r.new_balance)}`, "success");
-    closeModal(); setTimeout(() => loadAdmin(), 400);
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
-}
-function openMessageModal(userId, name) {
-  openModal(`
-    <div class="modal-title">💬 Nhắn ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
-    <textarea class="input" id="admMsg" placeholder="Nội dung..."></textarea>
-    <button class="btn btn-purple btn-block" onclick='submitMessage(${userId})'>📤 Gửi</button>
-  `);
-}
-async function submitMessage(userId) {
-  const message = document.getElementById("admMsg").value.trim();
-  if (!message) { toast("Nhập nội dung", "error"); return; }
-  try {
-    const r = await api("/api/admin/message", {user_id: userId, message});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã gửi!", "success"); closeModal();
-  } catch(e) { toast("Lỗi", "error"); }
-}
-function openGiftKeyModal(userId, name) {
-  openModal(`
-    <div class="modal-title">🎁 Tặng key cho ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
-    <input class="input" id="giftKeyInput" placeholder="Dán key..." autocomplete="off">
-    <button class="btn btn-purple btn-block" onclick='submitGiftKey(${userId})'>🎁 Tặng key</button>
-  `);
-}
-async function submitGiftKey(userId) {
-  const key = document.getElementById("giftKeyInput").value.trim();
-  if (!key) { toast("Nhập key", "error"); return; }
-  const btn = event.target; btn.disabled = true;
-  try {
-    const r = await api("/api/admin/transfer-key", {user_id: userId, key});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
-    toast("✅ " + r.msg, "success");
-    closeModal(); setTimeout(() => adminTab("keys"), 400);
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
-}
-async function revokeKey(keyId) {
-  if (!confirm("Thu hồi key này?")) return;
-  try {
-    const r = await api("/api/admin/revoke-key", {key_id: keyId});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã thu hồi", "success"); adminTab("keys");
-  } catch(e) { toast("Lỗi", "error"); }
-}
-
-// ===== BAN / UNBAN =====
-function openBanModal(userId, name) {
-  openModal(`
-    <div class="modal-title">🚫 Cấm user<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div style="background:rgba(255,71,87,.1);border:1px solid var(--danger);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6">
-      ⚠️ User sẽ <b>không thể truy cập bot</b> (Shop, GSM, Nạp, ...) cho đến khi Admin mở lại.
-    </div>
-    <div class="info-row"><span>User</span><span>${escapeHtml(name)} (${userId})</span></div>
-    <div style="margin:14px 0 8px;font-weight:600;font-size:13px">Lý do cấm (tùy chọn)</div>
-    <input class="input" id="banReasonInput" placeholder="VD: Spam, gian lận, vi phạm...">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
-      <input type="checkbox" id="banNotify" checked style="width:18px;height:18px"><span>Thông báo Telegram cho user</span>
-    </label>
-    <button class="btn btn-danger btn-block" onclick='submitBan(${userId})'>🚫 Xác nhận cấm</button>
-  `);
-}
-async function submitBan(userId) {
-  const reason = document.getElementById("banReasonInput").value.trim();
-  const notify = document.getElementById("banNotify").checked;
-  if (!confirm("Cấm user này khỏi bot?")) return;
-  const btn = event.target; btn.disabled = true; btn.textContent = "Đang cấm...";
-  try {
-    const r = await api("/api/admin/ban-user", {user_id: userId, reason: reason, notify: notify});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; btn.textContent = "🚫 Xác nhận cấm"; return; }
-    toast("✅ Đã cấm user", "success");
-    closeModal();
-    setTimeout(() => adminTab("users"), 400);
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; btn.textContent = "🚫 Xác nhận cấm"; }
-}
-async function unbanUser(userId, name) {
-  if (!confirm(`Mở lại tài khoản cho "${name}" (${userId})?`)) return;
-  try {
-    const r = await api("/api/admin/unban-user", {user_id: userId, notify: true});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); return; }
-    toast("✅ Đã mở lại tài khoản", "success");
-    setTimeout(() => adminTab("users"), 400);
-  } catch(e) { toast("Lỗi", "error"); }
-}
-
-async function openReferrerDetail(referrerId) {
-  openModal(`<div class="modal-title">🎁 Chi tiết<button class="close-x" onclick="closeModal()">✕</button></div><div class="loading"><div class="spinner"></div>Đang tải...</div>`);
-  try {
-    const r = await api("/api/admin/referrer-detail", {referrer_id: referrerId});
-    if (!r.ok) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Không tải được</div>`); return; }
-    const u = r.user;
-    const referredHtml = r.referred.length
-      ? r.referred.map(p => {
-          const spent = p.total_spent || 0;
-          let rate = spent >= 500000 ? 13 : 0;
-          return `
-          <div style="background:var(--card2);padding:10px;border-radius:8px;margin-bottom:8px;font-size:12px">
-            <div style="font-weight:600;margin-bottom:4px">${escapeHtml(p.first_name || p.username || "User")} (${p.id})</div>
-            <div style="display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px"><span>Đã chi:</span><span style="color:var(--gold)">${fmt(spent)}</span></div>
-            <div style="display:flex;justify-content:space-between;color:var(--muted)"><span>Mức:</span><span>${rate}%</span></div>
-          </div>`;
-        }).join("")
-      : '<div class="empty" style="padding:20px">Chưa mời ai</div>';
-    const earningsHtml = r.earnings.length
-      ? r.earnings.slice(0, 20).map(e => `
-          <div style="background:var(--card2);padding:8px;border-radius:6px;margin-bottom:6px;font-size:11px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-              <span style="color:var(--muted)">Từ #${e.referred_id}</span>
-              <span style="color:var(--success);font-weight:700">+${fmt(e.commission)}</span>
-            </div>
-            <div style="color:var(--muted);font-size:10px">${escapeHtml(e.created_at)} • ${e.rate}%</div>
-          </div>`).join("")
-      : '<div class="empty" style="padding:20px">Chưa có HH</div>';
-    openModal(`
-      <div class="modal-title">🎁 ${escapeHtml(u.first_name || u.username || "User")}<button class="close-x" onclick="closeModal()">✕</button></div>
-      <div class="info-row"><span>User ID</span><span>${u.id}</span></div>
-      <div class="info-row"><span>Tổng HH</span><span style="color:var(--gold);font-weight:700">${fmt(u.referral_earned)}</span></div>
-      <div class="info-row"><span>Ví HH</span><span style="color:var(--gold)">${fmt(u.referral_balance)}</span></div>
-      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">👥 Người được mời</div>
-      ${referredHtml}
-      <div style="margin:14px 0 8px;font-weight:700;font-size:14px">💰 Lịch sử hoa hồng</div>
-      ${earningsHtml}
-    `);
-  } catch(e) { openModal(`<div class="modal-title">Lỗi</div><div class="empty">Lỗi kết nối</div>`); }
+        <div class="product-head"><div class="product-name">${escapeHtml(x.username || x.name || x.proxy_key || x.order_code || x.id || "Dữ liệu")}</div></div>
+        ${Object.entries(x).filter(([k,v]) => !["username","name","proxy_key","order_code","id"].includes(k) && ["string","number","boolean"].includes(typeof v)).slice(0,8).map(([k,v]) => `<div class="info-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("")}
+      </div>`).join("") : '<div class="empty">Không có dữ liệu</div>';
+  } catch (e) {
+    console.error("adminTab:", e);
+    box.innerHTML = '<div class="empty">Không thể tải dữ liệu quản trị</div>';
+  }
 }
 function openBroadcast() {
   openModal(`
-    <div class="modal-title">📢 Broadcast<button class="close-x" onclick="closeModal()">✕</button></div>
-    <div style="background:rgba(255,71,87,.15);border:1px solid var(--danger);padding:10px;border-radius:10px;font-size:12px;color:var(--danger);margin-bottom:12px">
-      ⚠️ Gửi đến TẤT CẢ khách hàng (trừ user bị ban)
-    </div>
-    <textarea class="input" id="bcMsg" placeholder="Nội dung..."></textarea>
-    <button class="btn btn-purple btn-block" onclick="submitBroadcast()">📢 Gửi</button>
+    <div class="modal-title">📢 Gửi thông báo<button class="close-x" onclick="closeModal()">✕</button></div>
+    <textarea id="broadcastMessage" class="input" placeholder="Nhập nội dung thông báo"></textarea>
+    <button class="btn btn-purple btn-block" onclick="sendBroadcast()">Gửi thông báo</button>
   `);
 }
-async function submitBroadcast() {
-  const message = document.getElementById("bcMsg").value.trim();
-  if (!message) { toast("Nhập nội dung", "error"); return; }
-  if (!confirm("Gửi đến TẤT CẢ khách?")) return;
-  const btn = event.target; btn.disabled = true;
+async function sendBroadcast() {
+  const message = document.getElementById("broadcastMessage")?.value?.trim();
+  if (!message) { toast("Vui lòng nhập nội dung", "error"); return; }
   try {
-    const r = await api("/api/admin/broadcast", {message});
-    if (!r.ok) { toast(r.error || "Lỗi", "error"); btn.disabled = false; return; }
-    toast(`✅ Đang gửi đến ${r.total} khách`, "success");
+    const r = await api("/api/admin/broadcast", { message });
+    if (!r?.ok) { toast(r?.error || "Không gửi được thông báo", "error"); return; }
+    toast("Đã gửi thông báo", "success");
     closeModal();
-  } catch(e) { toast("Lỗi", "error"); btn.disabled = false; }
+  } catch (e) { toast("Lỗi kết nối", "error"); }
 }
 
-init();
+// ===== GLOBAL ERROR HANDLING & STARTUP =====
+window.addEventListener("error", e => console.error("JavaScript error:", e.message, e.filename, e.lineno));
+window.addEventListener("unhandledrejection", e => console.error("Unhandled promise rejection:", e.reason));
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Không để một API phụ làm hỏng quá trình xác thực hoặc khởi tạo giao diện.
+  init();
+});
 </script>
 </body>
 </html>
-```
