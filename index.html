@@ -1445,11 +1445,12 @@ async function loadReferrals() {
       return;
     }
     REF_DATA = r;
-    const balance = r.referral_balance ?? r.balance ?? USER?.referral_balance ?? 0;
-    const mainBalance = r.main_balance ?? r.user_balance ?? USER?.balance ?? 0;
-    const earned = r.total_earned ?? r.earned ?? 0;
-    const referrals = r.referrals ?? r.users ?? [];
-    const earnings = r.earnings ?? r.history ?? [];
+    const balance = r.referral_balance ?? 0;
+    const mainBalance = r.main_balance ?? USER?.balance ?? 0;
+    const earned = r.total_earned ?? 0;
+    // Backend trả mảng người được giới thiệu ở trường "referred".
+    const referrals = Array.isArray(r.referred) ? r.referred : [];
+    const earnings = Array.isArray(r.earnings) ? r.earnings : [];
 
     const setText = (id, value) => {
       const el = document.getElementById(id);
@@ -1458,26 +1459,32 @@ async function loadReferrals() {
     setText("refBalance", fmt(balance));
     setText("refMainBalance", fmt(mainBalance));
     setText("refEarned", fmt(earned));
-    setText("refCount", r.referral_count ?? r.count ?? referrals.length);
+    setText("refCount", r.total_referred ?? referrals.length);
 
-    const link = r.referral_link || r.ref_link || r.invite_link || r.link || "";
+    // Backend cung cấp bot_username + user_id, không trả sẵn referral_link.
+    const botName = String(r.bot_username || "").replace(/^@/, "");
+    const link = botName && r.user_id
+      ? `https://t.me/${botName}?start=ref_${r.user_id}`
+      : "";
     const linkEl = document.getElementById("refLink");
     if (linkEl) linkEl.textContent = link || "Chưa có link giới thiệu";
 
     referredBox.innerHTML = referrals.length ? referrals.map(u => `
       <div class="card">
         <div class="product-head">
-          <div class="product-name">${escapeHtml(u.username || u.name || ("User #" + (u.id ?? "")))}</div>
-          <div class="stock-tag">${escapeHtml(u.status || "Đã giới thiệu")}</div>
+          <div class="product-name">${escapeHtml(u.username || u.first_name || ("User #" + (u.id ?? "")))}</div>
+          <div class="stock-tag">${Number(u.current_rate || 0)}% HH</div>
         </div>
         ${u.created_at ? `<div class="info-row"><span>Ngày tham gia</span><span>${escapeHtml(u.created_at)}</span></div>` : ""}
-        ${u.total_spent != null ? `<div class="info-row"><span>Đã chi tiêu</span><span>${fmt(u.total_spent)}</span></div>` : ""}
+        <div class="info-row"><span>Đã chi tiêu</span><span>${fmt(u.total_spent || 0)}</span></div>
+        <div class="info-row"><span>Hoa hồng đã tính</span><span>${fmt(u.referral_paid || 0)}</span></div>
       </div>`).join("") : '<div class="empty"><div class="empty-icon">👥</div>Bạn chưa giới thiệu ai</div>';
 
     if (earningsBox) {
       earningsBox.innerHTML = earnings.length ? earnings.map(x => `
         <div class="card">
-          <div class="info-row"><span>${escapeHtml(x.description || x.note || "Hoa hồng giới thiệu")}</span><span style="color:var(--success)">+${fmt(x.amount || x.commission || 0)}</span></div>
+          <div class="info-row"><span>User #${escapeHtml(x.referred_id ?? "")} · ${Number(x.rate || 0)}%</span><span style="color:var(--success)">+${fmt(x.commission || 0)}</span></div>
+          <div class="info-row"><span>Đơn hàng</span><span>${fmt(x.order_amount || 0)}</span></div>
           ${x.created_at ? `<div style="font-size:11px;color:var(--muted);text-align:right">${escapeHtml(x.created_at)}</div>` : ""}
         </div>`).join("") : '<div class="empty">Chưa có lịch sử hoa hồng</div>';
     }
@@ -1551,20 +1558,23 @@ async function createDeposit() {
   const btn = document.querySelector('#page-deposit button[onclick="createDeposit()"]');
   if (btn) { btn.disabled = true; btn.textContent = "Đang tạo QR..."; }
   try {
-    const r = await api("/api/deposit/create", { amount });
+    // Backend hiện tại định nghĩa POST /api/deposit (không phải /api/deposit/create).
+    const r = await api("/api/deposit", { amount });
     if (!r?.ok) { toast(r?.error || "Không tạo được giao dịch", "error"); return; }
-    const qr = r.qr_url || r.qr_image || r.qr || "";
-    const transfer = r.transfer_content || r.content || r.description || "";
-    const bank = r.bank_name || r.bank || "";
-    const account = r.account_number || r.account || "";
+    const qr = r.qr || "";
+    const transfer = r.content || r.code || "";
+    const bank = r.bank || "";
+    const account = r.account_no || "";
+    const accountName = r.account_name || "";
     openModal(`
       <div class="modal-title">💳 Thanh toán nạp tiền<button class="close-x" onclick="closeModal()">✕</button></div>
       <div class="info-row"><span>Số tiền</span><span style="color:var(--gold)">${fmt(r.amount || amount)}</span></div>
       ${bank ? `<div class="info-row"><span>Ngân hàng</span><span>${escapeHtml(bank)}</span></div>` : ""}
       ${account ? `<div class="info-row"><span>Số tài khoản</span><span>${escapeHtml(account)}</span></div>` : ""}
+      ${accountName ? `<div class="info-row"><span>Chủ tài khoản</span><span>${escapeHtml(accountName)}</span></div>` : ""}
       ${transfer ? `<div class="code-box">${escapeHtml(transfer)}</div><button class="btn btn-outline btn-block" onclick='copyText(${JSON.stringify(transfer)})'>📋 Copy nội dung chuyển khoản</button>` : ""}
       ${qr ? `<div class="qr-box"><img src="${escapeHtml(qr)}" alt="QR thanh toán"></div>` : ""}
-      <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px">Vui lòng chuyển đúng số tiền và nội dung để hệ thống tự động xác nhận.</p>
+      <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px">Vui lòng chuyển đúng số tiền và nội dung để hệ thống tự động xác nhận. Mã có hiệu lực ${Number(r.expire_seconds || 300)} giây.</p>
     `);
     loadDepositHistory();
   } catch (e) {
@@ -1576,52 +1586,121 @@ async function createDeposit() {
 }
 
 // ===== ADMIN =====
-// Các màn admin gọi API độc lập; nếu backend chưa bật endpoint tương ứng,
-// giao diện hiển thị thông báo thay vì làm hỏng toàn bộ Mini App.
 let currentAdminTab = "users";
+
+const ADMIN_ENDPOINTS = {
+  users: "/api/admin/users",
+  orders: "/api/admin/orders",
+  proxies: "/api/admin/all-proxies",
+  referrals: "/api/admin/referrals",
+  keys: "/api/admin/keys",
+  gsm: "/api/admin/gsm/list",
+  logs: "/api/admin/logs"
+};
+
+function renderAdminStats(target, values, labels) {
+  if (!target) return;
+  if (!values || typeof values !== "object") {
+    target.innerHTML = "";
+    return;
+  }
+  target.innerHTML = Object.entries(values)
+    .filter(([key, value]) => typeof value === "number" && !key.startsWith("_"))
+    .map(([key, value]) => `
+      <div class="stat-card">
+        <div class="stat-val">${escapeHtml(Number(value).toLocaleString("vi-VN"))}</div>
+        <div class="stat-label">${escapeHtml(labels?.[key] || key.replace(/_/g, " "))}</div>
+      </div>`).join("");
+}
+
 async function loadAdmin() {
   const box = document.getElementById("adminList");
   if (!USER?.is_admin) {
     if (box) box.innerHTML = '<div class="empty">Bạn không có quyền truy cập</div>';
     return;
   }
-  const stats = document.getElementById("adminStats");
-  const proxyStats = document.getElementById("proxyStatsBox");
   if (box) box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  const statsBox = document.getElementById("adminStats");
+  const proxyStatsBox = document.getElementById("proxyStatsBox");
+  const statLabels = {
+    today_revenue: "Doanh thu hôm nay", total_revenue: "Tổng doanh thu",
+    total_profit: "Tổng lợi nhuận", today_profit: "Lợi nhuận hôm nay",
+    total_orders: "Tổng đơn hàng", total_proxy_sold: "Proxy đã bán",
+    total_users: "Tổng người dùng", banned_users: "Người bị cấm",
+    total_deposit: "Tổng nạp", total_rotations: "Lượt xoay IP",
+    total_keys: "Tổng key", total_commission: "Tổng hoa hồng",
+    total_referrals: "Lượt giới thiệu", total_extends: "Lượt gia hạn",
+    total_balance: "Số dư người dùng", total_referral_balance: "Số dư hoa hồng",
+    gsm_available: "GSM còn", gsm_sold: "GSM đã bán",
+    gsm_revenue: "Doanh thu GSM", gsm_profit: "Lợi nhuận GSM",
+    unique_proxies: "Proxy duy nhất", alive_count: "Proxy sống",
+    dead_count: "Proxy lỗi", alive_rate: "Tỷ lệ proxy sống"
+  };
   try {
-    const r = await api("/api/admin/overview");
-    if (r?.ok) {
-      if (stats) stats.innerHTML = (r.stats || []).map(s => `<div class="stat-card"><div class="stat-val">${escapeHtml(s.value ?? s.count ?? 0)}</div><div class="stat-label">${escapeHtml(s.label || s.name || "")}</div></div>`).join("");
-      if (proxyStats) proxyStats.innerHTML = (r.proxy_stats || []).map(s => `<div class="stat-card"><div class="stat-val">${escapeHtml(s.value ?? s.count ?? 0)}</div><div class="stat-label">${escapeHtml(s.label || s.name || "")}</div></div>`).join("");
+    const [stats, proxyStats] = await Promise.all([
+      api("/api/admin/stats"),
+      api("/api/admin/proxy-stats")
+    ]);
+    if (stats?.ok) renderAdminStats(statsBox, stats.stats, statLabels);
+    if (proxyStats?.ok) {
+      const vals = {
+        total_orders: proxyStats.total_orders,
+        total_proxy_sold: proxyStats.total_proxy_sold,
+        total_keys: proxyStats.total_keys,
+        unique_proxies: proxyStats.unique_proxies,
+        alive_count: proxyStats.alive_count,
+        dead_count: proxyStats.dead_count,
+        alive_rate: proxyStats.alive_rate
+      };
+      renderAdminStats(proxyStatsBox, vals, statLabels);
     }
-  } catch (e) { console.warn("Admin overview unavailable:", e); }
+  } catch (e) {
+    console.warn("Admin stats unavailable:", e);
+  }
   await adminTab(currentAdminTab);
 }
+
 async function adminTab(tab, el) {
   currentAdminTab = tab;
   document.querySelectorAll("#page-admin .tabs .tab").forEach(t => t.classList.remove("active"));
   if (el) el.classList.add("active");
   const box = document.getElementById("adminList");
   if (!box) return;
+  const endpoint = ADMIN_ENDPOINTS[tab];
+  if (!endpoint) {
+    box.innerHTML = '<div class="empty">Mục quản trị không được hỗ trợ</div>';
+    return;
+  }
   box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
   try {
-    const r = await api("/api/admin/" + encodeURIComponent(tab));
+    const r = await api(endpoint);
     if (!r?.ok) {
-      box.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Backend chưa cung cấp dữ liệu mục này")}</div>`;
+      box.innerHTML = `<div class="empty">${escapeHtml(r?.error || "Không tải được dữ liệu")}</div>`;
       return;
     }
-    const rows = r.items || r.users || r.orders || r.proxies || r.keys || r.logs || [];
-    if (typeof r.html === "string") { box.innerHTML = r.html; return; }
-    box.innerHTML = rows.length ? rows.map(x => `
-      <div class="card">
-        <div class="product-head"><div class="product-name">${escapeHtml(x.username || x.name || x.proxy_key || x.order_code || x.id || "Dữ liệu")}</div></div>
-        ${Object.entries(x).filter(([k,v]) => !["username","name","proxy_key","order_code","id"].includes(k) && ["string","number","boolean"].includes(typeof v)).slice(0,8).map(([k,v]) => `<div class="info-row"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("")}
-      </div>`).join("") : '<div class="empty">Không có dữ liệu</div>';
+    const rows = r.items || r.users || r.orders || r.referrers || r.keys || r.logs || [];
+    if (!rows.length) {
+      box.innerHTML = '<div class="empty">Không có dữ liệu</div>';
+      return;
+    }
+    box.innerHTML = rows.map(x => {
+      const heading = x.username || x.first_name || x.name || x.resource_name ||
+        x.link || x.proxy_key || x.order_code || x.action || ("#" + (x.id ?? ""));
+      const excluded = new Set(["username", "first_name", "name", "resource_name", "link", "proxy_key", "order_code", "id"]);
+      const fields = Object.entries(x)
+        .filter(([k, v]) => !excluded.has(k) && ["string", "number", "boolean"].includes(typeof v))
+        .slice(0, 10);
+      return `<div class="card" style="margin-bottom:8px">
+        <div class="product-head"><div class="product-name">${escapeHtml(heading)}</div></div>
+        ${fields.map(([k, v]) => `<div class="info-row"><span>${escapeHtml(k.replace(/_/g, " "))}</span><span>${escapeHtml(v)}</span></div>`).join("")}
+      </div>`;
+    }).join("");
   } catch (e) {
     console.error("adminTab:", e);
     box.innerHTML = '<div class="empty">Không thể tải dữ liệu quản trị</div>';
   }
 }
+
 function openBroadcast() {
   openModal(`
     <div class="modal-title">📢 Gửi thông báo<button class="close-x" onclick="closeModal()">✕</button></div>
@@ -1635,7 +1714,7 @@ async function sendBroadcast() {
   try {
     const r = await api("/api/admin/broadcast", { message });
     if (!r?.ok) { toast(r?.error || "Không gửi được thông báo", "error"); return; }
-    toast("Đã gửi thông báo", "success");
+    toast(`Đã gửi thông báo tới ${Number(r.total || 0).toLocaleString("vi-VN")} người dùng`, "success");
     closeModal();
   } catch (e) { toast("Lỗi kết nối", "error"); }
 }
