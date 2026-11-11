@@ -1511,6 +1511,7 @@ async function adminTab(tab, el) {
             <button class="btn btn-danger btn-xs" onclick='openBalanceModal(${u.id}, "${name}", ${u.balance}, "sub")'>➖</button>
             <button class="btn btn-outline btn-xs" onclick='openSetBalanceModal(${u.id}, "${name}", ${u.balance})'>✏️</button>
             <button class="btn btn-gold btn-xs" onclick='viewUserGsm(${u.id})'>📱 GSM</button>
+            <button class="btn btn-success btn-xs" onclick='viewUserDeposits(${u.id}, "${name}")'>💳 Nạp</button>
             <button class="btn btn-purple btn-xs" onclick='openGiftKeyModal(${u.id}, "${name}")'>🎁 Key</button>
             <button class="btn btn-outline btn-xs" onclick='openMessageModal(${u.id}, "${name}")'>💬</button>
             ${banned
@@ -1771,6 +1772,53 @@ async function adminDelSoldGsmFromUser(gsmId, userId) {
     toast(`✅ Đã thu hồi${r.refund ? ` + hoàn ${fmt(r.refund)}` : ""}`, "success");
     setTimeout(() => viewUserGsm(userId), 300);
   } catch(e) { toast("Lỗi", "error"); }
+}
+
+// ===== ADMIN USER DEPOSITS =====
+function openUserDepositFilter(userId, name) {
+  const today = new Date();
+  const dateValue = today.toISOString().slice(0, 10);
+  const monthValue = dateValue.slice(0, 7);
+  openModal(`
+    <div class="modal-title">💳 Tiền nạp của ${escapeHtml(name)}<button class="close-x" onclick="closeModal()">✕</button></div>
+    <div class="info-row"><span>User ID</span><b>${userId}</b></div>
+    <label style="display:block;font-size:12px;color:var(--muted);margin:12px 0 5px">Chọn khoảng thời gian</label>
+    <select class="input" id="admDepPeriod" onchange="changeAdminDepositInput()">
+      <option value="month">Theo tháng</option><option value="week">Theo tuần</option><option value="day">Theo ngày</option>
+    </select>
+    <input class="input" id="admDepValue" type="month" value="${monthValue}" style="margin-top:8px">
+    <button class="btn btn-success btn-block" style="margin-top:12px" onclick="viewUserDeposits(${userId}, '${name.replace(/\\/g,'').replace(/'/g,"\\'")}')">🔎 Xem tiền nạp</button>
+    <div id="admDepResult" style="margin-top:14px"></div>
+  `);
+}
+function changeAdminDepositInput() {
+  const period = document.getElementById("admDepPeriod").value;
+  const input = document.getElementById("admDepValue");
+  const today = new Date().toISOString().slice(0,10);
+  input.type = period === "month" ? "month" : "date";
+  input.value = period === "month" ? today.slice(0,7) : today;
+}
+async function viewUserDeposits(userId, name) {
+  if (!document.getElementById("admDepPeriod")) { openUserDepositFilter(userId, name); return; }
+  const period = document.getElementById("admDepPeriod").value;
+  const value = document.getElementById("admDepValue").value;
+  const box = document.getElementById("admDepResult");
+  box.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  try {
+    const r = await api("/api/admin/user-deposits", {user_id:userId, period, value});
+    if (!r.ok) { box.innerHTML = `<div class="empty">${escapeHtml(r.error || "Không tải được dữ liệu")}</div>`; return; }
+    box.innerHTML = `
+      <div class="card" style="margin:0 0 10px">
+        <div style="font-size:12px;color:var(--muted)">${escapeHtml(r.label)}</div>
+        <div style="font-size:23px;font-weight:800;color:var(--success);margin:5px 0">${fmt(r.total)}</div>
+        <div style="font-size:12px;color:var(--muted)">${r.count} giao dịch nạp thành công</div>
+      </div>
+      ${r.deposits.map(d => `<div class="card" style="margin-bottom:7px;padding:10px">
+        <div class="info-row"><span>${escapeHtml(d.code)}</span><b style="color:var(--success)">${fmt(d.amount)}</b></div>
+        <div style="font-size:11px;color:var(--muted)">Thời gian nạp thành công: ${escapeHtml(d.paid_at)}</div>
+      </div>`).join("") || '<div class="empty">Không có giao dịch thành công trong khoảng này</div>'}
+    `;
+  } catch(e) { box.innerHTML = '<div class="empty">Lỗi kết nối</div>'; }
 }
 
 // ===== ADMIN FUNCTIONS =====
