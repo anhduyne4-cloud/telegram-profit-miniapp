@@ -1375,11 +1375,16 @@ function closeDeposit() {
 }
 
 // ===== DEPOSIT HISTORY =====
+let depHistTimer = null;
+
 async function loadDeposits() {
   const list = document.getElementById("depositHistoryList");
   const statsBox = document.getElementById("depositStatsBox");
   if (!list) return;
+  
   list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải...</div>';
+  if (depHistTimer) clearInterval(depHistTimer);
+
   try {
     const r = await api("/api/my-deposits");
     if (!r.ok) { list.innerHTML = '<div class="empty">Lỗi tải lịch sử</div>'; return; }
@@ -1409,17 +1414,28 @@ async function loadDeposits() {
     };
 
     list.innerHTML = r.deposits.map(d => {
-      const s = statusMap[d.status] || {
-        label: d.status, color: "var(--muted)", bg: "rgba(139,147,168,.15)"
-      };
+      const s = statusMap[d.status] || { label: d.status, color: "var(--muted)", bg: "rgba(139,147,168,.15)" };
+      
+      // Nếu đơn đang chờ, tạo thẻ div chứa thời gian đếm ngược
+      let countdownHtml = "";
+      let expireTimestamp = 0;
+      if (d.status === "pending" && d.created_at) {
+         const createdDate = new Date(d.created_at.replace(" ", "T"));
+         expireTimestamp = createdDate.getTime() + 300000; 
+         countdownHtml = `
+           <div style="font-size:12px;color:var(--gold);margin-top:8px;text-align:right;font-weight:600">
+              ⏰ Còn lại: <span class="dep-hist-timer" data-expire="${expireTimestamp}">--:--</span>
+           </div>`;
+      }
+
       return `
-        <div class="card">
+        <div class="card" id="dep-card-${d.id}">
           <div class="product-head">
-            <div class="product-name" style="font-family:monospace;font-size:12px">${escapeHtml(d.code)}</div>
-            <div class="stock-tag" style="background:${s.bg};color:${s.color}">${s.label}</div>
+            <div class="product-name" style="font-family:monospace;font-size:13px;color:var(--primary)">${escapeHtml(d.code)}</div>
+            <div class="stock-tag" id="dep-badge-${d.id}" style="background:${s.bg};color:${s.color}">${s.label}</div>
           </div>
           <div class="info-row"><span>Số tiền</span>
-            <span style="color:var(--gold);font-weight:700">${fmt(d.amount)}</span>
+            <span style="color:var(--gold);font-weight:700;font-size:15px">${fmt(d.amount)}</span>
           </div>
           <div class="info-row"><span>Tạo lúc</span>
             <span style="font-size:12px">${escapeHtml(d.created_at || "")}</span>
@@ -1427,15 +1443,76 @@ async function loadDeposits() {
           ${d.paid_at ? `<div class="info-row"><span>Thanh toán</span>
             <span style="font-size:12px;color:var(--success)">${escapeHtml(d.paid_at)}</span>
           </div>` : ""}
+          
+          ${countdownHtml}
+          
           <div class="user-actions">
-            <button class="btn btn-outline btn-xs"
-                    onclick='copyText(${JSON.stringify(d.code)})'>📋 Copy mã</button>
+            <button class="btn btn-outline btn-xs" onclick='copyText(${JSON.stringify(d.code)})'>📋 Copy mã</button>
+            ${d.status === "pending" ? `<button class="btn btn-primary btn-xs" onclick="checkManualDeposit('${d.code}')">🔄 Kiểm tra</button>` : ""}
           </div>
         </div>`;
     }).join("");
+
+    // Kích hoạt đếm ngược thời gian thực cho các đơn đang chờ
+    startDepositHistoryCountdown();
+
   } catch(e) {
     list.innerHTML = '<div class="empty">Lỗi kết nối</div>';
   }
+}
+
+function startDepositHistoryCountdown() {
+  if (depHistTimer) clearInterval(depHistTimer);
+  
+  depHistTimer = setInterval(() => {
+    document.querySelectorAll(".dep-hist-timer").forEach(el => {
+      const expire = parseInt(el.getAttribute("data-expire"));
+      if (isNaN(expire)) return;
+      
+      const now = Date.now();
+      const diff = Math.floor((expire - now) / 1000);
+      
+      if (diff <= 0) {
+         el.textContent = "00:00";
+         el.style.color = "var(--danger)";
+         
+         const card = el.closest(".card");
+         if (card) {
+            const badge = card.querySelector(".stock-tag");
+            if (badge && badge.textContent.includes("Chờ")) {
+               badge.textContent = "🔴 Hết hạn";
+               badge.style.background = "rgba(255,71,87,.15)";
+               badge.style.color = "var(--danger)";
+            }
+            const checkBtn = card.querySelector(".btn-primary");
+            if (checkBtn) checkBtn.style.display = "none";
+         }
+      } else {
+         const m = String(Math.floor(diff / 60)).padStart(2, "0");
+         const s = String(diff % 60).padStart(2, "0");
+         el.textContent = `${m}:${s}`;
+      }
+    });
+  }, 1000);
+}
+
+async function checkManualDeposit(code) {
+  try {
+    const r = await api("/api/deposit/check", {code});
+    if (r.ok) {
+       if (r.status === "paid") {
+           toast("✅ Đã thanh toán thành công!", "success");
+           USER.balance = r.balance;
+           document.getElementById("hdrBal").textContent = fmt(r.balance);
+           loadDeposits(); // Tải lại danh sách
+       } else if (r.status === "expired") {
+           toast("⏰ Mã này đã hết hiệu lực", "error");
+           loadDeposits();
+       } else {
+           toast("⏳ Chưa nhận được tiền, vui lòng chờ...", "error");
+       }
+    }
+  } catch(e) { toast("Lỗi kiểm tra", "error"); }
 }
 
 // ===== ADMIN =====
