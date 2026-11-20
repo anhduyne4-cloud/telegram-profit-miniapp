@@ -363,6 +363,44 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <button class="btn btn-block" style="margin-top:14px;background:linear-gradient(135deg,#ffd700,#f0a500);color:#000" onclick="buyGsm('25')">✅ Mua GSM 25 tin</button>
   </div>
 
+  <div class="card" style="background:linear-gradient(135deg,rgba(37,211,102,.08),rgba(74,158,255,.08));border-color:var(--success)">
+    <div class="product-head">
+      <div class="product-name">📱 GSM Vina</div>
+      <div class="stock-tag" id="gsmvinaStockTag">Kho: --</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi link</div>
+        <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsmvinaPrice">40.000đ</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kho còn</div>
+        <div style="font-size:20px;font-weight:700;color:var(--success)" id="gsmvinaStock">--</div>
+      </div>
+    </div>
+    <div id="gsmvinaCountdown" style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px">
+      <span style="color:var(--muted)" id="gsmvinaCountdownLabel">⏰ Đang tải...</span>
+      <span class="countdown" id="gsmvinaCountdownVal" data-expire="">--</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin:8px 0 4px">Số lượng muốn mua</div>
+    <div class="qty-row" style="margin-bottom:8px">
+      <button class="qty-btn" onclick="changeGsmQty('vina',-1)">−</button>
+      <div class="qty-val" id="gsmvinaQty">1</div>
+      <button class="qty-btn" onclick="changeGsmQty('vina',1)">+</button>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty('vina',1)">1</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty('vina',5)">5</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty('vina',10)">10</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty('vina',20)">20</button>
+      <button class="btn btn-outline btn-xs" onclick="setGsmQty('vina',50)">50</button>
+    </div>
+    <div class="info-row"><span>💳 Số dư</span><span id="gsmvinaBalance">--</span></div>
+    <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho GSM</div>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsmvinaTotal">40.000đ</span></div>
+    <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm('vina')">✅ Mua GSM Vina</button>
+  </div>
+
   <div class="section-title" style="margin-top:16px"><span>📦 GSM đã mua</span></div>
   <div id="gsmOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
 </div>
@@ -423,6 +461,7 @@ let REF_DATA = null;
 let GSM_STATE = {
   "15": { price: 26000, stock: 0, qty: 1, label: "GSM 15 tin" },
   "25": { price: 36000, stock: 0, qty: 1, label: "GSM 25 tin" },
+  "vina": { price: 40000, stock: 0, qty: 1, label: "GSM Vina" },
 };
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
@@ -798,7 +837,7 @@ async function loadGsmInfo() {
     const r = await api("/api/gsm/info");
     if (!r.ok) return;
     const types = r.types || {};
-    for (const t of ["15", "25"]) {
+    for (const t of ["15", "25", "vina"]) {
       const info = types[t];
       if (!info) continue;
       GSM_STATE[t].price = info.price || GSM_STATE[t].price;
@@ -836,7 +875,7 @@ async function loadGsmInfo() {
   } catch(e) {}
 }
 function updateGsmTotals() {
-  for (const t of ["15", "25"]) {
+  for (const t of ["15", "25", "vina"]) {
     const st = GSM_STATE[t];
     const total = st.price * (st.qty || 1);
     const qtyEl = document.getElementById(`gsm${t}Qty`);
@@ -946,8 +985,8 @@ async function loadGsmOrders() {
       return;
     }
     list.innerHTML = r.orders.map(o => {
-      const typeLabel = o.gsm_type === "25" ? "GSM 25 tin" : "GSM 15 tin";
-      const typeColor = o.gsm_type === "25" ? "#ffd700" : "var(--success)";
+      const typeLabel = o.gsm_type === "vina" ? "GSM Vina" : (o.gsm_type === "25" ? "GSM 25 tin" : "GSM 15 tin");
+      const typeColor = o.gsm_type === "vina" ? "var(--success)" : (o.gsm_type === "25" ? "#ffd700" : "var(--success)");
       const linksHtml = o.links.map(l => {
         const link = l.link || l;
         const exp = l.expire_at || "";
@@ -1614,6 +1653,7 @@ async function renderAdminGsm(box) {
   const types = stats.types || {};
   const s15 = types["15"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
   const s25 = types["25"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
+  const sv = types["vina"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
   const defaultExp = new Date(Date.now() + 30 * 86400 * 1000);
   const defaultExpStr = defaultExp.toISOString().slice(0, 16);
 
@@ -1653,6 +1693,24 @@ async function renderAdminGsm(box) {
         <div>📈 LN: <b style="color:var(--success)">${fmt(s25.profit)}</b></div>
       </div>
     </div>`;
+  const formVina = `
+    <div class="card" style="background:linear-gradient(135deg,rgba(37,211,102,.08),rgba(74,158,255,.08));border-color:var(--success)">
+      <div class="product-head">
+        <div class="product-name" style="color:var(--success)">📱 Kho GSM Vina</div>
+        <div class="stock-tag">Kho: ${sv.available}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM Vina</div>
+      <textarea class="input" id="gsmvinaAddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
+      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
+      <input class="input" id="gsmvinaExpireInput" type="datetime-local" value="${defaultExpStr}">
+      <button class="btn btn-success btn-block" onclick="adminAddGsm('vina')">➕ Thêm vào kho GSM Vina</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
+        <div>Tổng: <b>${sv.total}</b></div>
+        <div>Đã bán: <b style="color:var(--danger)">${sv.sold}</b></div>
+        <div>DT: <b style="color:var(--gold)">${fmt(sv.revenue)}</b></div>
+        <div>📈 LN: <b style="color:var(--success)">${fmt(sv.profit)}</b></div>
+      </div>
+    </div>`;
   const filterTabs = `
     <div class="tabs" id="gsmFilterTabs" style="margin:10px 0">
       <div class="tab active" onclick="filterGsmList('15','all',this)">📱 15 tất cả</div>
@@ -1661,9 +1719,12 @@ async function renderAdminGsm(box) {
       <div class="tab" onclick="filterGsmList('25','all',this)">📱 25 tất cả</div>
       <div class="tab" onclick="filterGsmList('25','available',this)">🟢 25 kho</div>
       <div class="tab" onclick="filterGsmList('25','sold',this)">🔴 25 bán</div>
+      <div class="tab" onclick="filterGsmList('vina','all',this)">📱 Vina tất cả</div>
+      <div class="tab" onclick="filterGsmList('vina','available',this)">🟢 Vina kho</div>
+      <div class="tab" onclick="filterGsmList('vina','sold',this)">🔴 Vina bán</div>
     </div>
     <div id="gsmAdminList"></div>`;
-  box.innerHTML = form15 + form25 + filterTabs;
+  box.innerHTML = form15 + form25 + formVina + filterTabs;
   loadAdminGsmList('15', 'all');
 }
 async function adminAddGsm(gsm_type) {
@@ -1692,14 +1753,14 @@ async function loadAdminGsmList(gsm_type, status) {
     if (!r.ok) { el.innerHTML = '<div class="empty">Lỗi</div>'; return; }
     if (!r.items.length) { el.innerHTML = '<div class="empty">Không có GSM</div>'; return; }
     el.innerHTML = r.items.map(item => {
-      const typeColor = (item.gsm_type === "25") ? "var(--gold)" : "var(--success)";
+      const typeColor = (item.gsm_type === "vina") ? "var(--success)" : ((item.gsm_type === "25") ? "var(--gold)" : "var(--success)");
       return `
       <div class="card">
         <div class="product-head">
           <div class="product-name" style="font-family:monospace;font-size:12px;word-break:break-all">${escapeHtml(item.link)}</div>
           <div class="stock-tag" style="background:${item.is_sold?'rgba(255,71,87,.15)':'rgba(37,211,102,.15)'};color:${item.is_sold?'var(--danger)':'var(--success)'}">${item.is_sold?'Đã bán':'Trong kho'}</div>
         </div>
-        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">GSM ${item.gsm_type} tin</span></div>
+        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">${item.gsm_type === "vina" ? "GSM Vina" : `GSM ${item.gsm_type} tin`}</span></div>
         ${item.expire_at ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="font-size:12px">${escapeHtml(item.expire_at)}<br><span data-expire="${escapeHtml(item.expire_at)}">--</span></span></div>` : ''}
         ${item.is_sold ? `<div class="info-row"><span>Người mua</span><span>${escapeHtml(item.owner_name)} (${item.sold_to})</span></div>` : ''}
         <div class="user-actions">
