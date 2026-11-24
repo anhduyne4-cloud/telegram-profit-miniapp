@@ -145,7 +145,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 </div>
 
 <script>
-  const API_BASE = "https://suave-retype-treadmill.ngrok-free.dev";
+  const API_BASE = "https://parking-egotistic-senator.ngrok-free.dev";
   const ADMIN_USERNAME = "MARKPORA";
 </script>
 
@@ -1667,6 +1667,14 @@ async function renderAdminGsm(box) {
       <textarea class="input" id="gsm15AddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
       <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
       <input class="input" id="gsm15ExpireInput" type="datetime-local" value="${defaultExpStr}">
+      <div class="info-row"><span>Giá vốn</span><b>${fmt(s15.cost_per_link || 20000)}</b></div>
+      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">💰 Giá bán GSM 15 tin</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('15',-500)">−500</button>
+        <input class="input" id="gsm15PriceInput" type="number" min="20000" max="1000000" step="500" value="${s15.price || 26000}" style="text-align:center;max-width:130px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('15',500)">+500</button>
+        <button class="btn btn-success btn-xs" onclick="adminSetGsmPrice('15')">Lưu giá</button>
+      </div>
       <button class="btn btn-success btn-block" onclick="adminAddGsm('15')">➕ Thêm vào kho 15 tin</button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
         <div>Tổng: <b>${s15.total}</b></div>
@@ -1685,6 +1693,14 @@ async function renderAdminGsm(box) {
       <textarea class="input" id="gsm25AddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
       <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
       <input class="input" id="gsm25ExpireInput" type="datetime-local" value="${defaultExpStr}">
+      <div class="info-row"><span>Giá vốn</span><b>${fmt(s25.cost_per_link || 21000)}</b></div>
+      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">💰 Giá bán GSM 25 tin</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('25',-500)">−500</button>
+        <input class="input" id="gsm25PriceInput" type="number" min="21000" max="1000000" step="500" value="${s25.price || 28000}" style="text-align:center;max-width:130px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('25',500)">+500</button>
+        <button class="btn btn-success btn-xs" onclick="adminSetGsmPrice('25')">Lưu giá</button>
+      </div>
       <button class="btn btn-block" style="background:linear-gradient(135deg,#ffd700,#f0a500);color:#000" onclick="adminAddGsm('25')">➕ Thêm vào kho 25 tin</button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
         <div>Tổng: <b>${s25.total}</b></div>
@@ -1702,11 +1718,11 @@ async function renderAdminGsm(box) {
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM Mobi</div>
       <div class="info-row"><span>Giá vốn</span><b>${fmt(sv.cost_per_link || 25000)}</b></div>
       <div style="font-weight:600;font-size:12px;margin:8px 0 4px">💰 Giá bán GSM Mobi</div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice(-500)">−500</button>
-        <input class="input" id="gsmMobiPriceInput" type="number" min="25000" max="1000000" step="500" value="${sv.price || 38000}" style="text-align:center;max-width:150px">
-        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice(500)">+500</button>
-        <button class="btn btn-success btn-xs" onclick="adminSetGsmPrice()">Lưu giá</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('mobi',-500)">−500</button>
+        <input class="input" id="gsmmobiPriceInput" type="number" min="25000" max="1000000" step="500" value="${sv.price || 38000}" style="text-align:center;max-width:130px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice('mobi',500)">+500</button>
+        <button class="btn btn-success btn-xs" onclick="adminSetGsmPrice('mobi')">Lưu giá</button>
       </div>
       <textarea class="input" id="gsmmobiAddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
       <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
@@ -1735,24 +1751,29 @@ async function renderAdminGsm(box) {
   box.innerHTML = form15 + form25 + formMobi + filterTabs;
   loadAdminGsmList('15', 'all');
 }
-function adminAdjustGsmPrice(delta) {
-  const input = document.getElementById("gsmMobiPriceInput");
+function adminAdjustGsmPrice(gsmType, delta) {
+  const input = document.getElementById(`gsm${gsmType}PriceInput`);
   if (!input) return;
-  const current = parseInt(input.value || "38000", 10) || 38000;
-  input.value = Math.max(25000, Math.min(1000000, current + delta));
+  const minPrices = {"15": 20000, "25": 21000, "mobi": 25000};
+  const defaults = {"15": 26000, "25": 28000, "mobi": 38000};
+  const current = parseInt(input.value || String(defaults[gsmType]), 10) || defaults[gsmType];
+  input.value = Math.max(minPrices[gsmType], Math.min(1000000, current + delta));
 }
-async function adminSetGsmPrice() {
-  const input = document.getElementById("gsmMobiPriceInput");
+async function adminSetGsmPrice(gsmType) {
+  const input = document.getElementById(`gsm${gsmType}PriceInput`);
   if (!input) return;
+  const minPrices = {"15": 20000, "25": 21000, "mobi": 25000};
+  const labels = {"15": "GSM 15 tin", "25": "GSM 25 tin", "mobi": "GSM Mobi"};
+  const minPrice = minPrices[gsmType];
   const price = parseInt(input.value || "0", 10);
-  if (!Number.isFinite(price) || price < 25000 || price > 1000000 || price % 500 !== 0) {
-    toast("Giá phải từ 25.000đ đến 1.000.000đ và chia hết cho 500đ", "error");
+  if (!Number.isFinite(price) || price < minPrice || price > 1000000 || price % 500 !== 0) {
+    toast(`Giá phải từ ${fmt(minPrice)} đến 1.000.000đ và chia hết cho 500đ`, "error");
     return;
   }
   try {
-    const r = await api("/api/admin/gsm/price", {price});
+    const r = await api("/api/admin/gsm/price", {gsm_type: gsmType, price});
     if (!r.ok) { toast(r.error || "Không thể cập nhật giá", "error"); return; }
-    toast("Đã cập nhật giá GSM Mobi: " + fmt(r.price), "success");
+    toast(`Đã cập nhật giá ${labels[gsmType]}: ${fmt(r.price)}`, "success");
     await loadGsmInfo();
     adminTab("gsm");
   } catch (e) { toast("Lỗi kết nối khi cập nhật giá", "error"); }
