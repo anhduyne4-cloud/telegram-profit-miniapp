@@ -365,13 +365,13 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 
   <div class="card" style="background:linear-gradient(135deg,rgba(37,211,102,.08),rgba(74,158,255,.08));border-color:var(--success)">
     <div class="product-head">
-      <div class="product-name">📱 GSM mobi</div>
+      <div class="product-name">📱 GSM Mobi</div>
       <div class="stock-tag" id="gsmmobiStockTag">Kho: --</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Giá mỗi link</div>
-        <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsmmobiPrice">40.000đ</div>
+        <div style="font-size:20px;font-weight:700;color:var(--gold)" id="gsmmobiPrice">38.000đ</div>
       </div>
       <div style="text-align:right">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kho còn</div>
@@ -397,8 +397,8 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     </div>
     <div class="info-row"><span>💳 Số dư</span><span id="gsmmobiBalance">--</span></div>
     <div style="font-size:11px;color:var(--muted);margin:4px 0 8px;text-align:right">⚠️ Ví HH không dùng cho GSM</div>
-    <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsmmobiTotal">40.000đ</span></div>
-    <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm('mobi')">✅ Mua GSM mobi</button>
+    <div class="info-row"><span>Tổng tiền</span><span style="color:var(--gold);font-weight:700" id="gsmmobiTotal">38.000đ</span></div>
+    <button class="btn btn-success btn-block" style="margin-top:14px" onclick="buyGsm('mobi')">✅ Mua GSM Mobi</button>
   </div>
 
   <div class="section-title" style="margin-top:16px"><span>📦 GSM đã mua</span></div>
@@ -461,7 +461,7 @@ let REF_DATA = null;
 let GSM_STATE = {
   "15": { price: 26000, stock: 0, qty: 1, label: "GSM 15 tin" },
   "25": { price: 36000, stock: 0, qty: 1, label: "GSM 25 tin" },
-  "mobi": { price: 38000, stock: 0, qty: 1, label: "GSM mobi" },
+  "mobi": { price: 38000, stock: 0, qty: 1, label: "GSM Mobi" },
 };
 
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor?.("#0f1117"); tg.setBackgroundColor?.("#0f1117"); }
@@ -985,7 +985,7 @@ async function loadGsmOrders() {
       return;
     }
     list.innerHTML = r.orders.map(o => {
-      const typeLabel = o.gsm_type === "mobi" ? "GSM mobi" : (o.gsm_type === "25" ? "GSM 25 tin" : "GSM 15 tin");
+      const typeLabel = o.gsm_type === "mobi" ? "GSM Mobi" : (o.gsm_type === "25" ? "GSM 25 tin" : "GSM 15 tin");
       const typeColor = o.gsm_type === "mobi" ? "var(--success)" : (o.gsm_type === "25" ? "#ffd700" : "var(--success)");
       const linksHtml = o.links.map(l => {
         const link = l.link || l;
@@ -1653,7 +1653,7 @@ async function renderAdminGsm(box) {
   const types = stats.types || {};
   const s15 = types["15"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
   const s25 = types["25"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
-  const sv = types["mobi"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0};
+  const sv = types["mobi"] || {total:0,available:0,sold:0,revenue:0,cost:0,profit:0,total_orders:0,price:38000,cost_per_link:25000};
   const defaultExp = new Date(Date.now() + 30 * 86400 * 1000);
   const defaultExpStr = defaultExp.toISOString().slice(0, 16);
 
@@ -1693,17 +1693,25 @@ async function renderAdminGsm(box) {
         <div>📈 LN: <b style="color:var(--success)">${fmt(s25.profit)}</b></div>
       </div>
     </div>`;
-  const formmobi = `
+  const formMobi = `
     <div class="card" style="background:linear-gradient(135deg,rgba(37,211,102,.08),rgba(74,158,255,.08));border-color:var(--success)">
       <div class="product-head">
-        <div class="product-name" style="color:var(--success)">📱 Kho GSM mobi</div>
+        <div class="product-name" style="color:var(--success)">📱 Kho GSM Mobi</div>
         <div class="stock-tag">Kho: ${sv.available}</div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM mobi</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Mỗi dòng 1 link GSM Mobi</div>
+      <div class="info-row"><span>Giá vốn</span><b>${fmt(sv.cost_per_link || 25000)}</b></div>
+      <div style="font-weight:600;font-size:12px;margin:8px 0 4px">💰 Giá bán GSM Mobi</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice(-500)">−500</button>
+        <input class="input" id="gsmMobiPriceInput" type="number" min="25000" max="1000000" step="500" value="${sv.price || 38000}" style="text-align:center;max-width:150px">
+        <button class="btn btn-outline btn-xs" onclick="adminAdjustGsmPrice(500)">+500</button>
+        <button class="btn btn-success btn-xs" onclick="adminSetGsmPrice()">Lưu giá</button>
+      </div>
       <textarea class="input" id="gsmmobiAddInput" placeholder="https://...&#10;https://..." style="min-height:110px"></textarea>
       <div style="font-weight:600;font-size:12px;margin:8px 0 4px">⏰ Ngày giờ hết hạn</div>
       <input class="input" id="gsmmobiExpireInput" type="datetime-local" value="${defaultExpStr}">
-      <button class="btn btn-success btn-block" onclick="adminAddGsm('mobi')">➕ Thêm vào kho GSM mobi</button>
+      <button class="btn btn-success btn-block" onclick="adminAddGsm('mobi')">➕ Thêm vào kho GSM Mobi</button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-top:12px">
         <div>Tổng: <b>${sv.total}</b></div>
         <div>Đã bán: <b style="color:var(--danger)">${sv.sold}</b></div>
@@ -1719,14 +1727,37 @@ async function renderAdminGsm(box) {
       <div class="tab" onclick="filterGsmList('25','all',this)">📱 25 tất cả</div>
       <div class="tab" onclick="filterGsmList('25','available',this)">🟢 25 kho</div>
       <div class="tab" onclick="filterGsmList('25','sold',this)">🔴 25 bán</div>
-      <div class="tab" onclick="filterGsmList('mobi','all',this)">📱 mobi tất cả</div>
-      <div class="tab" onclick="filterGsmList('mobi','available',this)">🟢 mobi kho</div>
-      <div class="tab" onclick="filterGsmList('mobi','sold',this)">🔴 mobi bán</div>
+      <div class="tab" onclick="filterGsmList('mobi','all',this)">📱 Mobi tất cả</div>
+      <div class="tab" onclick="filterGsmList('mobi','available',this)">🟢 Mobi kho</div>
+      <div class="tab" onclick="filterGsmList('mobi','sold',this)">🔴 Mobi bán</div>
     </div>
     <div id="gsmAdminList"></div>`;
-  box.innerHTML = form15 + form25 + formmobi + filterTabs;
+  box.innerHTML = form15 + form25 + formMobi + filterTabs;
   loadAdminGsmList('15', 'all');
 }
+function adminAdjustGsmPrice(delta) {
+  const input = document.getElementById("gsmMobiPriceInput");
+  if (!input) return;
+  const current = parseInt(input.value || "38000", 10) || 38000;
+  input.value = Math.max(25000, Math.min(1000000, current + delta));
+}
+async function adminSetGsmPrice() {
+  const input = document.getElementById("gsmMobiPriceInput");
+  if (!input) return;
+  const price = parseInt(input.value || "0", 10);
+  if (!Number.isFinite(price) || price < 25000 || price > 1000000 || price % 500 !== 0) {
+    toast("Giá phải từ 25.000đ đến 1.000.000đ và chia hết cho 500đ", "error");
+    return;
+  }
+  try {
+    const r = await api("/api/admin/gsm/price", {price});
+    if (!r.ok) { toast(r.error || "Không thể cập nhật giá", "error"); return; }
+    toast("Đã cập nhật giá GSM Mobi: " + fmt(r.price), "success");
+    await loadGsmInfo();
+    adminTab("gsm");
+  } catch (e) { toast("Lỗi kết nối khi cập nhật giá", "error"); }
+}
+
 async function adminAddGsm(gsm_type) {
   const raw = document.getElementById(`gsm${gsm_type}AddInput`).value.trim();
   if (!raw) { toast("Nhập link GSM", "error"); return; }
@@ -1760,7 +1791,7 @@ async function loadAdminGsmList(gsm_type, status) {
           <div class="product-name" style="font-family:monospace;font-size:12px;word-break:break-all">${escapeHtml(item.link)}</div>
           <div class="stock-tag" style="background:${item.is_sold?'rgba(255,71,87,.15)':'rgba(37,211,102,.15)'};color:${item.is_sold?'var(--danger)':'var(--success)'}">${item.is_sold?'Đã bán':'Trong kho'}</div>
         </div>
-        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">${item.gsm_type === "mobi" ? "GSM mobi" : `GSM ${item.gsm_type} tin`}</span></div>
+        <div class="info-row"><span>Loại</span><span style="color:${typeColor};font-weight:700">${item.gsm_type === "mobi" ? "GSM Mobi" : `GSM ${item.gsm_type} tin`}</span></div>
         ${item.expire_at ? `<div class="info-row"><span>⏰ Hết hạn</span><span style="font-size:12px">${escapeHtml(item.expire_at)}<br><span data-expire="${escapeHtml(item.expire_at)}">--</span></span></div>` : ''}
         ${item.is_sold ? `<div class="info-row"><span>Người mua</span><span>${escapeHtml(item.owner_name)} (${item.sold_to})</span></div>` : ''}
         <div class="user-actions">
