@@ -85,6 +85,18 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
 .code-box{background:#000;color:var(--success);padding:12px;border-radius:10px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin-bottom:10px;line-height:1.5}
 .user-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .user-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+.profile-hero{background:linear-gradient(135deg,rgba(74,158,255,.18),rgba(168,85,247,.16));border:1px solid rgba(74,158,255,.35);border-radius:18px;padding:18px;text-align:center;margin-bottom:14px}
+.profile-avatar{width:94px;height:94px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);background:var(--card2);display:block;margin:0 auto 10px;box-shadow:0 0 0 5px rgba(74,158,255,.12)}
+.profile-name{font-size:17px;font-weight:800;margin-bottom:4px;word-break:break-word}
+.profile-sub{font-size:12px;color:var(--muted)}
+.profile-rank{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 13px;border-radius:30px;background:rgba(255,215,0,.14);color:var(--gold);font-weight:800;font-size:13px}
+.leader-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.leader-row:last-child{border-bottom:0}
+.leader-rank{width:28px;height:28px;flex:0 0 28px;border-radius:50%;display:grid;place-items:center;background:var(--card2);font-weight:800;font-size:12px}
+.leader-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:var(--card2);border:1px solid var(--border);flex:0 0 38px}
+.leader-meta{min-width:0;flex:1}.leader-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.leader-id{font-size:10px;color:var(--muted);margin-top:3px}.leader-total{font-size:13px;font-weight:800;color:var(--gold);white-space:nowrap}
+
 .admin-tools{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
 .admin-tools-title{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .proxy-item{background:#000;color:var(--success);padding:10px 12px;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -204,6 +216,40 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
     <div style="font-size:12px;color:var(--primary);line-height:1.5">💡 Chọn đơn hàng cần gia hạn, nhập số ngày</div>
   </div>
   <div id="extendOrdersList"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
+</div>
+
+<!-- PROFILE & DEPOSIT LEADERBOARD -->
+<div class="page" id="page-profile">
+  <div class="section-title"><span>👤 Hồ sơ nạp tiền</span><button class="btn btn-outline btn-xs" onclick="loadDepositProfile()">🔄 Làm mới</button></div>
+  <div class="profile-hero">
+    <img id="profileAvatar" class="profile-avatar" src="" alt="Ảnh đại diện Telegram" onerror="this.onerror=null;this.src='https://dummyimage.com/120x120/232735/ffffff&text=USER'">
+    <div class="profile-name" id="profileName">Đang tải...</div>
+    <div class="profile-sub" id="profileUsername">ID Telegram: --</div>
+    <div class="profile-rank" id="profileLifetimeRank">🏆 Hạng nạp trọn đời: --</div>
+  </div>
+  <div class="stats-grid" id="profileLifetimeStats">
+    <div class="stat-card green"><div class="stat-val">--</div><div class="stat-label">Tổng tiền đã nạp</div></div>
+    <div class="stat-card"><div class="stat-val">--</div><div class="stat-label">Mã nạp thành công</div></div>
+    <div class="stat-card pink"><div class="stat-val">--</div><div class="stat-label">Mã nạp thất bại</div></div>
+    <div class="stat-card gold"><div class="stat-val">--</div><div class="stat-label">Mã đang chờ</div></div>
+  </div>
+  <div class="section-title"><span>📊 Tiền nạp theo thời gian</span></div>
+  <div class="stats-grid" id="profilePeriodStats">
+    <div class="stat-card"><div class="stat-val">--</div><div class="stat-label">Hôm nay</div></div>
+    <div class="stat-card"><div class="stat-val">--</div><div class="stat-label">Tuần này</div></div>
+    <div class="stat-card"><div class="stat-val">--</div><div class="stat-label">Tháng này</div></div>
+  </div>
+  <div class="section-title" style="margin-top:16px"><span>🏆 Bảng xếp hạng nạp tiền</span></div>
+  <div class="tabs" id="depositLeaderboardTabs">
+    <div class="tab active" data-period="day" onclick="loadDepositLeaderboard('day',this)">☀️ Ngày</div>
+    <div class="tab" data-period="week" onclick="loadDepositLeaderboard('week',this)">📅 Tuần</div>
+    <div class="tab" data-period="month" onclick="loadDepositLeaderboard('month',this)">🗓 Tháng</div>
+  </div>
+  <div class="card" style="margin-bottom:8px">
+    <div class="info-row"><span id="leaderboardPeriodLabel">Hôm nay</span><span id="leaderboardMyRank" style="color:var(--gold)">Hạng của bạn: --</span></div>
+    <div id="depositLeaderboardList"><div class="loading"><div class="spinner"></div>Đang tải bảng xếp hạng...</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);line-height:1.5">Chỉ tính các giao dịch nạp đã thanh toán thành công. Bảng xếp hạng ngày, tuần và tháng được cập nhật tự động theo thời gian hiện tại.</div>
 </div>
 
 <!-- REFERRAL -->
@@ -436,6 +482,7 @@ textarea.input{min-height:100px;font-size:14px;line-height:1.5}
   <div class="nav-item" data-page="gsm" onclick="nav('gsm')"><span class="nav-icon">📱</span>GSM</div>
   <div class="nav-item" data-page="referral" onclick="nav('referral')"><span class="nav-icon">🎁</span>Mời</div>
   <div class="nav-item" data-page="deposit" onclick="nav('deposit')"><span class="nav-icon">💳</span>Nạp</div>
+  <div class="nav-item" data-page="profile" onclick="nav('profile')"><span class="nav-icon">👤</span>Hồ sơ</div>
   <div class="nav-item" id="navAdmin" data-page="admin" onclick="nav('admin')" style="display:none"><span class="nav-icon">👑</span>Admin</div>
 </div>
 
@@ -577,6 +624,7 @@ async function init() {
     }
     USER = r.user;
     document.getElementById("hdrBal").textContent = fmt(USER.balance);
+    renderProfileIdentity();
     if (USER.is_admin) document.getElementById("navAdmin").style.display = "block";
     loadProducts(); loadOrders(); loadRotations(); loadExtendOrders(); loadReferrals();
     loadGsmInfo(); loadGsmOrders(); loadDeposits();
@@ -623,6 +671,7 @@ function nav(page) {
   if (page === "referral") loadReferrals();
   if (page === "gsm") { loadGsmInfo(); loadGsmOrders(); }
   if (page === "deposit") loadDeposits();
+  if (page === "profile") loadDepositProfile();
   if (page === "admin") loadAdmin();
 }
 function closeModal() { document.getElementById("modalBg").classList.remove("active"); }
@@ -1411,6 +1460,77 @@ function closeDeposit() {
   if (depositPolling) { clearInterval(depositPolling); depositPolling = null; }
   if (window._depCountdownTimer) { clearInterval(window._depCountdownTimer); window._depCountdownTimer = null; }
   closeModal();
+}
+
+// ===== HỒ SƠ NGƯỜI DÙNG & TOP NẠP =====
+function renderProfileIdentity(profileUser=null) {
+  const u = profileUser || USER || {};
+  const telegramUser = tg?.initDataUnsafe?.user || {};
+  const avatar = u.photo_url || telegramUser.photo_url || "";
+  const name = [u.first_name || telegramUser.first_name || "", u.last_name || telegramUser.last_name || ""].filter(Boolean).join(" ") || u.username || "Người dùng Telegram";
+  const avatarEl = document.getElementById("profileAvatar");
+  if (avatarEl && avatar) avatarEl.src = avatar;
+  if (avatarEl && !avatar) avatarEl.src = "https://dummyimage.com/120x120/232735/ffffff&text=USER";
+  const nameEl = document.getElementById("profileName");
+  const userEl = document.getElementById("profileUsername");
+  if (nameEl) nameEl.textContent = name;
+  if (userEl) userEl.textContent = `${u.username ? "@" + u.username + " • " : ""}ID Telegram: ${u.id || "--"}`;
+}
+
+async function loadDepositProfile() {
+  const life = document.getElementById("profileLifetimeStats");
+  if (life) life.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải thống kê...</div>';
+  try {
+    const r = await api("/api/me/deposit-summary");
+    if (!r.ok) throw new Error(r.error || "Không tải được hồ sơ");
+    renderProfileIdentity(r.user);
+    document.getElementById("profileLifetimeRank").textContent = r.lifetime_rank ? `🏆 Hạng nạp trọn đời: #${r.lifetime_rank} / ${r.lifetime_users}` : "🏆 Chưa có thứ hạng nạp tiền";
+    life.innerHTML = `
+      <div class="stat-card green"><div class="stat-val">${fmt(r.lifetime_total)}</div><div class="stat-label">Tổng tiền đã nạp</div></div>
+      <div class="stat-card"><div class="stat-val">${Number(r.success_count||0).toLocaleString("vi-VN")}</div><div class="stat-label">Mã nạp thành công</div></div>
+      <div class="stat-card pink"><div class="stat-val">${Number(r.failed_count||0).toLocaleString("vi-VN")}</div><div class="stat-label">Mã nạp thất bại</div></div>
+      <div class="stat-card gold"><div class="stat-val">${Number(r.pending_count||0).toLocaleString("vi-VN")}</div><div class="stat-label">Mã đang chờ</div></div>`;
+    const p = r.periods || {};
+    document.getElementById("profilePeriodStats").innerHTML = `
+      <div class="stat-card"><div class="stat-val">${fmt(p.day?.total||0)}</div><div class="stat-label">Hôm nay (${p.day?.count||0} lần)</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(p.week?.total||0)}</div><div class="stat-label">Tuần này (${p.week?.count||0} lần)</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(p.month?.total||0)}</div><div class="stat-label">Tháng này (${p.month?.count||0} lần)</div></div>`;
+    const active = document.querySelector("#depositLeaderboardTabs .tab.active") || document.querySelector("#depositLeaderboardTabs .tab");
+    loadDepositLeaderboard(active?.dataset.period || "day", active);
+  } catch(e) {
+    if (life) life.innerHTML = `<div class="empty">${escapeHtml(e.message || "Lỗi tải thống kê")}</div>`;
+    toast("Không tải được thống kê nạp", "error");
+  }
+}
+
+async function loadDepositLeaderboard(period="day", el=null) {
+  document.querySelectorAll("#depositLeaderboardTabs .tab").forEach(t => t.classList.toggle("active", t.dataset.period === period));
+  const list = document.getElementById("depositLeaderboardList");
+  if (!list) return;
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Đang tải bảng xếp hạng...</div>';
+  try {
+    const r = await api("/api/deposit/leaderboard", {period});
+    if (!r.ok) throw new Error(r.error || "Không tải được bảng xếp hạng");
+    document.getElementById("leaderboardPeriodLabel").textContent = r.label || "Bảng xếp hạng";
+    document.getElementById("leaderboardMyRank").textContent = r.my_rank ? `Hạng của bạn: #${r.my_rank}` : "Bạn chưa có lượt nạp";
+    if (!r.leaderboard?.length) {
+      list.innerHTML = '<div class="empty" style="padding:24px 8px">Chưa có lượt nạp thành công trong thời gian này</div>';
+      return;
+    }
+    list.innerHTML = r.leaderboard.map(item => {
+      const name = [item.first_name, item.username ? "@" + item.username : ""].filter(Boolean).join(" ") || `User ${item.user_id}`;
+      const avatar = item.photo_url || "https://dummyimage.com/80x80/232735/ffffff&text=U";
+      const medal = item.rank === 1 ? "🥇" : item.rank === 2 ? "🥈" : item.rank === 3 ? "🥉" : `#${item.rank}`;
+      return `<div class="leader-row">
+        <div class="leader-rank">${medal}</div>
+        <img class="leader-avatar" src="${escapeHtml(avatar)}" alt="Avatar" onerror="this.onerror=null;this.src='https://dummyimage.com/80x80/232735/ffffff&text=U'">
+        <div class="leader-meta"><div class="leader-name">${escapeHtml(name)}</div><div class="leader-id">ID: ${item.user_id} • ${item.deposit_count} lần nạp</div></div>
+        <div class="leader-total">${fmt(item.total)}</div>
+      </div>`;
+    }).join("");
+  } catch(e) {
+    list.innerHTML = `<div class="empty">${escapeHtml(e.message || "Lỗi tải bảng xếp hạng")}</div>`;
+  }
 }
 
 // ===== DEPOSIT HISTORY =====
